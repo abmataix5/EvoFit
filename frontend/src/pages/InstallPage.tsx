@@ -29,8 +29,13 @@ const steps = [
   },
   {
     n: '3',
+    title: 'Pulsa Ver más',
+    text: 'En la lista de opciones, baja y toca Ver más. Ahí aparecen el resto de acciones.',
+  },
+  {
+    n: '4',
     title: 'Añadir a pantalla de inicio',
-    text: 'Elige ese nombre, confirma con Añadir y EvoFit queda como una app, con su icono.',
+    text: 'Elige Añadir a pantalla de inicio, confirma con Añadir y EvoFit queda como una app, con su icono.',
   },
 ]
 
