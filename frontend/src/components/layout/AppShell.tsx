@@ -8,6 +8,7 @@ import { formatHeaderDay } from '../../lib/motivation'
 const navItems = [
   { to: '/', label: 'Inicio', icon: '🏠', end: true },
   { to: '/routines', label: 'Rutinas', icon: '💪', end: false },
+  { to: '/exercises', label: 'Ejercicios', icon: '🏋️', end: false },
   { to: '/calendar', label: 'Agenda', icon: '📅', end: false },
   { to: '/progress', label: 'Progreso', icon: '📈', end: false },
 ]
@@ -87,19 +88,6 @@ export function AppShell() {
               {item.label}
             </NavLink>
           ))}
-          <NavLink
-            to="/exercises"
-            className={({ isActive }) =>
-              [
-                'mt-2 flex min-h-11 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition',
-                isActive
-                  ? 'bg-evo-surface-2 text-evo-accent'
-                  : 'text-evo-muted hover:bg-evo-surface-2 hover:text-evo-text',
-              ].join(' ')
-            }
-          >
-            Catálogo de ejercicios
-          </NavLink>
         </nav>
 
         <div className="mt-auto space-y-3 rounded-2xl border-2 border-evo-border bg-evo-surface-2 p-4">
@@ -155,7 +143,7 @@ export function AppShell() {
           aria-label="Navegación móvil"
           className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border bg-evo-surface/95 backdrop-blur-md lg:hidden"
         >
-          <ul className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1">
+          <ul className="mx-auto grid max-w-lg grid-cols-6 px-0.5 pt-1">
             {navItems.map((item) => (
               <li key={item.to}>
                 <NavLink
