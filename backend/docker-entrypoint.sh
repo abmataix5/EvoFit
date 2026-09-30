@@ -58,6 +58,10 @@ file_put_contents($path, $content);
 PHP
 fi
 
+if ! grep -q '^APP_KEY=' .env 2>/dev/null; then
+  echo 'APP_KEY=' >> .env
+fi
+
 if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
   php artisan key:generate --force
 fi
