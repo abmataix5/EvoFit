@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, defaultWeekdays } from '../lib/api'
@@ -334,6 +335,38 @@ export function NewRoutinePage() {
                   + Ejercicio
                 </Button>
               </div>
+
+              {days.length > 1 ? (
+                <CopyDayPicker
+                  sourceLabel={`D${currentDay.day_index} · ${currentDay.name}`}
+                  disabled={!currentDay.exercises.some((e) => e.name.trim())}
+                  options={days
+                    .map((day, index) => ({ day, index }))
+                    .filter(({ index }) => index !== activeDay)
+                    .map(({ day, index }) => ({
+                      id: index,
+                      label: `D${day.day_index}`,
+                      sublabel: day.name,
+                    }))}
+                  onCopy={(targetIds) => {
+                    const source = currentDay.exercises
+                      .filter((e) => e.name.trim())
+                      .map((e) => ({ ...e }))
+                    if (source.length === 0) {
+                      setError('Añade al menos un ejercicio antes de copiar.')
+                      return
+                    }
+                    setDays((current) =>
+                      current.map((day, index) =>
+                        targetIds.includes(index)
+                          ? { ...day, exercises: source.map((e) => ({ ...e })) }
+                          : day,
+                      ),
+                    )
+                    setError(null)
+                  }}
+                />
+              ) : null}
 
               <div className="flex gap-2">
                 {activeDay > 0 ? (

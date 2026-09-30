@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import {
@@ -104,6 +105,20 @@ export function RoutineDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
       notify('Fechas actualizadas', 'success')
     },
+  })
+
+  const copyDay = useMutation({
+    mutationFn: async (payload: { fromId: number; targetIds: number[] }) => {
+      await api.post(`/routines/${routineId}/days/${payload.fromId}/copy`, {
+        target_day_ids: payload.targetIds,
+        replace: true,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
+      notify('Ejercicios copiados', 'success')
+    },
+    onError: () => notify('No se pudo copiar el día', 'error'),
   })
 
   if (routineQuery.isLoading) {
@@ -222,6 +237,27 @@ export function RoutineDetailPage() {
               </li>
             ))}
           </ul>
+
+          {days.length > 1 ? (
+            <CopyDayPicker
+              sourceLabel={`D${activeDay.day_index} · ${activeDay.name}`}
+              disabled={!(activeDay.exercises?.length)}
+              busy={copyDay.isPending}
+              options={days
+                .filter((day) => day.id !== activeDay.id)
+                .map((day) => ({
+                  id: day.id,
+                  label: `D${day.day_index}`,
+                  sublabel: day.name,
+                }))}
+              onCopy={(targetIds) =>
+                copyDay.mutateAsync({
+                  fromId: activeDay.id,
+                  targetIds: targetIds.map(Number),
+                })
+              }
+            />
+          ) : null}
         </section>
       ) : null}
 
