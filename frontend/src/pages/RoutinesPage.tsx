@@ -61,34 +61,41 @@ export function RoutinesPage() {
   const inactive = (data ?? []).filter((r) => !r.is_active)
   const busy = toggleActive.isPending || deleteRoutine.isPending
 
+  if (!isLoading && !data?.length) {
+    return (
+      <div className="flex min-h-[68dvh] items-center">
+        <section className="panel w-full space-y-5 p-6 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-evo-accent">Rutinas</p>
+          <div className="space-y-2">
+            <h1 className="font-display text-3xl font-bold tracking-tight">Aún no tienes ninguna</h1>
+            <p className="text-base leading-relaxed text-evo-muted">
+              Crea la primera. Los días que elijas se colocan solos en la agenda.
+            </p>
+          </div>
+          <Link to="/routines/new" className="block">
+            <Button size="lg" fullWidth>
+              Crear rutina
+            </Button>
+          </Link>
+          <Link to="/exercises" className="inline-flex text-base font-bold text-evo-accent">
+            Ver catálogo de ejercicios
+          </Link>
+        </section>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <p className="max-w-xl text-sm text-evo-muted">
-          Puedes tener varias activas. Solo las activas y vigentes salen en la agenda.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/exercises">
-            <Button variant="secondary">Catálogo</Button>
-          </Link>
-          <Link to="/routines/new">
-            <Button size="lg">+ Nueva rutina</Button>
-          </Link>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Rutinas</h1>
+          <p className="mt-1 text-base text-evo-muted">Solo las activas salen en la agenda.</p>
         </div>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-evo-muted">Cargando…</p>
-      ) : !data?.length ? (
-        <div className="panel border-dashed p-6 text-center">
-          <p className="font-display text-xl font-bold">Aún no tienes rutinas</p>
-          <p className="mt-2 text-sm text-evo-muted">
-            Crea la primera y la agenda se rellenará sola.
-          </p>
-          <Link to="/routines/new" className="mt-4 inline-flex">
-            <Button size="lg">Crear rutina</Button>
-          </Link>
-        </div>
+        <p className="text-base text-evo-muted">Cargando…</p>
       ) : (
         <>
           <RoutineGroup
