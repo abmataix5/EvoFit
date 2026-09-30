@@ -50,48 +50,47 @@ export function LoginPage() {
   }
 
   return (
-    <div className="no-x-scroll mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center px-4 py-10">
-      <div className="mb-7 flex w-full flex-col items-center gap-4 text-center">
-        <BrandLogo size="lg" showTagline />
-        <div className="space-y-1.5">
-          <h1 className="font-display text-2xl font-bold tracking-tight">Bienvenido de nuevo</h1>
-          <p className="text-sm text-evo-muted">Tu progreso en el gym, sesión a sesión.</p>
-        </div>
+    <div className="no-x-scroll grid min-h-svh place-items-center px-5 py-6">
+      <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
+        <BrandLogo size="md" />
+        <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">EvoFit</h1>
+        <p className="mt-1 text-center text-base text-evo-muted">Entra para seguir tu entreno.</p>
+
+        <form onSubmit={onSubmit} className="panel mt-6 w-full space-y-4 p-5">
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            label="Contraseña"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {error ? (
+            <p className="text-base font-semibold text-evo-danger" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" size="lg" fullWidth disabled={submitting}>
+            {submitting ? 'Entrando…' : 'Iniciar sesión'}
+          </Button>
+        </form>
+
+        <p className="mt-5 text-center text-base text-evo-muted">
+          ¿Primera vez?{' '}
+          <Link to="/register" className="font-bold text-evo-accent">
+            Crear cuenta
+          </Link>
+        </p>
       </div>
-
-      <form onSubmit={onSubmit} className="panel w-full space-y-4 p-5">
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          label="Contraseña"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {error ? (
-          <p className="text-sm font-semibold text-evo-danger" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <Button type="submit" size="lg" fullWidth disabled={submitting}>
-          {submitting ? 'Entrando…' : 'Iniciar sesión'}
-        </Button>
-      </form>
-
-      <p className="mt-5 text-center text-sm text-evo-muted">
-        ¿Primera vez?{' '}
-        <Link to="/register" className="font-semibold text-evo-accent">
-          Crear cuenta
-        </Link>
-      </p>
     </div>
   )
 }
