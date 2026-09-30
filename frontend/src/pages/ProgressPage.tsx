@@ -16,6 +16,7 @@ import {
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { useAuth } from '../features/auth/AuthContext'
 import { PhotoCheckIn } from '../components/progress/PhotoCheckIn'
 import {
   api,
@@ -24,34 +25,33 @@ import {
   type ProgressInsight,
   type ProgressPhoto,
 } from '../lib/api'
-import { localDateKey } from '../lib/motivation'
+import { localDateKey, helloLine } from '../lib/motivation'
+import { prepareProgressPhoto } from '../lib/preparePhoto'
+import axios from 'axios'
 
 const moodUi = {
   green: {
-    face: '😄',
     title: 'Vas de subida',
     ring: 'border-evo-lime/50',
     badge: 'bg-evo-lime text-[#102000]',
   },
   orange: {
-    face: '😐',
     title: 'Semana estable',
     ring: 'border-evo-warn/50',
     badge: 'bg-evo-warn text-[#1a1400]',
   },
   red: {
-    face: '😞',
     title: 'Hay que ajustar',
     ring: 'border-evo-danger/50',
-    badge: 'bg-evo-danger text-white',
+    badge: 'bg-evo-danger text-[#1a120c]',
   },
 } as const
 
 const statusUi = {
-  improved: { label: 'Subió', className: 'bg-evo-lime/15 text-evo-lime', face: '🟢' },
-  maintained: { label: 'Igual', className: 'bg-evo-warn/15 text-evo-warn', face: '🟠' },
-  declined: { label: 'Bajó', className: 'bg-evo-danger/15 text-evo-danger', face: '🔴' },
-  new: { label: 'Nuevo', className: 'bg-evo-accent/15 text-evo-accent', face: '✨' },
+  improved: { label: 'Subió', className: 'bg-evo-lime/20 text-evo-lime' },
+  maintained: { label: 'Igual', className: 'bg-evo-warn/20 text-evo-warn' },
+  declined: { label: 'Bajó', className: 'bg-evo-danger/20 text-evo-danger' },
+  new: { label: 'Nuevo', className: 'bg-evo-accent/20 text-evo-accent-soft' },
 } as const
 
 function formatShortDate(iso: string) {
@@ -66,6 +66,7 @@ function formatKg(value: number | null | undefined) {
 
 export function ProgressPage() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const { notify } = useUiFeedback()
   const today = localDateKey()
   const [recordedOn, setRecordedOn] = useState(today)
@@ -129,13 +130,12 @@ export function ProgressPage() {
   const uploadPhoto = useMutation({
     mutationFn: async () => {
       if (!photoFile) return
+      const ready = await prepareProgressPhoto(photoFile)
       const formData = new FormData()
       formData.append('recorded_on', recordedOn)
-      formData.append('photo', photoFile)
+      formData.append('photo', ready)
       if (caption.trim()) formData.append('caption', caption.trim())
-      await api.post('/progress/photos', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      await api.post('/progress/photos', formData)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['progress-photos'] })
@@ -143,7 +143,23 @@ export function ProgressPage() {
       setCaption('')
       notify('Foto subida', 'success')
     },
-    onError: () => notify('No se pudo subir la foto', 'error'),
+    onError: (error: unknown) => {
+      if (error instanceof Error && (error.message === 'decode' || error.message === 'blob' || error.message === 'canvas')) {
+        notify('No pude leer esa foto. Elige otra de la galería, mejor en JPEG.', 'error')
+        return
+      }
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as { message?: string; errors?: Record<string, string[]> } | undefined
+        const field = data?.errors ? Object.values(data.errors).flat()[0] : undefined
+        if (error.response?.status === 413) {
+          notify('La foto pesa demasiado. Prueba con otra más ligera.', 'error')
+          return
+        }
+        notify(field || data?.message || 'No se pudo subir la foto', 'error')
+        return
+      }
+      notify('No se pudo subir la foto', 'error')
+    },
   })
 
   const data = insightsQuery.data
@@ -162,9 +178,12 @@ export function ProgressPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-evo-muted">Comparativa semanal de fuerza y volumen.</p>
+        <div>
+          <p className="font-display text-lg font-semibold">{helloLine(user?.name)}</p>
+          <p className="text-sm text-evo-muted">Tu semana de fuerza, peso y fotos, en un vistazo.</p>
+        </div>
         <Link to="/exercises" className="text-sm font-semibold text-evo-accent">
-          Catálogo de ejercicios →
+          Catálogo de ejercicios
         </Link>
       </div>
 
@@ -172,13 +191,13 @@ export function ProgressPage() {
       {mood && summary && coach ? (
         <section className={`panel space-y-4 border-2 p-5 ${mood.ring}`}>
           <div className="flex flex-wrap items-start gap-4">
-            <span className="text-5xl leading-none" aria-hidden>
-              {mood.face}
+            <span className="font-display text-4xl font-bold leading-none text-evo-accent" aria-hidden>
+              {summary.mood === 'green' ? '▲' : summary.mood === 'red' ? '▼' : '●'}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-xl font-bold sm:text-2xl">{mood.title}</h2>
-                <span className={`rounded-full px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide ${mood.badge}`}>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${mood.badge}`}>
                   {coach.focus}
                 </span>
               </div>
@@ -253,15 +272,15 @@ export function ProgressPage() {
             {(data?.chart.length ?? 0) > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data?.chart} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a3544" />
-                  <XAxis dataKey="name" tick={{ fill: '#9aa8bc', fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={55} />
-                  <YAxis tick={{ fill: '#9aa8bc', fontSize: 11 }} unit="kg" width={42} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" />
+                  <XAxis dataKey="name" tick={{ fill: '#c5d0de', fontSize: 12 }} interval={0} angle={-18} textAnchor="end" height={58} />
+                  <YAxis tick={{ fill: '#c5d0de', fontSize: 12 }} unit="kg" width={48} />
                   <Tooltip
-                    contentStyle={{ background: '#121821', border: '1px solid #2a3544', borderRadius: 12 }}
+                    contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="semana_anterior" name="Anterior" fill="#6b7a8f" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="esta_semana" name="Esta" fill="#ff6b2c" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="semana_anterior" name="Anterior" fill="#7d8da3" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="esta_semana" name="Esta" fill="#ff8a4c" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -304,7 +323,7 @@ export function ProgressPage() {
                   onClick={() => setFilter(key)}
                   className={[
                     'rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold transition',
-                    filter === key ? 'bg-evo-accent text-[#111]' : 'bg-evo-surface-2 text-evo-muted',
+                    filter === key ? 'bg-evo-accent text-[#1a120c]' : 'bg-evo-surface-2 text-evo-muted',
                   ].join(' ')}
                 >
                   {label}
@@ -389,21 +408,21 @@ export function ProgressPage() {
                   <AreaChart data={weightChart}>
                     <defs>
                       <linearGradient id="weightFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#c6ff4d" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#c6ff4d" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#b6f36a" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#b6f36a" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a3544" />
-                    <XAxis dataKey="fecha" tick={{ fill: '#9aa8bc', fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" />
+                    <XAxis dataKey="fecha" tick={{ fill: '#c5d0de', fontSize: 12 }} />
                     <YAxis
-                      tick={{ fill: '#9aa8bc', fontSize: 11 }}
+                      tick={{ fill: '#c5d0de', fontSize: 12 }}
                       domain={['dataMin - 1', 'dataMax + 1']}
                       width={40}
                     />
                     <Tooltip
-                      contentStyle={{ background: '#121821', border: '1px solid #2a3544', borderRadius: 12 }}
+                      contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
                     />
-                    <Area type="monotone" dataKey="kg" name="Kg" stroke="#c6ff4d" fill="url(#weightFill)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="kg" name="Kg" stroke="#b6f36a" fill="url(#weightFill)" strokeWidth={2.5} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -433,7 +452,7 @@ export function ProgressPage() {
 function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div className="panel px-3 py-3 sm:px-4 sm:py-4">
-      <p className="text-[0.65rem] font-bold uppercase tracking-wide text-evo-muted">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">{label}</p>
       <p className="mt-1 font-display text-2xl font-bold leading-none sm:text-3xl">{value}</p>
       <p className="mt-1.5 text-[0.7rem] leading-snug text-evo-muted">{hint}</p>
     </div>
@@ -497,14 +516,14 @@ function ExerciseRow({ row }: { row: ProgressExerciseRow }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold">
-            <span aria-hidden>{ui.face}</span> {row.name}
+            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{ui.label}</span> {row.name}
           </p>
           <p className="mt-0.5 text-xs text-evo-muted">
             {formatKg(row.previous_best_kg)} → {formatKg(row.current_best_kg)}
             {row.delta_pct != null ? ` · ${row.delta_pct > 0 ? '+' : ''}${row.delta_pct}%` : ''}
           </p>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-[0.65rem] font-bold ${ui.className}`}>{ui.label}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{ui.label}</span>
       </div>
       {row.coach_note ? (
         <p className="mt-2 border-t border-evo-border/50 pt-2 text-xs leading-snug text-evo-muted">

@@ -10,7 +10,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-evo-accent text-[#111] shadow-[0_8px_24px_rgba(255,107,44,0.32)] hover:bg-evo-accent-soft',
+    'bg-evo-accent text-[#1a120c] shadow-[0_8px_24px_rgba(255,138,76,0.28)] hover:bg-evo-accent-soft',
   secondary:
     'bg-evo-surface-2 text-evo-text border-2 border-evo-border hover:border-evo-accent hover:bg-evo-surface',
   ghost: 'bg-transparent text-evo-text hover:bg-evo-surface-2',

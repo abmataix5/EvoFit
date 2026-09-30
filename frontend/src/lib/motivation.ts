@@ -153,14 +153,30 @@ function dayOfYear(date: Date) {
   return Math.floor((now - start) / 86_400_000)
 }
 
+function stripEmoji(value: string) {
+  return value
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+export function firstName(name?: string | null) {
+  const part = name?.trim().split(/\s+/)[0]
+  return part && part.length > 0 ? part : 'atleta'
+}
+
+export function helloLine(name?: string | null) {
+  return `Hola, ${firstName(name)}`
+}
+
 export function getDayMotivation(date = new Date()): DayMotivation {
   const pack = packs[date.getDay()] ?? packs[1]
   const idx = dayOfYear(date) % pack.messages.length
   const picked = pack.messages[idx]!
   return {
     label: pack.label,
-    headline: picked.headline,
-    line: picked.line,
+    headline: stripEmoji(picked.headline),
+    line: stripEmoji(picked.line),
   }
 }
 

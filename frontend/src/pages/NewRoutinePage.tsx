@@ -244,10 +244,10 @@ export function NewRoutinePage() {
               >
                 <span className="flex items-center justify-between gap-1">
                   <span className="text-xs font-bold">D{day.day_index}</span>
-                  <span className="text-[0.65rem]">{dayProgress[index] ? '✓' : '·'}</span>
+                  <span className="text-xs">{dayProgress[index] ? '✓' : '·'}</span>
                 </span>
                 <span className="mt-0.5 block truncate text-[0.7rem] font-semibold">{day.name}</span>
-                <span className="block text-[0.65rem] text-evo-muted">
+                <span className="block text-xs text-evo-muted">
                   {WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3)}
                 </span>
               </button>

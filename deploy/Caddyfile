@@ -1,6 +1,10 @@
 http://{$DOMAIN} {
 	encode gzip zstd
 
+	request_body {
+		max_size 20MB
+	}
+
 	handle_path /storage/* {
 		root * /srv/storage
 		file_server

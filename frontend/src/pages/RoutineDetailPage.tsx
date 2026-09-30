@@ -200,7 +200,7 @@ export function RoutineDetailPage() {
             >
               <span className="block font-semibold">D{day.day_index}</span>
               <span className="block truncate">{day.name}</span>
-              <span className="mt-1 block text-[0.65rem]">
+              <span className="mt-1 block text-xs">
                 {day.weekday ? WEEKDAY_LABELS[day.weekday - 1] : 'Sin día'}
               </span>
             </button>

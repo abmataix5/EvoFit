@@ -25,7 +25,7 @@ export function BrandLogo({ size = 'md', showTagline = false, className = '' }: 
         decoding="async"
       />
       {showTagline ? (
-        <p className="mt-2 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-evo-muted">
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-evo-muted">
           Entrena · Mejora · Evoluciona
         </p>
       ) : null}

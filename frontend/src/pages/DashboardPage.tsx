@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { useAuth } from '../features/auth/AuthContext'
 import { api, type Routine, type WorkoutSession, type ProgressInsight } from '../lib/api'
-import { getDayMotivation, localDateKey } from '../lib/motivation'
+import { firstName, getDayMotivation, helloLine, localDateKey } from '../lib/motivation'
 
 export function DashboardPage() {
+  const { user } = useAuth()
   const motivation = getDayMotivation()
+  const name = firstName(user?.name)
 
   const routinesQuery = useQuery({
     queryKey: ['routines'],
@@ -55,15 +58,15 @@ export function DashboardPage() {
   return (
     <div className="space-y-5">
       <section className="panel overflow-hidden p-0">
-        <div className="bg-gradient-to-br from-evo-accent via-evo-accent-soft to-[#ffb347] p-5 text-white">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-white/80">
-            {motivation.label}
+        <div className="bg-gradient-to-br from-[#ff8a4c] via-[#ff9d68] to-[#ffd0a8] p-5 text-[#1a120c]">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1a120c]/70">
+            {helloLine(user?.name)} · {motivation.label}
           </p>
-          <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
+          <h2 className="mt-1 font-display text-[1.65rem] font-bold leading-tight sm:text-3xl">
             {motivation.headline}
           </h2>
-          <p className="mt-2 max-w-xl text-sm font-semibold leading-snug text-white/95 sm:text-base">
-            {motivation.line}
+          <p className="mt-2 max-w-xl text-base font-semibold leading-snug text-[#1a120c]/90">
+            {name === 'atleta' ? motivation.line : `${name}, ${motivation.line.charAt(0).toLowerCase()}${motivation.line.slice(1)}`}
           </p>
         </div>
       </section>
@@ -72,7 +75,7 @@ export function DashboardPage() {
         <section className="panel overflow-hidden p-0 lg:col-span-2">
           <div className="border-b border-evo-border/60 bg-evo-surface-2/60 px-5 py-4">
             <p className="text-sm font-bold uppercase tracking-wide text-evo-muted">Esta semana</p>
-            <p className="mt-1 font-display text-4xl font-bold text-evo-accent">
+            <p className="mt-1 font-display text-5xl font-bold tracking-tight text-evo-accent">
               {completed}/{planned || 0}
             </p>
             <p className="text-sm font-semibold text-evo-muted">sesiones hechas</p>
@@ -109,8 +112,13 @@ export function DashboardPage() {
 
         <section className="panel flex flex-col items-center justify-center gap-3 p-5 text-center">
           <p className="text-sm font-bold uppercase tracking-wide text-evo-muted">Pulso semanal</p>
-          <p className="text-6xl" aria-hidden>
-            {mood === 'green' ? '😄' : mood === 'red' ? '😞' : '😐'}
+          <p
+            className={[
+              'font-display text-3xl font-bold',
+              mood === 'green' ? 'text-evo-lime' : mood === 'red' ? 'text-evo-danger' : 'text-evo-warn',
+            ].join(' ')}
+          >
+            {mood === 'green' ? 'Subiendo' : mood === 'red' ? 'Ajustar' : 'Estable'}
           </p>
           <p className="text-sm text-evo-text">
             {insightsQuery.data?.summary.label ?? 'Registra kilos para ver tu tendencia.'}

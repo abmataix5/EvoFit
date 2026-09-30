@@ -2,15 +2,16 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { BrandLogo } from '../BrandLogo'
 import { useUiFeedback } from '../feedback/UiFeedback'
+import { Icon } from '../icons/Icon'
 import { Button } from '../ui/Button'
-import { formatHeaderDay } from '../../lib/motivation'
+import { formatHeaderDay, helloLine } from '../../lib/motivation'
 
 const navItems = [
-  { to: '/', label: 'Inicio', icon: '🏠', end: true },
-  { to: '/routines', label: 'Rutinas', icon: '💪', end: false },
-  { to: '/exercises', label: 'Ejercicios', icon: '🏋️', end: false },
-  { to: '/calendar', label: 'Agenda', icon: '📅', end: false },
-  { to: '/progress', label: 'Progreso', icon: '📈', end: false },
+  { to: '/', label: 'Hoy', icon: 'home' as const, end: true },
+  { to: '/routines', label: 'Rutinas', icon: 'routines' as const, end: false },
+  { to: '/exercises', label: 'Catálogo', icon: 'catalog' as const, end: false },
+  { to: '/calendar', label: 'Agenda', icon: 'calendar' as const, end: false },
+  { to: '/progress', label: 'Progreso', icon: 'progress' as const, end: false },
 ]
 
 const pageTitles: Record<string, string> = {
@@ -30,12 +31,6 @@ function resolveTitle(pathname: string) {
     return 'Sesión'
   }
   return pageTitles[pathname] ?? 'EvoFit'
-}
-
-function initials(name?: string) {
-  if (!name?.trim()) return 'EF'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map((p) => p[0]?.toUpperCase() ?? '').join('') || 'EF'
 }
 
 export function AppShell() {
@@ -77,13 +72,13 @@ export function AppShell() {
                 [
                   'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
                   isActive
-                    ? 'bg-evo-accent text-[#111] shadow-[0_10px_28px_rgba(255,107,44,0.32)]'
+                    ? 'bg-evo-accent text-[#1a120c] shadow-[0_10px_28px_rgba(255,138,76,0.28)]'
                     : 'text-evo-text hover:bg-evo-surface-2',
                 ].join(' ')
               }
             >
-              <span aria-hidden className="text-lg">
-                {item.icon}
+              <span aria-hidden>
+                <Icon name={item.icon} />
               </span>
               {item.label}
             </NavLink>
@@ -105,14 +100,12 @@ export function AppShell() {
       <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-hidden">
         <header className="safe-top sticky top-0 z-20 border-b border-evo-border/70 bg-[#151b26]/92 backdrop-blur-md">
           <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
-            <div className="justify-self-start">
-              <p className="leading-none">
-                <span className="font-display text-sm font-bold uppercase tracking-wide text-evo-accent">
-                  {headerDay.day}
-                </span>
-                <span className="ml-1.5 font-display text-sm font-bold text-evo-text">
-                  {headerDay.num}
-                </span>
+            <div className="min-w-0 justify-self-start">
+              <p className="truncate font-display text-sm font-semibold leading-none text-evo-text">
+                {helloLine(user?.name)}
+              </p>
+              <p className="mt-1 text-[0.7rem] font-semibold uppercase tracking-wide text-evo-muted">
+                {headerDay.day} {headerDay.num}
               </p>
             </div>
 
@@ -151,7 +144,7 @@ export function AppShell() {
                   end={item.end}
                   className={({ isActive }) =>
                     [
-                      'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[0.62rem] font-bold transition',
+                      'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-center text-[0.68rem] font-semibold leading-tight transition',
                       isActive ? 'text-evo-accent' : 'text-evo-muted hover:text-evo-text',
                     ].join(' ')
                   }
@@ -161,11 +154,11 @@ export function AppShell() {
                       <span
                         aria-hidden
                         className={[
-                          'flex h-7 w-7 items-center justify-center rounded-lg text-sm leading-none',
-                          isActive ? 'bg-evo-accent/20' : '',
+                          'flex h-7 w-7 items-center justify-center rounded-lg',
+                          isActive ? 'bg-evo-accent/20 text-evo-accent' : '',
                         ].join(' ')}
                       >
-                        {item.icon}
+                        <Icon name={item.icon} className="h-[1.15rem] w-[1.15rem]" />
                       </span>
                       {item.label}
                     </>
@@ -177,14 +170,14 @@ export function AppShell() {
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[0.62rem] font-bold text-evo-muted transition hover:text-evo-text"
+                className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[0.68rem] font-semibold leading-tight text-evo-muted transition hover:text-evo-text"
                 aria-label="Cuenta y cerrar sesión"
               >
                 <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-evo-border bg-evo-surface-2 text-[0.65rem] font-bold text-evo-text"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-evo-border bg-evo-surface-2 text-evo-text"
                   aria-hidden
                 >
-                  {initials(user?.name)}
+                  <Icon name="user" className="h-4 w-4" />
                 </span>
                 Perfil
               </button>

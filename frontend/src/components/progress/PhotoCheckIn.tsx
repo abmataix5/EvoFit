@@ -125,7 +125,7 @@ export function PhotoCheckIn({
             }}
             className={[
               'rounded-lg px-3 py-2 text-xs font-bold transition',
-              mode === 'gallery' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
+              mode === 'gallery' ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-muted',
             ].join(' ')}
           >
             Galería
@@ -136,7 +136,7 @@ export function PhotoCheckIn({
             disabled={photos.length < 2}
             className={[
               'rounded-lg px-3 py-2 text-xs font-bold transition disabled:opacity-40',
-              mode === 'compare' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
+              mode === 'compare' ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-muted',
             ].join(' ')}
           >
             Comparar
@@ -161,16 +161,19 @@ export function PhotoCheckIn({
             required
           />
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-evo-muted">Imagen</span>
+            <span className="text-sm font-semibold text-evo-text">Imagen</span>
             <input
               type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => onPhotoFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-evo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-evo-accent file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#111]"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic"
+            onChange={(e) => onPhotoFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-evo-text file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-evo-accent file:px-4 file:py-2 file:text-sm file:font-bold file:text-[#1a120c]"
               required
             />
-            {photoFile ? <p className="truncate text-xs text-evo-lime">{photoFile.name}</p> : null}
+            {photoFile ? (
+              <p className="text-sm text-evo-lime">Lista para subir · se comprime automáticamente</p>
+            ) : (
+              <p className="text-xs text-evo-muted">Galería o cámara. En iPhone también vale HEIC.</p>
+            )}
           </label>
           <Input
             label="Nota (opcional)"
@@ -247,16 +250,16 @@ export function PhotoCheckIn({
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2.5 pb-2 pt-8">
                           <p className="text-xs font-bold text-white">{formatShortDate(photo.recorded_on)}</p>
                           {photo.caption ? (
-                            <p className="truncate text-[0.65rem] text-white/75">{photo.caption}</p>
+                            <p className="truncate text-xs text-white/75">{photo.caption}</p>
                           ) : null}
                         </div>
                         {mode === 'gallery' ? (
-                          <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[0.6rem] font-bold text-white opacity-0 transition group-hover:opacity-100 sm:opacity-100">
+                          <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100 sm:opacity-100">
                             Ampliar
                           </span>
                         ) : null}
                         {role ? (
-                          <span className="absolute left-2 top-2 rounded-full bg-evo-accent px-2 py-1 text-[0.6rem] font-bold text-[#111]">
+                          <span className="absolute left-2 top-2 rounded-full bg-evo-accent px-2 py-1 text-xs font-bold text-[#111]">
                             {role}
                           </span>
                         ) : null}
@@ -362,10 +365,10 @@ function CompareStage({
                 ↔
               </div>
             </div>
-            <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
+            <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
               Antes
             </span>
-            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
+            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
               Después
             </span>
           </div>
@@ -379,7 +382,7 @@ function CompareStage({
                 picking === 'left' ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border bg-evo-bg/40',
               ].join(' ')}
             >
-              <p className="text-[0.65rem] font-bold uppercase text-evo-muted">Antes</p>
+              <p className="text-xs font-bold uppercase text-evo-muted">Antes</p>
               <p className="text-sm font-semibold">{formatLongDate(left.recorded_on)}</p>
               {left.caption ? <p className="truncate text-xs text-evo-muted">{left.caption}</p> : null}
             </button>
@@ -391,7 +394,7 @@ function CompareStage({
                 picking === 'right' ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border bg-evo-bg/40',
               ].join(' ')}
             >
-              <p className="text-[0.65rem] font-bold uppercase text-evo-muted">Después</p>
+              <p className="text-xs font-bold uppercase text-evo-muted">Después</p>
               <p className="text-sm font-semibold">{formatLongDate(right.recorded_on)}</p>
               {right.caption ? <p className="truncate text-xs text-evo-muted">{right.caption}</p> : null}
             </button>

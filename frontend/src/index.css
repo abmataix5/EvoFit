@@ -1,30 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  /* Oscuro refinado: charcoal + naranja, más contraste que el negro plano */
-  --color-evo-bg: #10141c;
-  --color-evo-surface: #181e2a;
-  --color-evo-surface-2: #232b3a;
-  --color-evo-border: #3a4558;
-  --color-evo-text: #f4f7fb;
-  --color-evo-muted: #9aa8bc;
-  --color-evo-accent: #ff6b2c;
-  --color-evo-accent-soft: #ff8a55;
-  --color-evo-lime: #b8f23a;
-  --color-evo-danger: #ff5c7a;
-  --color-evo-warn: #ffc14d;
-  --font-evo: 'DM Sans', system-ui, sans-serif;
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  /* Contraste AA sobre superficies oscuras. Acento cálido con texto casi negro en botones. */
+  --color-evo-bg: #0c1219;
+  --color-evo-surface: #161e29;
+  --color-evo-surface-2: #212b39;
+  --color-evo-border: #4a5a70;
+  --color-evo-text: #f6f8fb;
+  --color-evo-muted: #c5d0de;
+  --color-evo-accent: #ff8a4c;
+  --color-evo-accent-soft: #ffb088;
+  --color-evo-lime: #b6f36a;
+  --color-evo-danger: #ff8b9a;
+  --color-evo-warn: #ffd166;
+  --font-evo: 'Manrope', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
 }
 
 @layer base {
   html {
     font-family: var(--font-evo);
+    font-size: 16px;
     background:
-      radial-gradient(900px 480px at 0% -8%, rgba(255, 107, 44, 0.2), transparent 55%),
-      radial-gradient(700px 420px at 100% 0%, rgba(184, 242, 58, 0.08), transparent 50%),
-      linear-gradient(180deg, #161c28 0%, #10141c 42%, #0c1018 100%);
+      radial-gradient(880px 420px at 0% -10%, rgba(255, 138, 76, 0.16), transparent 55%),
+      radial-gradient(640px 360px at 100% 0%, rgba(182, 243, 106, 0.06), transparent 50%),
+      linear-gradient(180deg, #141c27 0%, #0c1219 48%, #0a1016 100%);
     color: var(--color-evo-text);
     overflow-x: hidden;
     max-width: 100vw;

@@ -314,11 +314,11 @@ export function CalendarPage() {
                         isToday ? 'bg-evo-lime text-[#102000]' : 'bg-evo-bg text-evo-text',
                       ].join(' ')}
                     >
-                      <p className="text-[0.65rem] font-bold uppercase tracking-wide opacity-80">
+                      <p className="text-xs font-bold uppercase tracking-wide opacity-80">
                         {item.label}
                       </p>
                       <p className="font-display text-2xl font-bold leading-none">{item.date.getDate()}</p>
-                      {isToday ? <p className="mt-0.5 text-[0.6rem] font-bold">HOY</p> : null}
+                      {isToday ? <p className="mt-0.5 text-xs font-bold">HOY</p> : null}
                     </div>
 
                     <div className="min-w-0 flex-1 self-center">
@@ -340,7 +340,7 @@ export function CalendarPage() {
                                 </div>
                                 <span
                                   className={[
-                                    'shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold',
+                                    'shrink-0 rounded-full px-2 py-0.5 text-xs font-bold',
                                     status.tone === 'lime'
                                       ? 'bg-evo-lime/20 text-evo-lime'
                                       : status.tone === 'warn'
@@ -456,7 +456,7 @@ export function CalendarPage() {
                         <p className="font-display text-lg font-bold">{session.day?.name ?? 'Sesión'}</p>
                         <span
                           className={[
-                            'rounded-full px-2 py-0.5 text-[0.65rem] font-bold',
+                            'rounded-full px-2 py-0.5 text-xs font-bold',
                             status.tone === 'lime'
                               ? 'bg-evo-lime/20 text-evo-lime'
                               : status.tone === 'warn'

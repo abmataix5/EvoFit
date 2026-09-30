@@ -103,10 +103,10 @@ export function CopyDayPicker({ sourceLabel, options, disabled, busy, onCopy }: 
                 >
                   <span className="block text-sm font-bold">{option.label}</span>
                   {option.sublabel ? (
-                    <span className="block truncate text-[0.65rem] text-evo-muted">{option.sublabel}</span>
+                    <span className="block truncate text-xs text-evo-muted">{option.sublabel}</span>
                   ) : null}
                   {selected ? (
-                    <span className="mt-1 block text-[0.65rem] font-bold text-evo-lime">Seleccionado</span>
+                    <span className="mt-1 block text-xs font-bold text-evo-lime">Seleccionado</span>
                   ) : null}
                 </button>
               )
