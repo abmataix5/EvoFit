@@ -2,10 +2,13 @@
   "name": "EvoFit",
   "short_name": "EvoFit",
   "description": "Entrena. Mejora. Evoluciona.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0b0f14",
-  "theme_color": "#0b0f14",
+  "orientation": "portrait",
+  "background_color": "#0c1219",
+  "theme_color": "#0c1219",
   "icons": [
     {
       "src": "/favicon-32.png",

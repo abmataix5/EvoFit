@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { BrandLogo } from '../BrandLogo'
 import { useUiFeedback } from '../feedback/UiFeedback'
@@ -243,6 +243,13 @@ export function AppShell() {
               </NavLink>
             ))}
           </nav>
+
+          <Link
+            to="/instalar"
+            className="mt-4 flex min-h-14 items-center justify-center rounded-3xl border border-evo-border px-4 text-base font-bold text-evo-text"
+          >
+            Instalar en el iPhone
+          </Link>
 
           <div
             style={{ transitionDelay: menuOpen ? '320ms' : '0ms' }}

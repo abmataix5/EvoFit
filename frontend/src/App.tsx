@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './features/auth/AuthContext'
 import { CalendarPage } from './pages/CalendarPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ExercisesPage } from './pages/ExercisesPage'
+import { InstallPage } from './pages/InstallPage'
 import { LoginPage } from './pages/LoginPage'
 import { NewRoutinePage } from './pages/NewRoutinePage'
 import { ProgressPage } from './pages/ProgressPage'
@@ -45,6 +46,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/instalar" element={<InstallPage />} />
               <Route
                 element={
                   <ProtectedRoute>
