@@ -174,8 +174,8 @@ export function NewRoutinePage() {
                     className={[
                       'rounded-xl border-2 py-3 text-center text-sm font-bold transition',
                       sessionsPerWeek === n
-                        ? 'border-evo-accent bg-evo-accent text-white'
-                        : 'border-evo-border bg-evo-surface-2 text-evo-text',
+                      ? 'border-evo-accent bg-evo-accent text-[#111]'
+                      : 'border-evo-border bg-evo-surface-2 text-evo-text',
                     ].join(' ')}
                   >
                     {n}

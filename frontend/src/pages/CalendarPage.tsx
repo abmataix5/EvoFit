@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { api, type Routine, type WorkoutSession } from '../lib/api'
 
-const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const WEEKDAYS_MINI = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const MONTHS = [
   'Enero',
   'Febrero',
@@ -50,11 +51,29 @@ function todayKey() {
   return fmt(new Date())
 }
 
+function formatHumanDate(iso: string) {
+  try {
+    return new Date(`${iso}T12:00:00`).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+  } catch {
+    return iso
+  }
+}
+
+function sessionStatus(session: WorkoutSession) {
+  if (session.completed_at) return { label: 'Hecha', tone: 'lime' as const }
+  if (session.is_planned) return { label: 'Pendiente', tone: 'accent' as const }
+  return { label: 'En curso', tone: 'warn' as const }
+}
+
 export function CalendarPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const now = new Date()
-  const [view, setView] = useState<ViewMode>('month')
+  const [view, setView] = useState<ViewMode>('week')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [weekStart, setWeekStart] = useState(() => startOfWeek(now))
@@ -129,20 +148,37 @@ export function CalendarPage() {
     setWeekStart(next)
   }
 
+  function goToday() {
+    const today = new Date()
+    setSelectedDate(todayKey())
+    setWeekStart(startOfWeek(today))
+    setYear(today.getFullYear())
+    setMonth(today.getMonth())
+  }
+
   const selectedSessions = selectedDate ? (sessionsByDate.get(selectedDate) ?? []) : []
   const completedCount = (calendarQuery.data ?? []).filter((s) => s.completed_at).length
   const plannedCount = (calendarQuery.data ?? []).length
+  const today = todayKey()
 
-  const title =
-    view === 'month'
-      ? `${MONTHS[month]} ${year}`
-      : `${range.from.slice(5)} → ${range.to.slice(5)}`
+  const weekLabel = useMemo(() => {
+    const from = weekStart
+    const to = new Date(weekStart)
+    to.setDate(from.getDate() + 6)
+    const sameMonth = from.getMonth() === to.getMonth()
+    if (sameMonth) {
+      return `${from.getDate()}–${to.getDate()} ${MONTHS[from.getMonth()]}`
+    }
+    return `${from.getDate()} ${MONTHS[from.getMonth()].slice(0, 3)} – ${to.getDate()} ${MONTHS[to.getMonth()].slice(0, 3)}`
+  }, [weekStart])
+
+  const title = view === 'month' ? `${MONTHS[month]} ${year}` : weekLabel
 
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(weekStart)
       date.setDate(weekStart.getDate() + index)
-      return { key: fmt(date), date, label: WEEKDAYS[index] }
+      return { key: fmt(date), date, label: WEEKDAYS_SHORT[index] }
     })
   }, [weekStart])
 
@@ -154,28 +190,28 @@ export function CalendarPage() {
     }
     for (let day = 1; day <= bounds.daysInMonth; day += 1) {
       const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      cells.push({ key, day, isToday: key === todayKey() })
+      cells.push({ key, day, isToday: key === today })
     }
     return cells
-  }, [year, month])
+  }, [year, month, today])
 
   return (
-    <div className="space-y-5 lg:grid lg:grid-cols-[1.25fr_0.75fr] lg:items-start lg:gap-6 lg:space-y-0">
-      <section className="panel space-y-4 p-4 lg:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="no-x-scroll space-y-4 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-start lg:gap-5 lg:space-y-0">
+      <section className="panel space-y-4 p-4 lg:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl font-bold">Calendario</h2>
-            <p className="text-xs text-evo-muted">
-              Autoplan de rutinas activas · {completedCount}/{plannedCount} hechas
+            <h2 className="font-display text-2xl font-bold">Agenda</h2>
+            <p className="mt-0.5 text-sm text-evo-muted">
+              {completedCount}/{plannedCount || 0} sesiones hechas esta {view === 'week' ? 'semana' : 'mes'}
             </p>
           </div>
-          <div className="inline-flex rounded-xl border border-evo-border bg-evo-bg/50 p-1">
+          <div className="inline-flex rounded-xl border border-evo-border bg-evo-surface-2 p-1">
             <button
               type="button"
               onClick={() => setView('week')}
               className={[
-                'rounded-lg px-3 py-2 text-xs font-semibold',
-                view === 'week' ? 'bg-evo-accent text-evo-bg' : 'text-evo-muted',
+                'rounded-lg px-3.5 py-2 text-xs font-bold transition',
+                view === 'week' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
               ].join(' ')}
             >
               Semana
@@ -184,8 +220,8 @@ export function CalendarPage() {
               type="button"
               onClick={() => setView('month')}
               className={[
-                'rounded-lg px-3 py-2 text-xs font-semibold',
-                view === 'month' ? 'bg-evo-accent text-evo-bg' : 'text-evo-muted',
+                'rounded-lg px-3.5 py-2 text-xs font-bold transition',
+                view === 'month' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
               ].join(' ')}
             >
               Mes
@@ -193,24 +229,45 @@ export function CalendarPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             aria-label="Anterior"
             onClick={() => shift(-1)}
-            className="min-h-11 min-w-11 rounded-xl border border-evo-border text-lg text-evo-muted"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-evo-border bg-evo-surface-2 text-lg font-bold text-evo-text"
           >
             ←
           </button>
-          <p className="font-display text-lg font-bold">{title}</p>
+          <div className="min-w-0 flex-1 text-center">
+            <p className="font-display truncate text-base font-bold sm:text-lg">{title}</p>
+            <button
+              type="button"
+              onClick={goToday}
+              className="mt-0.5 text-xs font-bold text-evo-accent"
+            >
+              Ir a hoy
+            </button>
+          </div>
           <button
             type="button"
             aria-label="Siguiente"
             onClick={() => shift(1)}
-            className="min-h-11 min-w-11 rounded-xl border border-evo-border text-lg text-evo-muted"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-evo-border bg-evo-surface-2 text-lg font-bold text-evo-text"
           >
             →
           </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3 text-[0.7rem] font-semibold text-evo-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-evo-accent" /> Pendiente
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-evo-lime" /> Hecha
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-evo-border" /> Libre
+          </span>
         </div>
 
         {activeRoutines.length === 0 ? (
@@ -219,17 +276,21 @@ export function CalendarPage() {
             <Link to="/routines" className="font-semibold text-evo-accent">
               Activa una
             </Link>{' '}
-            para rellenar el calendario.
+            para rellenar la agenda.
           </div>
         ) : null}
 
         {calendarQuery.isLoading ? (
-          <p className="text-sm text-evo-muted">Sincronizando plan…</p>
+          <p className="text-sm text-evo-muted">Cargando plan…</p>
         ) : view === 'week' ? (
           <ul className="space-y-2">
             {weekDays.map((item) => {
               const sessions = sessionsByDate.get(item.key) ?? []
               const selected = selectedDate === item.key
+              const isToday = item.key === today
+              const allDone = sessions.length > 0 && sessions.every((s) => s.completed_at)
+              const hasPending = sessions.some((s) => !s.completed_at)
+
               return (
                 <li key={item.key}>
                   <button
@@ -239,38 +300,72 @@ export function CalendarPage() {
                       setSwapSessionId(null)
                     }}
                     className={[
-                      'flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition',
-                      selected ? 'border-evo-accent bg-evo-accent/15' : 'border-evo-border bg-evo-bg/40',
+                      'flex w-full items-stretch gap-3 rounded-2xl border-2 px-3 py-3 text-left transition',
+                      selected
+                        ? 'border-evo-accent bg-evo-accent/15'
+                        : isToday
+                          ? 'border-evo-lime/50 bg-evo-surface-2'
+                          : 'border-evo-border bg-evo-surface-2/60',
                     ].join(' ')}
                   >
-                    <div className="w-12 text-center">
-                      <p className="text-xs font-semibold text-evo-muted">{item.label}</p>
-                      <p className="font-display text-xl font-bold">{item.date.getDate()}</p>
+                    <div
+                      className={[
+                        'flex w-14 shrink-0 flex-col items-center justify-center rounded-xl px-1 py-1',
+                        isToday ? 'bg-evo-lime text-[#102000]' : 'bg-evo-bg text-evo-text',
+                      ].join(' ')}
+                    >
+                      <p className="text-[0.65rem] font-bold uppercase tracking-wide opacity-80">
+                        {item.label}
+                      </p>
+                      <p className="font-display text-2xl font-bold leading-none">{item.date.getDate()}</p>
+                      {isToday ? <p className="mt-0.5 text-[0.6rem] font-bold">HOY</p> : null}
                     </div>
-                    <div className="min-w-0 flex-1">
+
+                    <div className="min-w-0 flex-1 self-center">
                       {sessions.length === 0 ? (
-                        <p className="text-sm text-evo-muted">Descanso / libre</p>
+                        <p className="text-sm font-medium text-evo-muted">Descanso · sin sesión</p>
                       ) : (
-                        <div className="space-y-1">
-                          {sessions.map((session) => (
-                            <p key={session.id} className="truncate text-sm font-semibold">
-                              <span
-                                className={[
-                                  'mr-2 inline-block h-2 w-2 rounded-full',
-                                  session.completed_at
-                                    ? 'bg-evo-lime'
-                                    : 'bg-evo-accent',
-                                ].join(' ')}
-                              />
-                              {session.day?.name ?? 'Sesión'}
-                              <span className="ml-1 text-xs font-normal text-evo-muted">
-                                · {session.routine?.name}
-                              </span>
-                            </p>
-                          ))}
+                        <div className="space-y-1.5">
+                          {sessions.map((session) => {
+                            const status = sessionStatus(session)
+                            return (
+                              <div key={session.id} className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-bold">
+                                    {session.day?.name ?? 'Sesión'}
+                                  </p>
+                                  <p className="truncate text-xs text-evo-muted">
+                                    {session.routine?.name}
+                                  </p>
+                                </div>
+                                <span
+                                  className={[
+                                    'shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold',
+                                    status.tone === 'lime'
+                                      ? 'bg-evo-lime/20 text-evo-lime'
+                                      : status.tone === 'warn'
+                                        ? 'bg-evo-warn/20 text-evo-warn'
+                                        : 'bg-evo-accent/20 text-evo-accent',
+                                  ].join(' ')}
+                                >
+                                  {status.label}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
+
+                    {sessions.length > 0 ? (
+                      <div
+                        className={[
+                          'w-1.5 shrink-0 rounded-full self-stretch',
+                          allDone ? 'bg-evo-lime' : hasPending ? 'bg-evo-accent' : 'bg-evo-border',
+                        ].join(' ')}
+                        aria-hidden
+                      />
+                    ) : null}
                   </button>
                 </li>
               )
@@ -278,8 +373,8 @@ export function CalendarPage() {
           </ul>
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-1 text-center text-[0.7rem] font-semibold text-evo-muted">
-              {WEEKDAYS.map((label) => (
+            <div className="grid grid-cols-7 gap-1 text-center text-[0.7rem] font-bold text-evo-muted">
+              {WEEKDAYS_MINI.map((label) => (
                 <div key={label} className="py-1">
                   {label}
                 </div>
@@ -303,8 +398,8 @@ export function CalendarPage() {
                     }}
                     className={[
                       'relative flex aspect-square flex-col items-center justify-center rounded-2xl border text-sm transition',
-                      selected ? 'border-evo-accent bg-evo-accent/20' : 'border-evo-border bg-evo-bg/40',
-                      cell.isToday ? 'ring-2 ring-evo-lime/50' : '',
+                      selected ? 'border-evo-accent bg-evo-accent/20' : 'border-evo-border bg-evo-surface-2/70',
+                      cell.isToday ? 'ring-2 ring-evo-lime/60' : '',
                     ].join(' ')}
                   >
                     <span className="font-semibold">{cell.day}</span>
@@ -313,16 +408,11 @@ export function CalendarPage() {
                         {sessions[0].day.name}
                       </span>
                     ) : null}
-                    {sessions.length > 1 ? (
-                      <span className="absolute right-1 top-1 text-[0.55rem] text-evo-accent">
-                        +{sessions.length - 1}
-                      </span>
-                    ) : null}
                     {sessions.length > 0 ? (
                       <span
                         className={[
                           'absolute bottom-1.5 h-1.5 w-1.5 rounded-full',
-                          completed ? 'bg-evo-lime' : pending ? 'bg-evo-accent' : 'bg-evo-muted',
+                          completed && !pending ? 'bg-evo-lime' : pending ? 'bg-evo-accent' : 'bg-evo-muted',
                         ].join(' ')}
                       />
                     ) : null}
@@ -334,16 +424,22 @@ export function CalendarPage() {
         )}
       </section>
 
-      <section className="panel space-y-4 p-4 lg:sticky lg:top-24 lg:p-6">
+      <section className="panel space-y-4 p-4 lg:sticky lg:top-24 lg:p-5">
         <div>
-          <h3 className="font-display text-xl font-bold">{selectedDate ?? 'Elige un día'}</h3>
-          <p className="text-sm text-evo-muted">
-            Si no seguiste el plan, cambia el día real. El historial de pesos se conserva.
+          <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Detalle del día</p>
+          <h3 className="mt-1 font-display text-xl font-bold capitalize">
+            {selectedDate ? formatHumanDate(selectedDate) : 'Elige un día'}
+          </h3>
+          <p className="mt-1 text-sm text-evo-muted">
+            Toca Abrir para entrenar. Si hiciste otro día del plan, cámbialo aquí.
           </p>
         </div>
 
         {selectedSessions.length === 0 ? (
-          <p className="text-sm text-evo-muted">Nada planificado este día.</p>
+          <div className="rounded-2xl border border-dashed border-evo-border bg-evo-surface-2/40 px-4 py-6 text-center">
+            <p className="font-semibold">Día libre</p>
+            <p className="mt-1 text-sm text-evo-muted">No hay sesión planificada.</p>
+          </div>
         ) : (
           <ul className="space-y-3">
             {selectedSessions.map((session) => {
@@ -351,34 +447,44 @@ export function CalendarPage() {
                 activeRoutines.find((r) => r.id === session.routine_id)?.days ??
                 session.routine?.days ??
                 []
+              const status = sessionStatus(session)
               return (
-                <li key={session.id} className="rounded-2xl border border-evo-border bg-evo-bg/50 p-3">
+                <li key={session.id} className="rounded-2xl border border-evo-border bg-evo-surface-2 p-3.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold">{session.day?.name ?? 'Sesión'}</p>
-                      <p className="text-xs text-evo-muted">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-display text-lg font-bold">{session.day?.name ?? 'Sesión'}</p>
+                        <span
+                          className={[
+                            'rounded-full px-2 py-0.5 text-[0.65rem] font-bold',
+                            status.tone === 'lime'
+                              ? 'bg-evo-lime/20 text-evo-lime'
+                              : status.tone === 'warn'
+                                ? 'bg-evo-warn/20 text-evo-warn'
+                                : 'bg-evo-accent/20 text-evo-accent',
+                          ].join(' ')}
+                        >
+                          {status.label}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-evo-muted">
                         {session.routine?.name}
-                        {session.completed_at
-                          ? ' · Completada'
-                          : session.is_planned
-                            ? ' · Planificada'
-                            : ' · En curso'}
                         {session.was_swapped ? ' · editada' : ''}
                       </p>
                     </div>
                     <Button
-                      className="!min-h-10 !px-3 !text-xs"
+                      className="!min-h-10 shrink-0 !px-3 !text-xs"
                       onClick={() => navigate(`/workout/${session.id}`)}
                     >
-                      Abrir
+                      {session.completed_at ? 'Ver' : 'Empezar'}
                     </Button>
                   </div>
 
-                  {routineDays.length > 0 ? (
+                  {!session.completed_at && routineDays.length > 1 ? (
                     <div className="mt-3 space-y-2 border-t border-evo-border pt-3">
-                      <p className="text-xs font-medium text-evo-muted">¿Qué entrenaste realmente?</p>
+                      <p className="text-xs font-semibold text-evo-muted">¿Entrenaste otro día del plan?</p>
                       <select
-                        className="w-full rounded-xl border border-evo-border bg-evo-surface px-3 py-2.5 text-sm"
+                        className="w-full"
                         value={swapSessionId === session.id ? swapDayId : session.routine_day_id ?? ''}
                         onChange={(e) => {
                           setSwapSessionId(session.id)
@@ -400,7 +506,7 @@ export function CalendarPage() {
                           disabled={swapMutation.isPending}
                           onClick={() => swapMutation.mutate()}
                         >
-                          Guardar cambio real
+                          Guardar cambio
                         </Button>
                       ) : null}
                     </div>
