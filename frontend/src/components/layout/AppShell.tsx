@@ -145,34 +145,34 @@ export function AppShell() {
           </div>
         </header>
 
-        <header className="safe-top sticky top-0 z-50 border-b border-evo-border/80 bg-evo-bg/95 backdrop-blur-md lg:hidden">
-          <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-3">
+        <header className="safe-top sticky top-0 z-50 border-b border-white/10 bg-evo-bg/80 backdrop-blur-xl lg:hidden">
+          <div className="grid h-[4.75rem] grid-cols-[3.5rem_1fr_3.5rem] items-center px-4">
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl text-evo-text transition active:scale-95"
+              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-evo-surface-2 text-evo-text shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition active:scale-95"
               aria-expanded={menuOpen}
               aria-controls="mobile-drawer"
               aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <span className="relative block h-5 w-5">
+              <span className="relative block h-7 w-7">
                 <Icon
                   name="menu"
                   className={[
-                    'absolute inset-0 h-5 w-5 transition duration-300',
+                    'absolute inset-0 h-7 w-7 transition duration-300',
                     menuOpen ? 'scale-75 opacity-0' : 'scale-100 opacity-100',
                   ].join(' ')}
                 />
                 <Icon
                   name="close"
                   className={[
-                    'absolute inset-0 h-5 w-5 transition duration-300',
+                    'absolute inset-0 h-7 w-7 transition duration-300',
                     menuOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
                   ].join(' ')}
                 />
               </span>
             </button>
-            <BrandLogo size="xs" className="justify-self-center" />
+            <BrandLogo size="sm" className="justify-self-center" />
             <span aria-hidden />
           </div>
         </header>
@@ -196,52 +196,65 @@ export function AppShell() {
           id="mobile-drawer"
           inert={!menuOpen}
           className={[
-            'fixed bottom-0 left-0 z-40 flex w-[min(19.5rem,86vw)] flex-col border-r border-evo-border bg-evo-surface px-4 pb-4 shadow-2xl lg:hidden',
-            'top-[calc(env(safe-area-inset-top)+3.5rem)]',
+            'fixed bottom-0 left-0 z-40 flex w-full flex-col bg-evo-bg/95 px-5 pb-6 backdrop-blur-xl lg:hidden',
+            'top-[calc(env(safe-area-inset-top)+4.75rem)]',
             'transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
             menuOpen ? 'translate-x-0' : '-translate-x-full',
           ].join(' ')}
         >
-          <div className="mb-3 pt-4">
-            <p className="truncate font-display text-xl font-bold">{helloLine(user?.name)}</p>
-            <p className="text-sm font-semibold text-evo-muted">
+          <div className="mb-6 pt-6">
+            <p className="truncate font-display text-4xl font-bold tracking-tight">{helloLine(user?.name)}</p>
+            <p className="mt-1 text-base font-semibold text-evo-muted">
               {headerDay.day} {headerDay.num} · {title}
             </p>
           </div>
 
-          <nav aria-label="Principal" className="flex flex-1 flex-col gap-2 overflow-y-auto">
+          <nav aria-label="Principal" className="flex flex-1 flex-col gap-3 overflow-y-auto">
             {navItems.map((item, index) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                style={{ transitionDelay: menuOpen ? `${60 + index * 45}ms` : '0ms' }}
+                style={{ transitionDelay: menuOpen ? `${80 + index * 50}ms` : '0ms' }}
                 className={({ isActive }) =>
                   [
-                    'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold',
+                    'flex min-h-[4.5rem] items-center gap-4 rounded-3xl px-4 text-xl font-bold',
                     'transition duration-300 ease-out motion-reduce:transition-none',
-                    menuOpen ? 'translate-x-0 opacity-100' : '-translate-x-3 opacity-0',
-                    isActive ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-text active:bg-evo-surface-2',
+                    menuOpen ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0',
+                    isActive
+                      ? 'bg-evo-accent text-[#1a120c]'
+                      : 'bg-evo-surface text-evo-text active:bg-evo-surface-2',
                   ].join(' ')
                 }
               >
-                <Icon name={item.icon} />
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={[
+                        'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl',
+                        isActive ? 'bg-black/10' : 'bg-evo-surface-2',
+                      ].join(' ')}
+                    >
+                      <Icon name={item.icon} className="h-6 w-6" />
+                    </span>
+                    {item.label}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
 
           <div
-            style={{ transitionDelay: menuOpen ? '280ms' : '0ms' }}
+            style={{ transitionDelay: menuOpen ? '320ms' : '0ms' }}
             className={[
-              'safe-bottom mt-4 space-y-3 rounded-2xl border border-evo-border bg-evo-surface-2 p-4',
+              'safe-bottom mt-6 space-y-3 rounded-3xl bg-evo-surface p-5',
               'transition duration-300 ease-out motion-reduce:transition-none',
-              menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+              menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
             ].join(' ')}
           >
-            <p className="truncate font-display text-lg font-bold">{user?.name}</p>
-            <p className="truncate text-sm text-evo-muted">{user?.email}</p>
-            <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
+            <p className="truncate font-display text-2xl font-bold">{user?.name}</p>
+            <p className="truncate text-base text-evo-muted">{user?.email}</p>
+            <Button variant="secondary" fullWidth size="lg" onClick={() => void handleLogout()}>
               Cerrar sesión
             </Button>
           </div>
