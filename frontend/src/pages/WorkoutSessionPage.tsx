@@ -176,7 +176,7 @@ export function WorkoutSessionPage() {
   const totalSets = drafts.length
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28 lg:pb-0">
       <div className="panel space-y-2 p-4">
         <Link
           to={`/routines/${session.routine_id}`}
@@ -255,21 +255,25 @@ export function WorkoutSessionPage() {
                     {group.sets.map((set) => (
                       <div
                         key={`${group.id}-${set.set_number}`}
-                        className="grid grid-cols-[auto_1fr_1fr] items-end gap-2 rounded-2xl border border-evo-border bg-evo-surface-2 p-3"
+                        className="grid min-w-0 grid-cols-[2.25rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 rounded-2xl border border-evo-border bg-evo-surface-2 p-3"
                       >
-                        <span className="pb-3 text-xs font-bold text-evo-accent">S{set.set_number}</span>
-                        <Input
-                          label="Kg"
-                          inputMode="decimal"
-                          value={set.weight_kg}
-                          onChange={(e) => updateDraft(set.draftIndex, { weight_kg: e.target.value })}
-                        />
-                        <Input
-                          label="Reps"
-                          inputMode="numeric"
-                          value={set.reps}
-                          onChange={(e) => updateDraft(set.draftIndex, { reps: e.target.value })}
-                        />
+                        <span className="pb-3 text-sm font-bold text-evo-accent">S{set.set_number}</span>
+                        <div className="min-w-0">
+                          <Input
+                            label="Kg"
+                            inputMode="decimal"
+                            value={set.weight_kg}
+                            onChange={(e) => updateDraft(set.draftIndex, { weight_kg: e.target.value })}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <Input
+                            label="Reps"
+                            inputMode="numeric"
+                            value={set.reps}
+                            onChange={(e) => updateDraft(set.draftIndex, { reps: e.target.value })}
+                          />
+                        </div>
                       </div>
                     ))}
                     {index < groups.length - 1 ? (
@@ -290,7 +294,7 @@ export function WorkoutSessionPage() {
         </ul>
       )}
 
-      <div className="sticky bottom-24 z-10 lg:bottom-6">
+      <div className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border bg-evo-bg/95 px-4 pt-3 backdrop-blur-md lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:px-0 lg:pt-0">
         <Button
           size="lg"
           fullWidth

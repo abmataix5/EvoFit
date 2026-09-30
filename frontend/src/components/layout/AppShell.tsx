@@ -117,7 +117,7 @@ export function AppShell() {
         </div>
       </aside>
 
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-hidden">
+      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-clip">
         <header className="safe-top sticky top-0 z-20 hidden border-b border-evo-border/70 bg-[#151b26]/92 backdrop-blur-md lg:block">
           <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
             <div className="min-w-0 justify-self-start">
@@ -181,16 +181,14 @@ export function AppShell() {
           <Outlet />
         </main>
 
-        <button
-          type="button"
-          className={[
-            'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ease-out lg:hidden',
-            menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
-          ].join(' ')}
-          aria-label="Cerrar menú"
-          tabIndex={menuOpen ? 0 : -1}
-          onClick={() => setMenuOpen(false)}
-        />
+        {menuOpen ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            aria-label="Cerrar menú"
+            onClick={() => setMenuOpen(false)}
+          />
+        ) : null}
 
         <aside
           id="mobile-drawer"
