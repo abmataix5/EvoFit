@@ -6,6 +6,7 @@ import { AppShell } from './components/layout/AppShell'
 import { AuthProvider, useAuth } from './features/auth/AuthContext'
 import { CalendarPage } from './pages/CalendarPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { ExercisesPage } from './pages/ExercisesPage'
 import { LoginPage } from './pages/LoginPage'
 import { NewRoutinePage } from './pages/NewRoutinePage'
 import { ProgressPage } from './pages/ProgressPage'
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="routines" element={<RoutinesPage />} />
                 <Route path="routines/new" element={<NewRoutinePage />} />
                 <Route path="routines/:id" element={<RoutineDetailPage />} />
+                <Route path="exercises" element={<ExercisesPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="progress" element={<ProgressPage />} />
                 <Route path="workout/:id" element={<WorkoutSessionPage />} />

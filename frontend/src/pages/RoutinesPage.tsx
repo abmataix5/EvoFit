@@ -67,9 +67,14 @@ export function RoutinesPage() {
         <p className="max-w-xl text-sm text-evo-muted">
           Puedes tener varias activas. Solo las activas y vigentes salen en la agenda.
         </p>
-        <Link to="/routines/new">
-          <Button size="lg">+ Nueva rutina</Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/exercises">
+            <Button variant="secondary">Catálogo</Button>
+          </Link>
+          <Link to="/routines/new">
+            <Button size="lg">+ Nueva rutina</Button>
+          </Link>
+        </div>
       </div>
 
       {isLoading ? (

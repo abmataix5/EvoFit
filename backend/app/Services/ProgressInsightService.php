@@ -74,6 +74,7 @@ class ProgressInsightService
             }
 
             $exercises[] = [
+                'catalog_exercise_id' => $curr['catalog_exercise_id'] ?? $prev['catalog_exercise_id'] ?? null,
                 'name' => $curr['name'] ?? $prev['name'] ?? $name,
                 'status' => $status,
                 'current_best_kg' => $curr['best_weight'] ?? null,
@@ -256,7 +257,7 @@ class ProgressInsightService
     }
 
     /**
-     * @return Collection<string, array{best_weight: float, volume: float, name: string}>
+     * @return Collection<string, array{best_weight: float, volume: float, name: string, catalog_exercise_id: int|null}>
      */
     private function aggregateWeek(int $userId, Carbon $from, Carbon $to): Collection
     {
@@ -271,20 +272,28 @@ class ProgressInsightService
             ->get();
 
         return $logs
-            ->groupBy(fn (ExerciseSetLog $log) => mb_strtolower(trim($log->routineExercise?->name ?? 'ejercicio')))
+            ->groupBy(function (ExerciseSetLog $log) {
+                $exercise = $log->routineExercise;
+                if ($exercise?->catalog_exercise_id) {
+                    return 'id:'.$exercise->catalog_exercise_id;
+                }
+
+                return 'name:'.mb_strtolower(trim($exercise?->name ?? 'ejercicio'));
+            })
             ->map(function (Collection $group) {
                 $best = (float) $group->max('weight_kg');
                 $volume = (float) $group->sum(function (ExerciseSetLog $log) {
                     return ((float) $log->weight_kg) * ((int) ($log->reps ?? 0));
                 });
+                $first = $group->first()?->routineExercise;
 
                 return [
                     'best_weight' => $best,
                     'volume' => round($volume, 1),
-                    'name' => $group->first()?->routineExercise?->name ?? 'Ejercicio',
+                    'name' => $first?->name ?? 'Ejercicio',
+                    'catalog_exercise_id' => $first?->catalog_exercise_id,
                 ];
-            })
-            ->keyBy(fn (array $row) => mb_strtolower($row['name']));
+            });
     }
 
     private function buildChartSeries(array $exercises): array

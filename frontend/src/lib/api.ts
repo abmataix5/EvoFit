@@ -38,6 +38,7 @@ export type User = {
 export type RoutineExercise = {
   id: number
   routine_day_id?: number
+  catalog_exercise_id?: number | null
   name: string
   sort_order: number
   default_sets: number
@@ -45,6 +46,18 @@ export type RoutineExercise = {
   rest_seconds?: number | null
   target_muscle?: string | null
   notes?: string | null
+}
+
+export type CatalogExercise = {
+  id: number
+  name: string
+  target_muscle?: string | null
+  default_sets: number
+  default_reps: number
+  rest_seconds: number
+  notes?: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export type RoutineDay = {
@@ -136,6 +149,7 @@ export type ProgressInsight = {
 }
 
 export type ProgressExerciseRow = {
+  catalog_exercise_id?: number | null
   name: string
   status: 'improved' | 'maintained' | 'declined' | 'new'
   current_best_kg: number | null

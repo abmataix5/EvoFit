@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -160,6 +161,13 @@ export function ProgressPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-evo-muted">Comparativa semanal de fuerza y volumen.</p>
+        <Link to="/exercises" className="text-sm font-semibold text-evo-accent">
+          Catálogo de ejercicios →
+        </Link>
+      </div>
+
       {/* 1. Briefing del coach */}
       {mood && summary && coach ? (
         <section className={`panel space-y-4 border-2 p-5 ${mood.ring}`}>

@@ -1,13 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ExerciseCatalogPicker } from '../components/exercises/ExerciseCatalogPicker'
 import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, defaultWeekdays } from '../lib/api'
+import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, defaultWeekdays, type CatalogExercise } from '../lib/api'
 
 type DraftExercise = {
   name: string
+  catalog_exercise_id: number | null
   default_sets: number
   default_reps: number
   rest_seconds: number
@@ -22,7 +24,13 @@ type DraftDay = {
 }
 
 function emptyExercise(): DraftExercise {
-  return { name: '', default_sets: 3, default_reps: 10, rest_seconds: 90 }
+  return {
+    name: '',
+    catalog_exercise_id: null,
+    default_sets: 3,
+    default_reps: 10,
+    rest_seconds: 90,
+  }
 }
 
 function buildDaysFromTemplate(count: number): DraftDay[] {
@@ -48,6 +56,14 @@ export function NewRoutinePage() {
   const [days, setDays] = useState<DraftDay[]>(() => buildDaysFromTemplate(4))
   const [error, setError] = useState<string | null>(null)
 
+  const { data: catalog = [] } = useQuery({
+    queryKey: ['catalog-exercises'],
+    queryFn: async () => {
+      const { data: response } = await api.get<{ data: CatalogExercise[] }>('/catalog-exercises')
+      return response.data
+    },
+  })
+
   const template = TRAINING_TEMPLATES[sessionsPerWeek] ?? TRAINING_TEMPLATES[3]
   const currentDay = days[activeDay]
 
@@ -70,9 +86,10 @@ export function NewRoutinePage() {
           name: day.name,
           focus: day.focus || null,
           exercises: day.exercises
-            .filter((exercise) => exercise.name.trim())
+            .filter((exercise) => exercise.name.trim() || exercise.catalog_exercise_id)
             .map((exercise, index) => ({
               name: exercise.name.trim(),
+              catalog_exercise_id: exercise.catalog_exercise_id,
               sort_order: index,
               default_sets: exercise.default_sets,
               default_reps: exercise.default_reps,
@@ -87,6 +104,7 @@ export function NewRoutinePage() {
     onSuccess: async (routineId) => {
       await queryClient.invalidateQueries({ queryKey: ['routines'] })
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
       navigate(`/routines/${routineId}`)
     },
     onError: () => setError('No se pudo guardar. Revisa nombre y ejercicios.'),
@@ -271,19 +289,37 @@ export function NewRoutinePage() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-semibold">Ejercicios</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">Ejercicios</p>
+                  <Link to="/exercises" className="text-xs font-semibold text-evo-accent">
+                    Gestionar catálogo
+                  </Link>
+                </div>
                 {currentDay.exercises.map((exercise, exerciseIndex) => (
                   <div
                     key={exerciseIndex}
                     className="rounded-xl border border-evo-border bg-evo-surface-2 p-3"
                   >
-                    <Input
+                    <ExerciseCatalogPicker
                       label={`#${exerciseIndex + 1}`}
-                      value={exercise.name}
-                      onChange={(e) =>
-                        updateExercise(activeDay, exerciseIndex, { name: e.target.value })
+                      name={exercise.name}
+                      catalogId={exercise.catalog_exercise_id}
+                      catalog={catalog}
+                      onChange={(next) =>
+                        updateExercise(activeDay, exerciseIndex, {
+                          name: next.name,
+                          catalog_exercise_id: next.catalog_exercise_id,
+                          ...(next.default_sets !== undefined
+                            ? { default_sets: next.default_sets }
+                            : {}),
+                          ...(next.default_reps !== undefined
+                            ? { default_reps: next.default_reps }
+                            : {}),
+                          ...(next.rest_seconds !== undefined
+                            ? { rest_seconds: next.rest_seconds }
+                            : {}),
+                        })
                       }
-                      placeholder="Press banca, Sentadilla…"
                     />
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Input

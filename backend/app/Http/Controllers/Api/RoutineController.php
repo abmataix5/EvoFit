@@ -10,6 +10,7 @@ use App\Http\Resources\WorkoutSessionResource;
 use App\Models\Routine;
 use App\Models\RoutineDay;
 use App\Models\WorkoutSession;
+use App\Services\CatalogExerciseResolver;
 use App\Services\TrainingCalendarPlanner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,14 +32,18 @@ class RoutineController extends Controller
         return RoutineResource::collection($routines);
     }
 
-    public function store(StoreRoutineRequest $request, TrainingCalendarPlanner $planner): JsonResponse
+    public function store(
+        StoreRoutineRequest $request,
+        TrainingCalendarPlanner $planner,
+        CatalogExerciseResolver $catalogResolver
+    ): JsonResponse
     {
         $payload = $request->validated();
 
         $weekdays = collect($payload['days'])->pluck('weekday');
         abort_if($weekdays->count() !== $weekdays->unique()->count(), 422, 'Cada día de la semana solo puede asignarse una vez.');
 
-        $routine = DB::transaction(function () use ($request, $payload) {
+        $routine = DB::transaction(function () use ($request, $payload, $catalogResolver) {
             $routine = Routine::query()->create([
                 'user_id' => $request->user()->id,
                 'name' => $payload['name'],
@@ -59,19 +64,22 @@ class RoutineController extends Controller
                 ]);
 
                 foreach ($dayPayload['exercises'] ?? [] as $index => $exercise) {
-                    if (blank($exercise['name'] ?? null)) {
+                    if (blank($exercise['name'] ?? null) && blank($exercise['catalog_exercise_id'] ?? null)) {
                         continue;
                     }
 
+                    $catalog = $catalogResolver->resolve($request->user(), $exercise);
+
                     $day->exercises()->create([
                         'routine_id' => $routine->id,
-                        'name' => $exercise['name'],
+                        'catalog_exercise_id' => $catalog->id,
+                        'name' => $catalog->name,
                         'sort_order' => $exercise['sort_order'] ?? $index,
-                        'default_sets' => $exercise['default_sets'] ?? 3,
-                        'default_reps' => $exercise['default_reps'] ?? 10,
-                        'rest_seconds' => $exercise['rest_seconds'] ?? 90,
-                        'target_muscle' => $exercise['target_muscle'] ?? null,
-                        'notes' => $exercise['notes'] ?? null,
+                        'default_sets' => $exercise['default_sets'] ?? $catalog->default_sets ?? 3,
+                        'default_reps' => $exercise['default_reps'] ?? $catalog->default_reps ?? 10,
+                        'rest_seconds' => $exercise['rest_seconds'] ?? $catalog->rest_seconds ?? 90,
+                        'target_muscle' => $exercise['target_muscle'] ?? $catalog->target_muscle,
+                        'notes' => $exercise['notes'] ?? $catalog->notes,
                     ]);
                 }
             }
@@ -167,6 +175,7 @@ class RoutineController extends Controller
                 foreach ($sourceExercises as $index => $exercise) {
                     $target->exercises()->create([
                         'routine_id' => $routine->id,
+                        'catalog_exercise_id' => $exercise->catalog_exercise_id,
                         'name' => $exercise->name,
                         'sort_order' => $offset + $index + 1,
                         'default_sets' => $exercise->default_sets,

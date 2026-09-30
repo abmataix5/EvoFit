@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CatalogExerciseController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\WorkoutSessionController;
@@ -17,6 +18,11 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('routines', RoutineController::class);
         Route::post('/routines/{routine}/days/{day}/copy', [RoutineController::class, 'copyDay']);
         Route::get('/routines/{routine}/history', [RoutineController::class, 'history']);
+
+        Route::get('/catalog-exercises', [CatalogExerciseController::class, 'index']);
+        Route::post('/catalog-exercises', [CatalogExerciseController::class, 'store']);
+        Route::patch('/catalog-exercises/{catalog_exercise}', [CatalogExerciseController::class, 'update']);
+        Route::delete('/catalog-exercises/{catalog_exercise}', [CatalogExerciseController::class, 'destroy']);
 
         Route::get('/workout-sessions/calendar', [WorkoutSessionController::class, 'calendar']);
         Route::post('/workout-sessions', [WorkoutSessionController::class, 'store']);

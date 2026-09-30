@@ -16,6 +16,7 @@ const pageTitles: Record<string, string> = {
   '/': 'Hoy',
   '/routines': 'Rutinas',
   '/routines/new': 'Nueva',
+  '/exercises': 'Catálogo',
   '/calendar': 'Agenda',
   '/progress': 'Progreso',
 }
@@ -86,6 +87,19 @@ export function AppShell() {
               {item.label}
             </NavLink>
           ))}
+          <NavLink
+            to="/exercises"
+            className={({ isActive }) =>
+              [
+                'mt-2 flex min-h-11 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition',
+                isActive
+                  ? 'bg-evo-surface-2 text-evo-accent'
+                  : 'text-evo-muted hover:bg-evo-surface-2 hover:text-evo-text',
+              ].join(' ')
+            }
+          >
+            Catálogo de ejercicios
+          </NavLink>
         </nav>
 
         <div className="mt-auto space-y-3 rounded-2xl border-2 border-evo-border bg-evo-surface-2 p-4">

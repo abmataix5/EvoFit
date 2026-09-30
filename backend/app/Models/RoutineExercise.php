@@ -15,6 +15,7 @@ class RoutineExercise extends Model
         'tenant_id',
         'routine_id',
         'routine_day_id',
+        'catalog_exercise_id',
         'name',
         'sort_order',
         'default_sets',
@@ -32,6 +33,11 @@ class RoutineExercise extends Model
     public function day(): BelongsTo
     {
         return $this->belongsTo(RoutineDay::class, 'routine_day_id');
+    }
+
+    public function catalogExercise(): BelongsTo
+    {
+        return $this->belongsTo(CatalogExercise::class, 'catalog_exercise_id');
     }
 
     public function setLogs(): HasMany
