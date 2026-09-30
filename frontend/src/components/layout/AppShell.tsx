@@ -177,7 +177,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="no-x-scroll flex-1 px-3 py-4 lg:px-8 lg:py-6">
+        <main className="no-x-scroll flex-1 px-4 py-5 lg:px-8 lg:py-6">
           <Outlet />
         </main>
 
@@ -196,14 +196,14 @@ export function AppShell() {
           id="mobile-drawer"
           inert={!menuOpen}
           className={[
-            'fixed bottom-0 left-0 z-40 flex w-full flex-col bg-evo-bg/95 px-5 pb-6 backdrop-blur-xl lg:hidden',
+            'fixed bottom-0 left-0 z-40 flex w-[min(20.5rem,82vw)] flex-col rounded-r-3xl border-r border-white/10 bg-evo-surface px-4 pb-5 shadow-2xl lg:hidden',
             'top-[calc(env(safe-area-inset-top)+4.75rem)]',
             'transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
             menuOpen ? 'translate-x-0' : '-translate-x-full',
           ].join(' ')}
         >
           <div className="mb-6 pt-6">
-            <p className="truncate font-display text-4xl font-bold tracking-tight">{helloLine(user?.name)}</p>
+            <p className="truncate font-display text-3xl font-bold tracking-tight">{helloLine(user?.name)}</p>
             <p className="mt-1 text-base font-semibold text-evo-muted">
               {headerDay.day} {headerDay.num} · {title}
             </p>
