@@ -52,7 +52,12 @@ export function AppShell() {
       if (event.key === 'Escape') setMenuOpen(false)
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previous
+    }
   }, [menuOpen])
 
   async function handleLogout() {
@@ -140,60 +145,83 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="no-x-scroll flex-1 px-3 pb-6 pt-16 lg:px-8 lg:py-6 lg:pb-10">
+        <header className="safe-top sticky top-0 z-50 border-b border-evo-border/80 bg-evo-bg/95 backdrop-blur-md lg:hidden">
+          <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-3">
+            <button
+              type="button"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl text-evo-text transition active:scale-95"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-drawer"
+              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span className="relative block h-5 w-5">
+                <Icon
+                  name="menu"
+                  className={[
+                    'absolute inset-0 h-5 w-5 transition duration-300',
+                    menuOpen ? 'scale-75 opacity-0' : 'scale-100 opacity-100',
+                  ].join(' ')}
+                />
+                <Icon
+                  name="close"
+                  className={[
+                    'absolute inset-0 h-5 w-5 transition duration-300',
+                    menuOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
+                  ].join(' ')}
+                />
+              </span>
+            </button>
+            <BrandLogo size="xs" className="justify-self-center" />
+            <span aria-hidden />
+          </div>
+        </header>
+
+        <main className="no-x-scroll flex-1 px-3 py-4 lg:px-8 lg:py-6">
           <Outlet />
         </main>
 
         <button
           type="button"
-          className="safe-top fixed left-3 top-3 z-30 flex h-12 w-12 items-center justify-center rounded-2xl border border-evo-border bg-evo-surface text-evo-text shadow-lg lg:hidden"
-          aria-expanded={menuOpen}
-          aria-controls="mobile-drawer"
-          aria-label="Abrir menú"
-          onClick={() => setMenuOpen(true)}
-        >
-          <Icon name="menu" />
-        </button>
+          className={[
+            'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ease-out lg:hidden',
+            menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+          ].join(' ')}
+          aria-label="Cerrar menú"
+          tabIndex={menuOpen ? 0 : -1}
+          onClick={() => setMenuOpen(false)}
+        />
 
-        {menuOpen ? (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-40 bg-black/55 lg:hidden"
-              aria-label="Cerrar menú"
-              onClick={() => setMenuOpen(false)}
-            />
-            <aside
-              id="mobile-drawer"
-              className="safe-top fixed inset-y-0 left-0 z-50 flex w-[min(20rem,88vw)] flex-col border-r border-evo-border bg-evo-surface px-4 py-4 lg:hidden"
-            >
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-display text-xl font-bold">{helloLine(user?.name)}</p>
-              <p className="text-sm font-semibold text-evo-muted">
-                {headerDay.day} {headerDay.num}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-evo-border"
-              aria-label="Cerrar menú"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Icon name="close" />
-            </button>
+        <aside
+          id="mobile-drawer"
+          inert={!menuOpen}
+          className={[
+            'fixed bottom-0 left-0 z-40 flex w-[min(19.5rem,86vw)] flex-col border-r border-evo-border bg-evo-surface px-4 pb-4 shadow-2xl lg:hidden',
+            'top-[calc(env(safe-area-inset-top)+3.5rem)]',
+            'transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+            menuOpen ? 'translate-x-0' : '-translate-x-full',
+          ].join(' ')}
+        >
+          <div className="mb-3 pt-4">
+            <p className="truncate font-display text-xl font-bold">{helloLine(user?.name)}</p>
+            <p className="text-sm font-semibold text-evo-muted">
+              {headerDay.day} {headerDay.num} · {title}
+            </p>
           </div>
 
           <nav aria-label="Principal" className="flex flex-1 flex-col gap-2 overflow-y-auto">
-            {navItems.map((item) => (
+            {navItems.map((item, index) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
+                style={{ transitionDelay: menuOpen ? `${60 + index * 45}ms` : '0ms' }}
                 className={({ isActive }) =>
                   [
-                    'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
-                    isActive ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-text hover:bg-evo-surface-2',
+                    'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold',
+                    'transition duration-300 ease-out motion-reduce:transition-none',
+                    menuOpen ? 'translate-x-0 opacity-100' : '-translate-x-3 opacity-0',
+                    isActive ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-text active:bg-evo-surface-2',
                   ].join(' ')
                 }
               >
@@ -203,7 +231,14 @@ export function AppShell() {
             ))}
           </nav>
 
-          <div className="safe-bottom mt-4 space-y-3 rounded-2xl border border-evo-border bg-evo-surface-2 p-4">
+          <div
+            style={{ transitionDelay: menuOpen ? '280ms' : '0ms' }}
+            className={[
+              'safe-bottom mt-4 space-y-3 rounded-2xl border border-evo-border bg-evo-surface-2 p-4',
+              'transition duration-300 ease-out motion-reduce:transition-none',
+              menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+            ].join(' ')}
+          >
             <p className="truncate font-display text-lg font-bold">{user?.name}</p>
             <p className="truncate text-sm text-evo-muted">{user?.email}</p>
             <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
@@ -211,8 +246,6 @@ export function AppShell() {
             </Button>
           </div>
         </aside>
-          </>
-        ) : null}
       </div>
     </div>
   )
