@@ -1,6 +1,16 @@
 #!/bin/sh
 set -e
 
+mkdir -p \
+  storage/framework/sessions \
+  storage/framework/views \
+  storage/framework/cache \
+  storage/logs \
+  storage/app/public \
+  bootstrap/cache
+
+chmod -R ug+rwx storage bootstrap/cache || true
+
 if [ ! -f vendor/autoload.php ]; then
   if [ "${APP_ENV:-local}" = "production" ]; then
     composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
@@ -27,7 +37,8 @@ $vars = [
     'DB_DATABASE' => getenv('DB_DATABASE') ?: 'evofit',
     'DB_USERNAME' => getenv('DB_USERNAME') ?: 'evofit',
     'DB_PASSWORD' => getenv('DB_PASSWORD') ?: 'secret',
-    'SESSION_DOMAIN' => getenv('SESSION_DOMAIN') ?: '',
+    'SESSION_DRIVER' => getenv('SESSION_DRIVER') ?: 'file',
+    'SESSION_DOMAIN' => getenv('SESSION_DOMAIN') !== false ? (string) getenv('SESSION_DOMAIN') : '',
     'SESSION_SECURE_COOKIE' => getenv('SESSION_SECURE_COOKIE') ?: 'false',
     'SANCTUM_STATEFUL_DOMAINS' => getenv('SANCTUM_STATEFUL_DOMAINS') ?: 'localhost,127.0.0.1',
     'FRONTEND_URL' => getenv('FRONTEND_URL') ?: 'http://localhost:5173',
@@ -55,10 +66,8 @@ php artisan migrate --force
 
 php artisan storage:link --force 2>/dev/null || true
 
-if [ "${APP_ENV:-local}" = "production" ]; then
-  php artisan config:cache
-  php artisan route:cache
-  php artisan view:cache
-fi
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
 exec "$@"
