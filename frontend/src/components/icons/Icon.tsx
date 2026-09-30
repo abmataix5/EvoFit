@@ -1,4 +1,4 @@
-type IconName = 'home' | 'routines' | 'catalog' | 'calendar' | 'progress' | 'user'
+type IconName = 'home' | 'routines' | 'catalog' | 'calendar' | 'progress' | 'user' | 'menu' | 'close'
 
 type Props = {
   name: IconName
@@ -46,6 +46,8 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
           <path {...common} d="M5.5 19.2c1.4-2.8 3.7-4.2 6.5-4.2s5.1 1.4 6.5 4.2" />
         </>
       ) : null}
+      {name === 'menu' ? <path {...common} d="M4 7h16M4 12h16M4 17h16" /> : null}
+      {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}
     </svg>
   )
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { BrandLogo } from '../BrandLogo'
@@ -39,6 +40,20 @@ export function AppShell() {
   const location = useLocation()
   const title = resolveTitle(location.pathname)
   const headerDay = formatHeaderDay()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
 
   async function handleLogout() {
     const ok = await confirm({
@@ -98,7 +113,7 @@ export function AppShell() {
       </aside>
 
       <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-hidden">
-        <header className="safe-top sticky top-0 z-20 border-b border-evo-border/70 bg-[#151b26]/92 backdrop-blur-md">
+        <header className="safe-top sticky top-0 z-20 hidden border-b border-evo-border/70 bg-[#151b26]/92 backdrop-blur-md lg:block">
           <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
             <div className="min-w-0 justify-self-start">
               <p className="truncate font-display text-sm font-semibold leading-none text-evo-text">
@@ -112,10 +127,7 @@ export function AppShell() {
             <BrandLogo size="xs" className="justify-self-center" />
 
             <div className="justify-self-end text-right">
-              <p className="truncate text-xs font-bold uppercase tracking-wide text-evo-muted lg:hidden">
-                {title}
-              </p>
-              <div className="hidden items-center justify-end gap-3 lg:flex">
+              <div className="flex items-center justify-end gap-3">
                 <div className="min-w-0 text-right">
                   <p className="truncate text-sm font-semibold">{user?.name}</p>
                   <p className="truncate text-xs text-evo-muted">{title}</p>
@@ -128,62 +140,79 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="no-x-scroll flex-1 px-3 py-4 pb-24 lg:px-8 lg:py-6 lg:pb-10">
+        <main className="no-x-scroll flex-1 px-3 pb-6 pt-16 lg:px-8 lg:py-6 lg:pb-10">
           <Outlet />
         </main>
 
-        <nav
-          aria-label="Navegación móvil"
-          className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border bg-evo-surface/95 backdrop-blur-md lg:hidden"
+        <button
+          type="button"
+          className="safe-top fixed left-3 top-3 z-30 flex h-12 w-12 items-center justify-center rounded-2xl border border-evo-border bg-evo-surface text-evo-text shadow-lg lg:hidden"
+          aria-expanded={menuOpen}
+          aria-controls="mobile-drawer"
+          aria-label="Abrir menú"
+          onClick={() => setMenuOpen(true)}
         >
-          <ul className="mx-auto grid max-w-lg grid-cols-6 px-0.5 pt-1">
+          <Icon name="menu" />
+        </button>
+
+        {menuOpen ? (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-black/55 lg:hidden"
+              aria-label="Cerrar menú"
+              onClick={() => setMenuOpen(false)}
+            />
+            <aside
+              id="mobile-drawer"
+              className="safe-top fixed inset-y-0 left-0 z-50 flex w-[min(20rem,88vw)] flex-col border-r border-evo-border bg-evo-surface px-4 py-4 lg:hidden"
+            >
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate font-display text-xl font-bold">{helloLine(user?.name)}</p>
+              <p className="text-sm font-semibold text-evo-muted">
+                {headerDay.day} {headerDay.num}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-evo-border"
+              aria-label="Cerrar menú"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Icon name="close" />
+            </button>
+          </div>
+
+          <nav aria-label="Principal" className="flex flex-1 flex-col gap-2 overflow-y-auto">
             {navItems.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    [
-                      'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-center text-[0.68rem] font-semibold leading-tight transition',
-                      isActive ? 'text-evo-accent' : 'text-evo-muted hover:text-evo-text',
-                    ].join(' ')
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span
-                        aria-hidden
-                        className={[
-                          'flex h-7 w-7 items-center justify-center rounded-lg',
-                          isActive ? 'bg-evo-accent/20 text-evo-accent' : '',
-                        ].join(' ')}
-                      >
-                        <Icon name={item.icon} className="h-[1.15rem] w-[1.15rem]" />
-                      </span>
-                      {item.label}
-                    </>
-                  )}
-                </NavLink>
-              </li>
-            ))}
-            <li>
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[0.68rem] font-semibold leading-tight text-evo-muted transition hover:text-evo-text"
-                aria-label="Cuenta y cerrar sesión"
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  [
+                    'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
+                    isActive ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-text hover:bg-evo-surface-2',
+                  ].join(' ')
+                }
               >
-                <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-evo-border bg-evo-surface-2 text-evo-text"
-                  aria-hidden
-                >
-                  <Icon name="user" className="h-4 w-4" />
-                </span>
-                Perfil
-              </button>
-            </li>
-          </ul>
-        </nav>
+                <Icon name={item.icon} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="safe-bottom mt-4 space-y-3 rounded-2xl border border-evo-border bg-evo-surface-2 p-4">
+            <p className="truncate font-display text-lg font-bold">{user?.name}</p>
+            <p className="truncate text-sm text-evo-muted">{user?.email}</p>
+            <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
+              Cerrar sesión
+            </Button>
+          </div>
+        </aside>
+          </>
+        ) : null}
       </div>
     </div>
   )
