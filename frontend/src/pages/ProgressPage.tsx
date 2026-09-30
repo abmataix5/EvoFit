@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -69,7 +68,8 @@ export function ProgressPage() {
   const { user } = useAuth()
   const { notify } = useUiFeedback()
   const today = localDateKey()
-  const [recordedOn, setRecordedOn] = useState(today)
+  const [weightOn, setWeightOn] = useState(today)
+  const [photoOn, setPhotoOn] = useState(today)
   const [weightKg, setWeightKg] = useState('')
   const [caption, setCaption] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -112,7 +112,7 @@ export function ProgressPage() {
   const saveWeight = useMutation({
     mutationFn: async () => {
       await api.post('/progress/body-weight', {
-        recorded_on: recordedOn,
+        recorded_on: weightOn,
         weight_kg: Number(weightKg),
       })
     },
@@ -132,7 +132,7 @@ export function ProgressPage() {
       if (!photoFile) return
       const ready = await prepareProgressPhoto(photoFile)
       const formData = new FormData()
-      formData.append('recorded_on', recordedOn)
+      formData.append('recorded_on', photoOn)
       formData.append('photo', ready)
       if (caption.trim()) formData.append('caption', caption.trim())
       await api.post('/progress/photos', formData)
@@ -176,18 +176,14 @@ export function ProgressPage() {
   }, [data?.exercises, filter])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="font-display text-lg font-semibold">{helloLine(user?.name)}</p>
-          <p className="text-sm text-evo-muted">Tu semana de fuerza, peso y fotos, en un vistazo.</p>
-        </div>
-        <Link to="/exercises" className="text-sm font-semibold text-evo-accent">
-          Catálogo de ejercicios
-        </Link>
+    <div className="min-w-0 space-y-10">
+      <div className="min-w-0">
+        <h1 className="font-display text-3xl font-bold tracking-tight">{helloLine(user?.name)}</h1>
+        <p className="mt-1 text-base text-evo-muted">Semana, peso y fotos, cada cosa en su sitio.</p>
       </div>
 
-      {/* 1. Briefing del coach */}
+      <section className="min-w-0 space-y-4">
+        <SectionHeading kicker="1" title="Esta semana" text="Cómo vas de fuerza y de constancia." />
       {mood && summary && coach ? (
         <section className={`panel space-y-4 border-2 p-5 ${mood.ring}`}>
           <div className="flex flex-wrap items-start gap-4">
@@ -222,8 +218,7 @@ export function ProgressPage() {
         </section>
       )}
 
-      {/* 2. KPIs */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Adherencia"
           value={training ? `${training.adherence_pct}%` : '—'}
@@ -258,8 +253,7 @@ export function ProgressPage() {
         />
       </section>
 
-      {/* 3. Fuerza */}
-      <section className="space-y-3">
+      <div className="min-w-0 space-y-4">
         <div>
           <h3 className="font-display text-lg font-bold">Fuerza · semana a semana</h3>
           <p className="text-sm text-evo-muted">
@@ -267,13 +261,13 @@ export function ProgressPage() {
           </p>
         </div>
 
-        <div className="panel p-4 lg:p-5">
-          <div className="h-56 w-full sm:h-64">
+        <div className="panel min-w-0 overflow-hidden p-4 lg:p-5">
+          <div className="h-56 w-full min-w-0 sm:h-64">
             {(data?.chart.length ?? 0) > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data?.chart} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" />
-                  <XAxis dataKey="name" tick={{ fill: '#c5d0de', fontSize: 12 }} interval={0} angle={-18} textAnchor="end" height={58} />
+                  <XAxis dataKey="name" tick={{ fill: '#c5d0de', fontSize: 11 }} interval={0} height={48} />
                   <YAxis tick={{ fill: '#c5d0de', fontSize: 12 }} unit="kg" width={48} />
                   <Tooltip
                     contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
@@ -342,31 +336,30 @@ export function ProgressPage() {
             </ul>
           )}
         </div>
+      </div>
       </section>
 
-      {/* 4. Cuerpo */}
-      <section className="space-y-3">
-        <div>
-          <h3 className="font-display text-lg font-bold">Composición · peso corporal</h3>
-          <p className="text-sm text-evo-muted">
-            Mide siempre a la misma hora (ideal en ayunas). Una bajada/subida puntual no es tendencia.
-          </p>
-        </div>
+      <section className="min-w-0 space-y-4">
+        <SectionHeading
+          kicker="2"
+          title="Peso corporal"
+          text="Anótalo aparte de las fotos. Mejor siempre a la misma hora."
+        />
 
-        <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
           <form
             onSubmit={(e: FormEvent) => {
               e.preventDefault()
               saveWeight.mutate()
             }}
-            className="panel space-y-3 p-4"
+            className="panel min-w-0 space-y-4 p-4"
           >
-            <p className="text-sm font-bold">Check-in de peso</p>
+            <p className="font-display text-xl font-bold">Registrar peso</p>
             <Input
               label="Fecha"
               type="date"
-              value={recordedOn}
-              onChange={(e) => setRecordedOn(e.target.value)}
+              value={weightOn}
+              onChange={(e) => setWeightOn(e.target.value)}
               required
             />
             <Input
@@ -382,7 +375,7 @@ export function ProgressPage() {
             </Button>
           </form>
 
-          <div className="panel space-y-3 p-4">
+          <div className="panel min-w-0 space-y-3 overflow-hidden p-4">
             <div className="flex items-end justify-between gap-2">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Último registro</p>
@@ -433,18 +426,30 @@ export function ProgressPage() {
         </div>
       </section>
 
-      {/* 5. Fotos */}
+      <section className="min-w-0 space-y-4">
+        <SectionHeading kicker="3" title="Fotos" text="Una sección distinta del peso. Compara dos fechas cuando quieras." />
       <PhotoCheckIn
         photos={photosQuery.data ?? []}
-        recordedOn={recordedOn}
+        recordedOn={photoOn}
         caption={caption}
         photoFile={photoFile}
         uploading={uploadPhoto.isPending}
-        onRecordedOn={setRecordedOn}
+        onRecordedOn={setPhotoOn}
         onCaption={setCaption}
         onPhotoFile={setPhotoFile}
         onUpload={() => uploadPhoto.mutate()}
       />
+      </section>
+    </div>
+  )
+}
+
+function SectionHeading({ kicker, title, text }: { kicker: string; title: string; text: string }) {
+  return (
+    <div className="border-b border-evo-border pb-3">
+      <p className="text-sm font-bold uppercase tracking-[0.14em] text-evo-accent">{kicker}</p>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">{title}</h2>
+      <p className="mt-1 text-base text-evo-muted">{text}</p>
     </div>
   )
 }

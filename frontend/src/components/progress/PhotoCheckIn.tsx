@@ -108,15 +108,8 @@ export function PhotoCheckIn({
   }
 
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="font-display text-lg font-bold">Check-in visual</h3>
-          <p className="text-sm text-evo-muted">
-            Misma luz y pose. Toca para ampliar · compara dos fechas para ver el cambio real.
-          </p>
-        </div>
-        <div className="inline-flex rounded-xl border border-evo-border bg-evo-surface-2/80 p-1">
+    <section className="min-w-0 space-y-4">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-evo-surface-2 p-1">
           <button
             type="button"
             onClick={() => {
@@ -124,7 +117,7 @@ export function PhotoCheckIn({
               setPicking(null)
             }}
             className={[
-              'rounded-lg px-3 py-2 text-xs font-bold transition',
+              'min-h-12 rounded-xl text-base font-bold transition',
               mode === 'gallery' ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-muted',
             ].join(' ')}
           >
@@ -135,24 +128,23 @@ export function PhotoCheckIn({
             onClick={() => setMode('compare')}
             disabled={photos.length < 2}
             className={[
-              'rounded-lg px-3 py-2 text-xs font-bold transition disabled:opacity-40',
+              'min-h-12 rounded-xl text-base font-bold transition disabled:opacity-40',
               mode === 'compare' ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-muted',
             ].join(' ')}
           >
             Comparar
           </button>
-        </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+      <div className="grid min-w-0 gap-4">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             onUpload()
           }}
-          className="panel space-y-3 p-4"
+          className="panel min-w-0 space-y-4 p-4"
         >
-          <p className="text-sm font-bold">Nueva foto</p>
+          <p className="font-display text-xl font-bold">Nueva foto</p>
           <Input
             label="Fecha"
             type="date"
@@ -160,13 +152,13 @@ export function PhotoCheckIn({
             onChange={(e) => onRecordedOn(e.target.value)}
             required
           />
-          <label className="block space-y-1.5">
+          <label className="block min-w-0 max-w-full space-y-1.5">
             <span className="text-sm font-semibold text-evo-text">Imagen</span>
             <input
               type="file"
             accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic"
             onChange={(e) => onPhotoFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-evo-text file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-evo-accent file:px-4 file:py-2 file:text-sm file:font-bold file:text-[#1a120c]"
+            className="box-border block w-full min-w-0 max-w-full text-base text-evo-text file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-evo-accent file:px-4 file:py-2 file:text-sm file:font-bold file:text-[#1a120c]"
               required
             />
             {photoFile ? (

@@ -12,14 +12,14 @@ export function Input({ label, error, hint, id, className = '', ...props }: Prop
   const errorId = error ? `${inputId}-error` : undefined
 
   return (
-    <label className="block space-y-1.5" htmlFor={inputId}>
+    <label className="block min-w-0 max-w-full space-y-1.5" htmlFor={inputId}>
       <span className="text-sm font-semibold text-evo-text">{label}</span>
       <input
         id={inputId}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
         aria-invalid={error ? true : undefined}
         className={[
-          'w-full rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 py-3.5 text-base text-evo-text',
+          'box-border w-full min-w-0 max-w-full rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 py-3.5 text-base text-evo-text',
           'placeholder:text-evo-muted/80',
           'focus:border-evo-accent focus:outline-none focus:ring-4 focus:ring-evo-accent/25',
           error ? 'border-evo-danger' : '',
