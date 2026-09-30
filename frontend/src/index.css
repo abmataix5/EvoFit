@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-evo-bg: #141820;
+  --color-evo-surface: #1e2530;
+  --color-evo-surface-2: #2a3342;
+  --color-evo-border: #3d4a5c;
+  --color-evo-text: #f7f9fc;
+  --color-evo-muted: #b4c0d0;
+  --color-evo-accent: #ff6b2c;
+  --color-evo-accent-soft: #ff8f5c;
+  --color-evo-lime: #c6ff4d;
+  --color-evo-danger: #ff5c7a;
+  --color-evo-warn: #ffc14d;
+  --font-evo: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-evo);
+    background:
+      radial-gradient(900px 480px at 0% -5%, rgba(255, 107, 44, 0.22), transparent 55%),
+      radial-gradient(700px 420px at 100% 0%, rgba(198, 255, 77, 0.12), transparent 50%),
+      linear-gradient(180deg, #1a2029 0%, #141820 40%, #10141b 100%);
+    color: var(--color-evo-text);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  select {
+    min-height: 3rem;
+    border-radius: 1rem;
+    border: 2px solid var(--color-evo-border);
+    background: var(--color-evo-surface-2);
+    color: var(--color-evo-text);
+    padding: 0.75rem 1rem;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-evo-accent);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-evo-accent) 45%, white);
+    color: #111;
+  }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .panel {
+    border: 1px solid color-mix(in oklab, var(--color-evo-border) 70%, white 30%);
+    background: color-mix(in oklab, var(--color-evo-surface) 88%, white 12%);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+}

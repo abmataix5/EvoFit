@@ -1,0 +1,24 @@
+{$DOMAIN:localhost} {
+	encode gzip zstd
+
+	# Fotos / ficheros públicos de Laravel
+	handle_path /storage/* {
+		root * /srv/storage
+		file_server
+	}
+
+	handle /api* {
+		reverse_proxy backend:8000
+	}
+
+	handle /sanctum* {
+		reverse_proxy backend:8000
+	}
+
+	# SPA React
+	handle {
+		root * /srv/www
+		try_files {path} /index.html
+		file_server
+	}
+}
