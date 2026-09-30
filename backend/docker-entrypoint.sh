@@ -45,6 +45,11 @@ $vars = [
     'CORS_ALLOWED_ORIGINS' => getenv('CORS_ALLOWED_ORIGINS') ?: 'http://localhost:5173',
 ];
 
+// Asegurar línea APP_KEY (key:generate la necesita para poder reemplazarla)
+if (! preg_match('/^APP_KEY=/m', $content)) {
+    $content .= PHP_EOL.'APP_KEY=';
+}
+
 foreach ($vars as $key => $value) {
     $line = $key.'='.$value;
     if (preg_match('/^'.preg_quote($key, '/').'=.*/m', $content)) {
