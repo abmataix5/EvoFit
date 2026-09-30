@@ -54,6 +54,7 @@ export function WorkoutSessionPage() {
   const sessionQuery = useQuery({
     queryKey: ['workout-session', sessionId],
     enabled: Number.isFinite(sessionId),
+    refetchOnMount: 'always',
     queryFn: async () => {
       const { data } = await api.get<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}`)
       return data.data
@@ -65,7 +66,9 @@ export function WorkoutSessionPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const draftsRef = useRef<SetDraft[]>([])
   const hydratedRef = useRef(false)
+  const pendingRef = useRef(false)
   const saveTimerRef = useRef<number | null>(null)
+  const flushRef = useRef<() => void>(() => {})
 
   const session = sessionQuery.data
 
@@ -83,12 +86,14 @@ export function WorkoutSessionPage() {
   }, [session, drafts])
 
   useEffect(() => {
-    if (!session || hydratedRef.current) return
+    if (!session || pendingRef.current) return
     const next = buildDrafts(session)
     setDrafts(next)
     draftsRef.current = next
-    setOpenExerciseId(session.day?.exercises?.[0]?.id ?? null)
-    hydratedRef.current = true
+    if (!hydratedRef.current) {
+      setOpenExerciseId(session.day?.exercises?.[0]?.id ?? null)
+      hydratedRef.current = true
+    }
   }, [session])
 
   useEffect(() => {
@@ -104,14 +109,21 @@ export function WorkoutSessionPage() {
         reps: draft.reps === '' ? null : Number(draft.reps),
         completed: true,
       }))
-      await api.put(`/workout-sessions/${sessionId}/logs`, { sets, complete })
-      return complete
+      const { data } = await api.put<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}/logs`, {
+        sets,
+        complete,
+      })
+      return { complete, session: data.data }
     },
     onMutate: () => setSaveState('saving'),
-    onSuccess: async (complete) => {
+    onSuccess: async ({ complete, session: saved }) => {
       setSaveState('saved')
+      queryClient.setQueryData(['workout-session', sessionId], saved)
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
       await queryClient.invalidateQueries({ queryKey: ['routine-history'] })
+      if (pendingRef.current) {
+        flushRef.current()
+      }
       if (complete) {
         notify('Sesión completada', 'success')
         navigate('/calendar')
@@ -123,13 +135,27 @@ export function WorkoutSessionPage() {
     },
   })
 
+  function flushAutosave() {
+    if (saveTimerRef.current) {
+      window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+    if (!pendingRef.current) return
+    pendingRef.current = false
+    saveMutation.mutate(false)
+  }
+
+  flushRef.current = flushAutosave
+
   function queueAutosave() {
+    pendingRef.current = true
     if (saveTimerRef.current) {
       window.clearTimeout(saveTimerRef.current)
     }
     saveTimerRef.current = window.setTimeout(() => {
-      saveMutation.mutate(false)
-    }, 650)
+      saveTimerRef.current = null
+      flushAutosave()
+    }, 250)
   }
 
   function updateDraft(index: number, patch: Partial<SetDraft>) {
@@ -150,17 +176,27 @@ export function WorkoutSessionPage() {
       cancelLabel: 'Seguir editando',
     })
     if (!ok) return
+    pendingRef.current = false
     if (saveTimerRef.current) {
       window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
     }
     saveMutation.mutate(true)
   }
 
   useEffect(() => {
+    function flushIfHidden() {
+      if (document.visibilityState === 'hidden') flushRef.current()
+    }
+    function flushOnLeave() {
+      flushRef.current()
+    }
+    document.addEventListener('visibilitychange', flushIfHidden)
+    window.addEventListener('pagehide', flushOnLeave)
     return () => {
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current)
-      }
+      document.removeEventListener('visibilitychange', flushIfHidden)
+      window.removeEventListener('pagehide', flushOnLeave)
+      flushRef.current()
     }
   }, [])
 

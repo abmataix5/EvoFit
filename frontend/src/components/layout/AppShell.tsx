@@ -75,7 +75,9 @@ export function AppShell() {
     <div className="no-x-scroll min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r border-evo-border bg-evo-surface lg:flex lg:flex-col lg:px-5 lg:py-6">
         <div className="mb-8 flex items-center gap-3 rounded-2xl bg-evo-surface-2 p-3">
-          <BrandLogo size="sm" />
+          <Link to="/" aria-label="Ir al inicio">
+            <BrandLogo size="nav" />
+          </Link>
           <div>
             <p className="font-display text-xl font-bold">EvoFit</p>
             <p className="text-xs font-medium text-evo-muted">Entrena · Mejora · Evoluciona</p>
@@ -129,7 +131,9 @@ export function AppShell() {
               </p>
             </div>
 
-            <BrandLogo size="xs" className="justify-self-center" />
+            <Link to="/" aria-label="Ir al inicio" className="justify-self-center">
+              <BrandLogo size="nav" />
+            </Link>
 
             <div className="justify-self-end text-right">
               <div className="flex items-center justify-end gap-3">
@@ -172,7 +176,9 @@ export function AppShell() {
                 />
               </span>
             </button>
-            <BrandLogo size="sm" className="justify-self-center" />
+            <Link to="/" aria-label="Ir al inicio" className="justify-self-center">
+              <BrandLogo size="nav" />
+            </Link>
             <span aria-hidden />
           </div>
         </header>

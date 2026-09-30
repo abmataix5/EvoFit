@@ -1,5 +1,5 @@
 type BrandLogoProps = {
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'nav' | 'md' | 'lg'
   showTagline?: boolean
   className?: string
 }
@@ -7,11 +7,12 @@ type BrandLogoProps = {
 const sizes = {
   xs: 'h-8 w-8',
   sm: 'h-10 w-10',
+  nav: 'h-12 w-12',
   md: 'h-16 w-16',
   lg: 'h-28 w-28',
 } as const
 
-const px = { xs: 32, sm: 40, md: 64, lg: 112 } as const
+const px = { xs: 32, sm: 40, nav: 48, md: 64, lg: 112 } as const
 
 export function BrandLogo({ size = 'md', showTagline = false, className = '' }: BrandLogoProps) {
   return (
