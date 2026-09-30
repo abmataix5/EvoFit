@@ -55,14 +55,14 @@ export function DashboardPage() {
   return (
     <div className="space-y-5">
       <section className="panel overflow-hidden p-0">
-        <div className="bg-gradient-to-br from-evo-accent via-evo-accent-soft to-[#ffc14d] p-5 text-[#111]">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] opacity-75">
+        <div className="bg-gradient-to-br from-evo-accent via-evo-accent-soft to-[#ffb347] p-5 text-white">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-white/80">
             {motivation.label}
           </p>
           <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
             {motivation.headline}
           </h2>
-          <p className="mt-2 max-w-xl text-sm font-semibold leading-snug opacity-90 sm:text-base">
+          <p className="mt-2 max-w-xl text-sm font-semibold leading-snug text-white/95 sm:text-base">
             {motivation.line}
           </p>
         </div>

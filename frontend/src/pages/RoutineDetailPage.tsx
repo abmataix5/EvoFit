@@ -20,8 +20,6 @@ export function RoutineDetailPage() {
   const { confirm, notify } = useUiFeedback()
   const routineId = Number(id)
   const [selectedDayId, setSelectedDayId] = useState<number | null>(null)
-  const [copyFromId, setCopyFromId] = useState<number | null>(null)
-  const [copyTargets, setCopyTargets] = useState<number[]>([])
   const [startsOn, setStartsOn] = useState('')
   const [endsOn, setEndsOn] = useState('')
   const [expandedSession, setExpandedSession] = useState<number | null>(null)
@@ -108,21 +106,6 @@ export function RoutineDetailPage() {
     },
   })
 
-  const copyDay = useMutation({
-    mutationFn: async () => {
-      if (!copyFromId || copyTargets.length === 0) return
-      await api.post(`/routines/${routineId}/days/${copyFromId}/copy`, {
-        target_day_ids: copyTargets,
-        replace: true,
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
-      setCopyTargets([])
-      setCopyFromId(null)
-    },
-  })
-
   if (routineQuery.isLoading) {
     return <p className="text-sm text-evo-muted">Cargando rutina…</p>
   }
@@ -185,7 +168,7 @@ export function RoutineDetailPage() {
         </p>
       </section>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {days.map((day) => {
           const selected = (activeDay?.id ?? null) === day.id
           return (
@@ -194,9 +177,9 @@ export function RoutineDetailPage() {
               type="button"
               onClick={() => setSelectedDayId(day.id)}
               className={[
-                'min-w-[6rem] rounded-2xl border px-3 py-2 text-left text-xs',
+                'rounded-2xl border-2 px-3 py-2 text-left text-xs',
                 selected
-                  ? 'border-evo-accent bg-evo-accent/15 text-evo-accent'
+                  ? 'border-evo-accent bg-evo-accent/10 text-evo-accent'
                   : 'border-evo-border bg-evo-surface text-evo-muted',
               ].join(' ')}
             >
@@ -229,7 +212,7 @@ export function RoutineDetailPage() {
           </div>
           <ul className="space-y-2">
             {(activeDay.exercises ?? []).map((exercise) => (
-              <li key={exercise.id} className="rounded-xl border border-evo-border bg-evo-bg/50 px-4 py-3 text-sm">
+              <li key={exercise.id} className="rounded-xl border border-evo-border bg-evo-surface-2 px-4 py-3 text-sm">
                 <p className="font-medium">{exercise.name}</p>
                 <p className="text-evo-muted">
                   {exercise.default_sets}×{exercise.default_reps}
@@ -239,60 +222,6 @@ export function RoutineDetailPage() {
               </li>
             ))}
           </ul>
-        </section>
-      ) : null}
-
-      {days.length > 1 ? (
-        <section className="panel space-y-2 border-dashed p-4">
-          <h3 className="font-semibold">Copiar día</h3>
-          <select
-            className="w-full rounded-xl border border-evo-border bg-evo-bg px-3 py-3"
-            value={copyFromId ?? ''}
-            onChange={(e) => setCopyFromId(Number(e.target.value) || null)}
-          >
-            <option value="">Origen</option>
-            {days.map((day) => (
-              <option key={day.id} value={day.id}>
-                D{day.day_index} · {day.name}
-              </option>
-            ))}
-          </select>
-          <div className="flex flex-wrap gap-2">
-            {days
-              .filter((day) => day.id !== copyFromId)
-              .map((day) => {
-                const selected = copyTargets.includes(day.id)
-                return (
-                  <button
-                    key={day.id}
-                    type="button"
-                    disabled={!copyFromId}
-                    onClick={() =>
-                      setCopyTargets((current) =>
-                        selected ? current.filter((id) => id !== day.id) : [...current, day.id],
-                      )
-                    }
-                    className={[
-                      'rounded-lg border px-2 py-1 text-xs',
-                      selected
-                        ? 'border-evo-lime bg-evo-lime/15 text-evo-lime'
-                        : 'border-evo-border text-evo-muted',
-                    ].join(' ')}
-                  >
-                    → {day.name}
-                  </button>
-                )
-              })}
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            fullWidth
-            disabled={!copyFromId || copyTargets.length === 0 || copyDay.isPending}
-            onClick={() => copyDay.mutate()}
-          >
-            Copiar ejercicios
-          </Button>
         </section>
       ) : null}
 

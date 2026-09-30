@@ -68,10 +68,10 @@ export function UiFeedbackProvider({ children }: { children: ReactNode }) {
             className={[
               'pointer-events-auto w-full max-w-md rounded-2xl border-2 px-4 py-3 text-sm font-semibold shadow-lg',
               toast.tone === 'success'
-                ? 'border-evo-lime/50 bg-evo-lime text-[#102000]'
+                ? 'border-evo-lime bg-evo-lime text-white'
                 : toast.tone === 'error'
                   ? 'border-evo-danger bg-evo-danger text-white'
-                  : 'border-evo-border bg-evo-surface-2 text-evo-text',
+                  : 'border-evo-border bg-evo-surface text-evo-text shadow-md',
             ].join(' ')}
             role="status"
           >

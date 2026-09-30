@@ -55,9 +55,9 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="hidden border-r border-evo-border bg-evo-surface/80 lg:flex lg:flex-col lg:px-5 lg:py-6">
-        <div className="mb-8 flex items-center gap-3 rounded-2xl bg-evo-surface-2/80 p-3">
+    <div className="no-x-scroll min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
+      <aside className="hidden border-r border-evo-border bg-evo-surface lg:flex lg:flex-col lg:px-5 lg:py-6">
+        <div className="mb-8 flex items-center gap-3 rounded-2xl bg-evo-surface-2 p-3">
           <BrandLogo size="sm" />
           <div>
             <p className="font-display text-xl font-bold">EvoFit</p>
@@ -75,7 +75,7 @@ export function AppShell() {
                 [
                   'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
                   isActive
-                    ? 'bg-evo-accent text-[#111] shadow-[0_10px_28px_rgba(255,107,44,0.35)]'
+                    ? 'bg-evo-accent text-white shadow-[0_10px_28px_rgba(255,90,31,0.28)]'
                     : 'text-evo-text hover:bg-evo-surface-2',
                 ].join(' ')
               }
@@ -100,8 +100,8 @@ export function AppShell() {
         </div>
       </aside>
 
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col">
-        <header className="safe-top sticky top-0 z-20 border-b border-evo-border/60 bg-[#1a2029]/92 backdrop-blur-md">
+      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-hidden">
+        <header className="safe-top sticky top-0 z-20 border-b border-evo-border/70 bg-evo-surface/90 backdrop-blur-md">
           <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
             <div className="justify-self-start">
               <p className="leading-none">
@@ -133,13 +133,13 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 pb-24 lg:px-8 lg:py-6 lg:pb-10">
+        <main className="no-x-scroll flex-1 px-3 py-4 pb-24 lg:px-8 lg:py-6 lg:pb-10">
           <Outlet />
         </main>
 
         <nav
           aria-label="Navegación móvil"
-          className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border/80 bg-evo-surface/95 backdrop-blur-md lg:hidden"
+          className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border bg-evo-surface/95 backdrop-blur-md lg:hidden"
         >
           <ul className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1">
             {navItems.map((item) => (
