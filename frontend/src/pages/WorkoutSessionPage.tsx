@@ -36,12 +36,21 @@ type ExerciseGroup = {
   sets: Array<SetDraft & { draftIndex: number }>
 }
 
-function scoreOf(mode: TrackingMode, source: PreviousLift | PreviousLiftSet) {
+function scoreOfLift(mode: TrackingMode, source: PreviousLift) {
   return formatScore({
     mode,
-    weight: 'best_weight_kg' in source ? source.best_weight_kg : source.weight_kg,
-    reps: 'best_reps' in source ? source.best_reps : source.reps,
-    duration: 'best_duration_seconds' in source ? source.best_duration_seconds : source.duration_seconds,
+    weight: source.best_weight_kg,
+    reps: source.best_reps,
+    duration: source.best_duration_seconds,
+  })
+}
+
+function scoreOfSet(mode: TrackingMode, source: PreviousLiftSet) {
+  return formatScore({
+    mode,
+    weight: source.weight_kg,
+    reps: source.reps,
+    duration: source.duration_seconds,
   })
 }
 
@@ -333,7 +342,7 @@ export function WorkoutSessionPage() {
                     <span className="block truncate font-display text-lg font-bold">{group.name}</span>
                     {previous ? (
                       <span className="mt-0.5 block text-sm font-semibold text-evo-accent">
-                        Última {formatPreviousDate(previous.recorded_on)} · {scoreOf(group.mode, previous)}
+                        Última {formatPreviousDate(previous.recorded_on)} · {scoreOfLift(group.mode, previous)}
                       </span>
                     ) : (
                       <span className="mt-0.5 block text-sm text-evo-muted">Primera vez</span>
@@ -362,7 +371,7 @@ export function WorkoutSessionPage() {
                           Última vez · {formatPreviousDate(previous.recorded_on)}
                         </p>
                         <p className="mt-1 font-display text-lg font-bold">
-                          {bestScoreLabel(group.mode, group.direction)} {scoreOf(group.mode, previous)}
+                          {bestScoreLabel(group.mode, group.direction)} {scoreOfLift(group.mode, previous)}
                         </p>
                         <ul className="mt-2 flex flex-wrap gap-2">
                           {previous.sets.map((prev) => (
@@ -370,7 +379,7 @@ export function WorkoutSessionPage() {
                               key={prev.set_number}
                               className="rounded-full bg-evo-surface-2 px-3 py-1 text-sm font-semibold"
                             >
-                              S{prev.set_number} {scoreOf(group.mode, prev)}
+                              S{prev.set_number} {scoreOfSet(group.mode, prev)}
                             </li>
                           ))}
                         </ul>
@@ -400,7 +409,7 @@ export function WorkoutSessionPage() {
                                 })
                               }}
                             >
-                              Usar {scoreOf(group.mode, previousSet)}
+                              Usar {scoreOfSet(group.mode, previousSet)}
                             </button>
                           ) : null}
                         </div>
