@@ -129,29 +129,29 @@ class ProgressInsightService
         $compared = $improved + $maintained + $declined;
         if ($compared === 0 && $newOnes > 0) {
             $mood = 'green';
-            $label = 'Primera semana con datos reales. Buen arranque: ahora toca constancia.';
-            $tip = 'Repite los mismos ejercicios la semana que viene para comparar kilos o tiempos.';
-            $focus = 'Construir base de datos';
+            $label = 'Primera semana con números de verdad. Ahora toca repetir, que una vez la hace cualquiera.';
+            $tip = 'La semana que viene, los mismos ejercicios. Si cambias todo, no hay con qué vacilarte.';
+            $focus = 'A ver si repites';
         } elseif ($compared === 0) {
             $mood = 'orange';
-            $label = 'Aún no hay series con peso o tiempo esta semana para evaluar el progreso.';
-            $tip = 'Abre una sesión y anota kilos, repeticiones o el tiempo. Sin marcas no hay coaching útil.';
-            $focus = 'Registrar entrenamientos';
+            $label = 'Esta semana el informe está mudo. Sin kilos ni tiempos no hay de qué reírse.';
+            $tip = 'Abre una sesión y apunta algo. El sofá no genera estadísticas.';
+            $focus = 'Apunta algo';
         } elseif ($declined > $improved && $declined >= max(1, (int) ceil($compared * 0.4))) {
             $mood = 'red';
-            $label = 'Bajada clara en varios movimientos. Prioriza recuperación antes de forzar PR.';
-            $tip = 'Revisa sueño, estrés y comida. Baja 5–10% la carga 1 sesión y vuelve a subir limpio.';
-            $focus = 'Recuperación y técnica';
+            $label = 'Varios ejercicios han bajado. O ha sido una semana perra, o te has venido arriba.';
+            $tip = 'Duerme, come y baja un poco la carga una sesión. El récord puede esperar a que dejes de ir zombie.';
+            $focus = 'Baja el ritmo';
         } elseif ($improved >= $maintained && $improved >= $declined) {
             $mood = 'green';
-            $label = 'Progreso sólido: estás empujando la barra en la mayoría de ejercicios clave.';
-            $tip = 'Mantén el mismo plan 1–2 semanas más. Sube solo cuando completes todas las series con margen.';
-            $focus = 'Progresión controlada';
+            $label = 'Estás subiendo en lo importante. No te vengas arriba y lo estropees el viernes.';
+            $tip = 'Sigue igual una semana más. Sube peso cuando las series salgan limpias, no cuando te pique el ego.';
+            $focus = 'Sigue picando';
         } else {
             $mood = 'orange';
-            $label = 'Semana de mantenimiento. Normal en deload, estrés o volumen alto.';
-            $tip = 'No cambies el programa aún. Busca 1–2 reps más en compuestos antes de añadir kilos.';
-            $focus = 'Calidad de repeticiones';
+            $label = 'Semana de seguir igual. Ni gloria ni desastre: el punto peligroso donde uno se duerme.';
+            $tip = 'No cambies el plan. Busca una repe más antes de tocar los discos como si fueras otro.';
+            $focus = 'No te duermas';
         }
 
         $sessionsPlanned = WorkoutSession::query()
@@ -238,27 +238,27 @@ class ProgressInsightService
 
             return match ($status) {
                 'improved' => $longer
-                    ? 'Aguantas más. Suma segundos cuando la postura siga limpia.'
-                    : 'Has bajado el tiempo. Repite esa marca antes de apretar más.',
-                'maintained' => 'Mismo tiempo. Busca 1–2 segundos de diferencia la próxima.',
+                    ? 'Aguantas más. Cuando la postura siga decente, roba unos segundos más.'
+                    : 'Has bajado el tiempo. Repite esa marca antes de hacerte el héroe.',
+                'maintained' => 'Mismo tiempo. La próxima, aunque sean dos segundos. Que se note que lo intentas.',
                 'declined' => $longer
-                    ? 'Menos aguante. Puede ser fatiga: no fuerces el récord hoy.'
-                    : 'El tiempo ha subido. Revisa el ritmo y recupera antes de buscar marca.',
-                'new' => 'Primera marca de tiempo. Úsala como referencia.',
-                default => 'Sigue anotando el tiempo de cada serie.',
+                    ? 'Menos aguante. Huele a fatiga: hoy no es el día de hacerte el récord.'
+                    : 'El tiempo ha subido. Recupera antes de perseguir la marca como si no doliera.',
+                'new' => 'Primera marca. La semana que viene ya no tienes excusa de “era la primera vez”.',
+                default => 'Apunta el tiempo. Sin cronómetro esto es teatro.',
             };
         }
 
         return match ($status) {
             'improved' => $deltaKg !== null
-                ? 'Buen estímulo. Si las reps fueron limpias, mantén o suma +1–2,5 kg la próxima.'
-                : 'Subida registrada. Sigue con la misma técnica.',
-            'maintained' => 'Estancamiento sano. Añade 1–2 reps antes de tocar el peso.',
+                ? 'Has subido. Si las reps salieron limpias, la próxima puedes picar un poco más.'
+                : 'Subida anotada. No lo celebres cambiando la técnica a mitad.',
+            'maintained' => 'Estás clavado. Mete una o dos reps más antes de tocar el peso para fardar.',
             'declined' => $deltaPct !== null && $deltaPct <= -5
-                ? 'Caída notable. Baja carga, prioriza rango completo y recupera 48–72 h.'
-                : 'Ligera bajada. Puede ser fatiga. No fuerces un PR esta sesión.',
-            'new' => 'Primer registro. Úsalo como baseline para la próxima semana.',
-            default => 'Sigue registrando series completas.',
+                ? 'Menuda bajada. Baja la carga, haz el recorrido entero y duerme. El ego puede esperar.'
+                : 'Un poco por debajo. Puede ser cansancio. Hoy no hace falta un récord para demostrar nada.',
+            'new' => 'Primera vez que lo apuntas. La próxima semana ya se puede comparar, y vacilar.',
+            default => 'Apunta las series enteras. A medias no cuenta ni para reírse.',
         };
     }
 
