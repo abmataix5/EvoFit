@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
-import { api, type Routine, type WorkoutSession } from '../lib/api'
+import { api, type Routine, type RoutineDay, type WorkoutSession } from '../lib/api'
+import { exercisePlanLabel } from '../lib/tracking'
 
 const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const WEEKDAYS_MINI = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -80,6 +81,7 @@ export function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(todayKey())
   const [swapSessionId, setSwapSessionId] = useState<number | null>(null)
   const [swapDayId, setSwapDayId] = useState<number | ''>('')
+  const detailRef = useRef<HTMLDivElement>(null)
 
   const range = useMemo(() => {
     if (view === 'month') {
@@ -148,6 +150,15 @@ export function CalendarPage() {
     setWeekStart(next)
   }
 
+  function selectDate(key: string) {
+    setSelectedDate(key)
+    setSwapSessionId(null)
+    setSwapDayId('')
+    window.setTimeout(() => {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 40)
+  }
+
   function goToday() {
     const today = new Date()
     setSelectedDate(todayKey())
@@ -196,7 +207,7 @@ export function CalendarPage() {
   }, [year, month, today])
 
   return (
-    <div className="no-x-scroll space-y-4 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-start lg:gap-5 lg:space-y-0">
+    <div className="no-x-scroll space-y-4">
       <section className="panel space-y-4 p-4 lg:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -295,10 +306,7 @@ export function CalendarPage() {
                 <li key={item.key}>
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedDate(item.key)
-                      setSwapSessionId(null)
-                    }}
+                    onClick={() => selectDate(item.key)}
                     className={[
                       'flex w-full items-stretch gap-3 rounded-2xl border-2 px-3 py-3 text-left transition',
                       selected
@@ -367,6 +375,22 @@ export function CalendarPage() {
                       />
                     ) : null}
                   </button>
+                  {selected ? (
+                    <div ref={detailRef} className="mt-2">
+                      <DayDetail
+                        dateLabel={formatHumanDate(item.key)}
+                        sessions={sessions}
+                        activeRoutines={activeRoutines}
+                        swapSessionId={swapSessionId}
+                        swapDayId={swapDayId}
+                        swapPending={swapMutation.isPending}
+                        onSwapSession={setSwapSessionId}
+                        onSwapDay={setSwapDayId}
+                        onSaveSwap={() => swapMutation.mutate()}
+                        onOpen={(id) => navigate(`/workout/${id}`)}
+                      />
+                    </div>
+                  ) : null}
                 </li>
               )
             })}
@@ -392,10 +416,7 @@ export function CalendarPage() {
                     key={cell.key}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => {
-                      setSelectedDate(cell.key)
-                      setSwapSessionId(null)
-                    }}
+                    onClick={() => selectDate(cell.key)}
                     className={[
                       'relative flex aspect-square flex-col items-center justify-center rounded-2xl border text-sm transition',
                       selected ? 'border-evo-accent bg-evo-accent/20' : 'border-evo-border bg-evo-surface-2/70',
@@ -420,103 +441,138 @@ export function CalendarPage() {
                 )
               })}
             </div>
+            {selectedDate?.startsWith(`${year}-${String(month + 1).padStart(2, '0')}-`) ? (
+              <div ref={detailRef}>
+                <DayDetail
+                  dateLabel={formatHumanDate(selectedDate)}
+                  sessions={selectedSessions}
+                  activeRoutines={activeRoutines}
+                  swapSessionId={swapSessionId}
+                  swapDayId={swapDayId}
+                  swapPending={swapMutation.isPending}
+                  onSwapSession={setSwapSessionId}
+                  onSwapDay={setSwapDayId}
+                  onSaveSwap={() => swapMutation.mutate()}
+                  onOpen={(id) => navigate(`/workout/${id}`)}
+                />
+              </div>
+            ) : null}
           </>
         )}
       </section>
+    </div>
+  )
+}
 
-      <section className="panel space-y-4 p-4 lg:sticky lg:top-24 lg:p-5">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Detalle del día</p>
-          <h3 className="mt-1 font-display text-xl font-bold capitalize">
-            {selectedDate ? formatHumanDate(selectedDate) : 'Elige un día'}
-          </h3>
-          <p className="mt-1 text-sm text-evo-muted">
-            Toca Abrir para entrenar. Si hiciste otro día del plan, cámbialo aquí.
-          </p>
+function DayDetail({
+  dateLabel,
+  sessions,
+  activeRoutines,
+  swapSessionId,
+  swapDayId,
+  swapPending,
+  onSwapSession,
+  onSwapDay,
+  onSaveSwap,
+  onOpen,
+}: {
+  dateLabel: string
+  sessions: WorkoutSession[]
+  activeRoutines: Routine[]
+  swapSessionId: number | null
+  swapDayId: number | ''
+  swapPending: boolean
+  onSwapSession: (id: number) => void
+  onSwapDay: (id: number | '') => void
+  onSaveSwap: () => void
+  onOpen: (id: number) => void
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border-2 border-evo-accent/40 bg-evo-bg/40 p-3">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Este día</p>
+        <h3 className="font-display text-xl font-bold capitalize">{dateLabel}</h3>
+      </div>
+
+      {sessions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-evo-border px-4 py-5 text-center">
+          <p className="font-semibold">Día libre</p>
+          <p className="mt-1 text-sm text-evo-muted">No hay entrenamiento planificado.</p>
         </div>
-
-        {selectedSessions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-evo-border bg-evo-surface-2/40 px-4 py-6 text-center">
-            <p className="font-semibold">Día libre</p>
-            <p className="mt-1 text-sm text-evo-muted">No hay sesión planificada.</p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {selectedSessions.map((session) => {
-              const routineDays =
-                activeRoutines.find((r) => r.id === session.routine_id)?.days ??
-                session.routine?.days ??
-                []
-              const status = sessionStatus(session)
-              return (
-                <li key={session.id} className="rounded-2xl border border-evo-border bg-evo-surface-2 p-3.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-display text-lg font-bold">{session.day?.name ?? 'Sesión'}</p>
-                        <span
-                          className={[
-                            'rounded-full px-2 py-0.5 text-xs font-bold',
-                            status.tone === 'lime'
-                              ? 'bg-evo-lime/20 text-evo-lime'
-                              : status.tone === 'warn'
-                                ? 'bg-evo-warn/20 text-evo-warn'
-                                : 'bg-evo-accent/20 text-evo-accent',
-                          ].join(' ')}
-                        >
-                          {status.label}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-xs text-evo-muted">
-                        {session.routine?.name}
-                        {session.was_swapped ? ' · editada' : ''}
-                      </p>
-                    </div>
-                    <Button
-                      className="!min-h-10 shrink-0 !px-3 !text-xs"
-                      onClick={() => navigate(`/workout/${session.id}`)}
+      ) : (
+        <ul className="space-y-3">
+          {sessions.map((session) => {
+            const routineDays: RoutineDay[] =
+              activeRoutines.find((routine) => routine.id === session.routine_id)?.days ??
+              session.routine?.days ??
+              []
+            const status = sessionStatus(session)
+            const exercises = session.day?.exercises ?? []
+            return (
+              <li key={session.id} className="space-y-3 rounded-2xl bg-evo-surface p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-display text-lg font-bold">{session.day?.name ?? 'Sesión'}</p>
+                  <span
+                    className={[
+                      'rounded-full px-2.5 py-1 text-xs font-bold',
+                      status.tone === 'lime'
+                        ? 'bg-evo-lime/20 text-evo-lime'
+                        : status.tone === 'warn'
+                          ? 'bg-evo-warn/20 text-evo-warn'
+                          : 'bg-evo-accent/20 text-evo-accent',
+                    ].join(' ')}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+                <p className="text-sm text-evo-muted">
+                  {session.routine?.name}
+                  {session.was_swapped ? ' · día cambiado' : ''}
+                </p>
+                {exercises.length > 0 ? (
+                  <ul className="space-y-1.5">
+                    {exercises.map((exercise) => (
+                      <li key={exercise.id} className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate font-semibold">{exercise.name}</span>
+                        <span className="shrink-0 text-evo-muted">{exercisePlanLabel(exercise)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-evo-muted">Este día no tiene ejercicios.</p>
+                )}
+                <Button size="lg" fullWidth onClick={() => onOpen(session.id)}>
+                  {session.completed_at ? 'Ver entrenamiento' : 'Abrir entrenamiento'}
+                </Button>
+                {!session.completed_at && routineDays.length > 1 ? (
+                  <div className="space-y-2 border-t border-evo-border pt-3">
+                    <p className="text-sm font-semibold">¿Tocaba otro día del plan?</p>
+                    <select
+                      className="w-full"
+                      value={swapSessionId === session.id ? swapDayId : session.routine_day_id ?? ''}
+                      onChange={(e) => {
+                        onSwapSession(session.id)
+                        onSwapDay(e.target.value ? Number(e.target.value) : '')
+                      }}
                     >
-                      {session.completed_at ? 'Ver' : 'Empezar'}
-                    </Button>
+                      {routineDays.map((day) => (
+                        <option key={day.id} value={day.id}>
+                          {day.name}
+                        </option>
+                      ))}
+                    </select>
+                    {swapSessionId === session.id && swapDayId && Number(swapDayId) !== session.routine_day_id ? (
+                      <Button variant="secondary" fullWidth disabled={swapPending} onClick={onSaveSwap}>
+                        Guardar cambio
+                      </Button>
+                    ) : null}
                   </div>
-
-                  {!session.completed_at && routineDays.length > 1 ? (
-                    <div className="mt-3 space-y-2 border-t border-evo-border pt-3">
-                      <p className="text-xs font-semibold text-evo-muted">¿Entrenaste otro día del plan?</p>
-                      <select
-                        className="w-full"
-                        value={swapSessionId === session.id ? swapDayId : session.routine_day_id ?? ''}
-                        onChange={(e) => {
-                          setSwapSessionId(session.id)
-                          setSwapDayId(e.target.value ? Number(e.target.value) : '')
-                        }}
-                      >
-                        {routineDays.map((day) => (
-                          <option key={day.id} value={day.id}>
-                            {day.name}
-                          </option>
-                        ))}
-                      </select>
-                      {swapSessionId === session.id &&
-                      swapDayId &&
-                      Number(swapDayId) !== session.routine_day_id ? (
-                        <Button
-                          variant="secondary"
-                          fullWidth
-                          disabled={swapMutation.isPending}
-                          onClick={() => swapMutation.mutate()}
-                        >
-                          Guardar cambio
-                        </Button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }

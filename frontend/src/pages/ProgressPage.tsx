@@ -1,17 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
@@ -62,6 +51,10 @@ function formatShortDate(iso: string) {
 function formatKg(value: number | null | undefined) {
   if (value == null) return '—'
   return `${Number(value).toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg`
+}
+
+function formatVolume(value: number) {
+  return `${Math.round(value).toLocaleString('es-ES')} kg`
 }
 
 function formatMark(row: ProgressExerciseRow, which: 'current' | 'previous') {
@@ -259,11 +252,11 @@ export function ProgressPage() {
         />
         <KpiCard
           label="Volumen"
-          value={training ? `${Math.round(training.volume_this_week / 1000)}k` : '—'}
+          value={training ? formatVolume(training.volume_this_week) : '—'}
           hint={
             training?.volume_delta_pct != null
-              ? `${training.volume_delta_pct > 0 ? '+' : ''}${training.volume_delta_pct}% vs ant.`
-              : 'kg × reps (semana)'
+              ? `${training.volume_delta_pct > 0 ? '+' : ''}${training.volume_delta_pct}% vs la semana anterior`
+              : 'Kilos × repeticiones de esta semana'
           }
         />
         <KpiCard
@@ -284,33 +277,13 @@ export function ProgressPage() {
 
       <div className="min-w-0 space-y-4">
         <div>
-          <h3 className="font-display text-lg font-bold">Fuerza · semana a semana</h3>
+          <h3 className="font-display text-lg font-bold">Marcas de la semana</h3>
           <p className="text-sm text-evo-muted">
-            La gráfica compara kilos. Los ejercicios por tiempo salen en la lista, con su mejor marca.
+            Cada ejercicio compara la semana pasada con esta. El número es la mejor serie.
           </p>
         </div>
 
-        <div className="panel min-w-0 overflow-hidden p-4 lg:p-5">
-          <div className="h-56 w-full min-w-0 sm:h-64">
-            {(data?.chart.length ?? 0) > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data?.chart} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" />
-                  <XAxis dataKey="name" tick={{ fill: '#c5d0de', fontSize: 11 }} interval={0} height={48} />
-                  <YAxis tick={{ fill: '#c5d0de', fontSize: 12 }} unit="kg" width={48} />
-                  <Tooltip
-                    contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="semana_anterior" name="Anterior" fill="#7d8da3" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="esta_semana" name="Esta" fill="#ff8a4c" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyBlock text="Sin datos de fuerza aún. Entrena y guarda kilos." />
-            )}
-          </div>
-        </div>
+        <CompareBoard rows={data?.exercises ?? []} />
 
         <div className="grid gap-3 lg:grid-cols-2">
           <HighlightList
@@ -330,13 +303,13 @@ export function ProgressPage() {
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="font-display text-base font-bold">Detalle por ejercicio</h4>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {(
                 [
                   ['all', 'Todos'],
-                  ['improved', 'Subió'],
+                  ['improved', 'Mejor'],
                   ['maintained', 'Igual'],
-                  ['declined', 'Bajó'],
+                  ['declined', 'Peor'],
                   ['new', 'Nuevo'],
                 ] as const
               ).map(([key, label]) => (
@@ -345,7 +318,7 @@ export function ProgressPage() {
                   type="button"
                   onClick={() => setFilter(key)}
                   className={[
-                    'rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold transition',
+                    'min-h-11 shrink-0 rounded-full px-4 text-sm font-bold transition',
                     filter === key ? 'bg-evo-accent text-[#1a120c]' : 'bg-evo-surface-2 text-evo-muted',
                   ].join(' ')}
                 >
@@ -424,22 +397,27 @@ export function ProgressPage() {
                 </p>
               ) : null}
             </div>
-            <div className="h-44 w-full">
-              {weightChart.length > 0 ? (
+            <div className="h-40 w-full min-w-0">
+              {weightChart.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={weightChart}>
+                  <AreaChart data={weightChart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="weightFill" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#b6f36a" stopOpacity={0.35} />
                         <stop offset="100%" stopColor="#b6f36a" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" />
-                    <XAxis dataKey="fecha" tick={{ fill: '#c5d0de', fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" vertical={false} />
+                    <XAxis
+                      dataKey="fecha"
+                      tick={{ fill: '#c5d0de', fontSize: 12 }}
+                      interval="preserveStartEnd"
+                      minTickGap={28}
+                    />
                     <YAxis
                       tick={{ fill: '#c5d0de', fontSize: 12 }}
                       domain={['dataMin - 1', 'dataMax + 1']}
-                      width={40}
+                      width={36}
                     />
                     <Tooltip
                       contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
@@ -447,10 +425,20 @@ export function ProgressPage() {
                     <Area type="monotone" dataKey="kg" name="Kg" stroke="#b6f36a" fill="url(#weightFill)" strokeWidth={2.5} />
                   </AreaChart>
                 </ResponsiveContainer>
-              ) : (
+              ) : weightChart.length === 0 ? (
                 <EmptyBlock text="Sin historial de peso todavía." />
-              )}
+              ) : null}
             </div>
+            {weightChart.length > 0 ? (
+              <ul className="space-y-1 border-t border-evo-border pt-3">
+                {[...(weightsQuery.data ?? [])].slice(0, 6).map((entry) => (
+                  <li key={entry.id} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-evo-muted">{formatShortDate(entry.recorded_on)}</span>
+                    <span className="font-bold tabular-nums">{formatKg(Number(entry.weight_kg))}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         </div>
       </section>
@@ -485,10 +473,10 @@ function SectionHeading({ kicker, title, text }: { kicker: string; title: string
 
 function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="panel px-3 py-3 sm:px-4 sm:py-4">
+    <div className="panel min-w-0 px-3 py-3 sm:px-4 sm:py-4">
       <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">{label}</p>
-      <p className="mt-1 font-display text-2xl font-bold leading-none sm:text-3xl">{value}</p>
-      <p className="mt-1.5 text-[0.7rem] leading-snug text-evo-muted">{hint}</p>
+      <p className="mt-1 break-words font-display text-2xl font-bold leading-tight sm:text-3xl">{value}</p>
+      <p className="mt-1.5 text-sm leading-snug text-evo-muted">{hint}</p>
     </div>
   )
 }
@@ -522,7 +510,7 @@ function HighlightList({
           {rows.map((row) => (
             <li key={row.name} className="rounded-xl bg-evo-bg/50 px-3 py-2">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-semibold">{row.name}</p>
+                <p className="truncate text-base font-semibold">{row.name}</p>
                 <span
                   className={[
                     'shrink-0 text-xs font-bold',
@@ -532,7 +520,7 @@ function HighlightList({
                   {formatDelta(row)}
                 </span>
               </div>
-              <p className="mt-0.5 text-[0.7rem] text-evo-muted">
+              <p className="mt-0.5 text-sm text-evo-muted">
                 {formatMark(row, 'previous')} → {formatMark(row, 'current')}
               </p>
             </li>
@@ -546,24 +534,112 @@ function HighlightList({
 function ExerciseRow({ row }: { row: ProgressExerciseRow }) {
   const ui = statusUi[row.status]
   return (
-    <li className="panel px-4 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-semibold">
-            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{statusLabel(row)}</span> {row.name}
-          </p>
-          <p className="mt-0.5 text-xs text-evo-muted">
-            {formatMark(row, 'previous')} → {formatMark(row, 'current')}
-            {row.delta_pct != null ? ` · ${row.delta_pct > 0 ? '+' : ''}${row.delta_pct}%` : ''}
-          </p>
-        </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{statusLabel(row)}</span>
+    <li className="panel space-y-2 px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 font-display text-lg font-bold leading-tight">{row.name}</p>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{statusLabel(row)}</span>
       </div>
-      {row.coach_note ? (
-        <p className="mt-2 border-t border-evo-border/50 pt-2 text-xs leading-snug text-evo-muted">
-          {row.coach_note}
-        </p>
-      ) : null}
+      <p className="text-base font-semibold">
+        <span className="text-evo-muted">{formatMark(row, 'previous')}</span>
+        <span className="px-2 text-evo-muted">→</span>
+        <span>{formatMark(row, 'current')}</span>
+      </p>
+      <p className="text-sm font-bold text-evo-accent">{formatDelta(row)}</p>
+      {row.coach_note ? <p className="text-sm leading-snug text-evo-muted">{row.coach_note}</p> : null}
     </li>
+  )
+}
+
+function CompareBoard({ rows }: { rows: ProgressExerciseRow[] }) {
+  const comparable = rows.filter(
+    (row) =>
+      row.current_best_kg != null ||
+      row.previous_best_kg != null ||
+      row.current_best_seconds != null ||
+      row.previous_best_seconds != null,
+  )
+  if (comparable.length === 0) {
+    return <EmptyBlock text="Sin marcas esta semana. Entrena y guarda kilos o tiempos." />
+  }
+
+  const weightRows = comparable.filter((row) => row.metric !== 'time')
+  const timeRows = comparable.filter((row) => row.metric === 'time')
+  const maxKg = Math.max(
+    1,
+    ...weightRows.flatMap((row) => [row.current_best_kg ?? 0, row.previous_best_kg ?? 0]),
+  )
+  const maxSeconds = Math.max(
+    1,
+    ...timeRows.flatMap((row) => [row.current_best_seconds ?? 0, row.previous_best_seconds ?? 0]),
+  )
+
+  return (
+    <div className="space-y-3">
+      {weightRows.length > 0 ? (
+        <ul className="panel space-y-4 p-4">
+          {weightRows.map((row) => (
+            <CompareRow key={row.name} row={row} max={maxKg} unit="kg" />
+          ))}
+        </ul>
+      ) : null}
+      {timeRows.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-evo-muted">Por tiempo</p>
+          <ul className="panel space-y-4 p-4">
+            {timeRows.map((row) => (
+              <CompareRow key={row.name} row={row} max={maxSeconds} unit="time" />
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function CompareRow({
+  row,
+  max,
+  unit,
+}: {
+  row: ProgressExerciseRow
+  max: number
+  unit: 'kg' | 'time'
+}) {
+  const previous = unit === 'time' ? row.previous_best_seconds : row.previous_best_kg
+  const current = unit === 'time' ? row.current_best_seconds : row.current_best_kg
+  return (
+    <li className="space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="min-w-0 truncate text-base font-bold">{row.name}</p>
+        <p className="shrink-0 text-sm font-bold text-evo-accent">{formatDelta(row)}</p>
+      </div>
+      <Meter label="Antes" value={previous ?? null} max={max} text={formatMark(row, 'previous')} color="#7d8da3" />
+      <Meter label="Ahora" value={current ?? null} max={max} text={formatMark(row, 'current')} color="#ff8a4c" />
+    </li>
+  )
+}
+
+function Meter({
+  label,
+  value,
+  max,
+  text,
+  color,
+}: {
+  label: string
+  value: number | null
+  max: number
+  text: string
+  color: string
+}) {
+  const width = value == null || value <= 0 ? 0 : Math.max(8, Math.round((value / max) * 100))
+  return (
+    <div className="grid grid-cols-[3.25rem_minmax(0,1fr)_4.5rem] items-center gap-2">
+      <span className="text-xs font-bold uppercase tracking-wide text-evo-muted">{label}</span>
+      <span className="h-3 overflow-hidden rounded-full bg-evo-bg">
+        <span className="block h-full rounded-full" style={{ width: `${width}%`, background: color }} />
+      </span>
+      <span className="text-right text-sm font-bold tabular-nums">{text}</span>
+    </div>
   )
 }
