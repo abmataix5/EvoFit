@@ -20,17 +20,17 @@ import axios from 'axios'
 
 const moodUi = {
   green: {
-    title: 'Vas de subida',
+    title: 'Vas picando',
     ring: 'border-evo-lime/50',
     badge: 'bg-evo-lime text-[#102000]',
   },
   orange: {
-    title: 'Semana estable',
+    title: 'Ni fu ni fa',
     ring: 'border-evo-warn/50',
     badge: 'bg-evo-warn text-[#1a1400]',
   },
   red: {
-    title: 'Hay que ajustar',
+    title: 'Esta semana, regular',
     ring: 'border-evo-danger/50',
     badge: 'bg-evo-danger text-[#1a120c]',
   },
