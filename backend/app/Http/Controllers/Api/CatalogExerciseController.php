@@ -38,8 +38,11 @@ class CatalogExerciseController extends Controller
             'user_id' => $request->user()->id,
             'name' => $payload['name'],
             'target_muscle' => $payload['target_muscle'] ?? null,
+            'tracking_mode' => $payload['tracking_mode'] ?? 'weight_reps',
+            'time_direction' => $payload['time_direction'] ?? 'faster',
             'default_sets' => $payload['default_sets'] ?? 3,
             'default_reps' => $payload['default_reps'] ?? 10,
+            'default_duration_seconds' => $payload['default_duration_seconds'] ?? null,
             'rest_seconds' => $payload['rest_seconds'] ?? 90,
             'notes' => $payload['notes'] ?? null,
         ]);
@@ -63,10 +66,14 @@ class CatalogExerciseController extends Controller
             ]);
         }
 
-        if (array_key_exists('target_muscle', $payload)) {
-            $catalogExercise->routineExercises()->update([
-                'target_muscle' => $catalogExercise->target_muscle,
-            ]);
+        $sync = [];
+        foreach (['target_muscle', 'tracking_mode', 'time_direction', 'default_duration_seconds'] as $field) {
+            if (array_key_exists($field, $payload)) {
+                $sync[$field] = $catalogExercise->{$field};
+            }
+        }
+        if ($sync !== []) {
+            $catalogExercise->routineExercises()->update($sync);
         }
 
         return new CatalogExerciseResource($catalogExercise->fresh());

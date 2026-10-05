@@ -16,6 +16,7 @@ class ExerciseSetLogResource extends JsonResource
             'set_number' => $this->set_number,
             'weight_kg' => $this->weight_kg,
             'reps' => $this->reps,
+            'duration_seconds' => $this->duration_seconds,
             'completed' => $this->completed,
             'exercise' => new RoutineExerciseResource($this->whenLoaded('routineExercise')),
         ];

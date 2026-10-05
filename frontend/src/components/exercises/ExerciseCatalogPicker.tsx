@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { CatalogExercise } from '../../lib/api'
+import { modeLabel, type TimeDirection, type TrackingMode } from '../../lib/tracking'
 import { Input } from '../ui/Input'
 
 type Props = {
@@ -10,8 +11,11 @@ type Props = {
   onChange: (next: {
     name: string
     catalog_exercise_id: number | null
+    tracking_mode?: TrackingMode
+    time_direction?: TimeDirection
     default_sets?: number
     default_reps?: number
+    default_duration_seconds?: number | null
     rest_seconds?: number
   }) => void
 }
@@ -56,8 +60,11 @@ export function ExerciseCatalogPicker({ label, name, catalogId, catalog, onChang
             catalog_exercise_id: match?.id ?? null,
             ...(match
               ? {
+                  tracking_mode: match.tracking_mode ?? 'weight_reps',
+                  time_direction: match.time_direction ?? 'faster',
                   default_sets: match.default_sets,
                   default_reps: match.default_reps,
+                  default_duration_seconds: match.default_duration_seconds ?? null,
                   rest_seconds: match.rest_seconds,
                 }
               : {}),
@@ -78,17 +85,21 @@ export function ExerciseCatalogPicker({ label, name, catalogId, catalog, onChang
                   onChange({
                     name: item.name,
                     catalog_exercise_id: item.id,
+                    tracking_mode: item.tracking_mode ?? 'weight_reps',
+                    time_direction: item.time_direction ?? 'faster',
                     default_sets: item.default_sets,
                     default_reps: item.default_reps,
+                    default_duration_seconds: item.default_duration_seconds ?? null,
                     rest_seconds: item.rest_seconds,
                   })
                   setOpen(false)
                 }}
               >
                 <span className="font-semibold">{item.name}</span>
-                {item.target_muscle ? (
-                  <span className="text-xs text-evo-muted">{item.target_muscle}</span>
-                ) : null}
+                <span className="text-xs text-evo-muted">
+                  {modeLabel(item.tracking_mode ?? 'weight_reps')}
+                  {item.target_muscle ? ` · ${item.target_muscle}` : ''}
+                </span>
               </button>
             </li>
           ))}

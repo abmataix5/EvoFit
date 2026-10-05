@@ -17,6 +17,7 @@ class ExerciseSetLog extends Model
         'set_number',
         'weight_kg',
         'reps',
+        'duration_seconds',
         'completed',
     ];
 
@@ -24,6 +25,7 @@ class ExerciseSetLog extends Model
     {
         return [
             'weight_kg' => 'decimal:2',
+            'duration_seconds' => 'integer',
             'completed' => 'boolean',
         ];
     }

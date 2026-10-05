@@ -4,13 +4,25 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { api, type ExerciseSetLog, type PreviousLift, type WorkoutSession } from '../lib/api'
+import { api, type ExerciseSetLog, type PreviousLift, type PreviousLiftSet, type WorkoutSession } from '../lib/api'
+import {
+  bestScoreLabel,
+  formatDuration,
+  formatScore,
+  isTimeMode,
+  joinDuration,
+  splitDuration,
+  type TimeDirection,
+  type TrackingMode,
+} from '../lib/tracking'
 
 type SetDraft = {
   routine_exercise_id: number
   set_number: number
   weight_kg: string
   reps: string
+  minutes: string
+  seconds: string
 }
 
 type ExerciseGroup = {
@@ -18,12 +30,24 @@ type ExerciseGroup = {
   name: string
   rest?: number | null
   muscle?: string | null
+  mode: TrackingMode
+  direction: TimeDirection
+  goalSeconds: number | null
   sets: Array<SetDraft & { draftIndex: number }>
 }
 
-function formatLoad(weight: number, reps: number | null) {
-  const kg = Number(weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })
-  return reps != null ? `${kg} kg × ${reps}` : `${kg} kg`
+function scoreOf(mode: TrackingMode, source: PreviousLift | PreviousLiftSet) {
+  return formatScore({
+    mode,
+    weight: 'best_weight_kg' in source ? source.best_weight_kg : source.weight_kg,
+    reps: 'best_reps' in source ? source.best_reps : source.reps,
+    duration: 'best_duration_seconds' in source ? source.best_duration_seconds : source.duration_seconds,
+  })
+}
+
+function setLogged(draft: SetDraft, mode: TrackingMode) {
+  if (isTimeMode(mode)) return joinDuration(draft.minutes, draft.seconds) != null
+  return draft.weight_kg.trim() !== ''
 }
 
 function formatPreviousDate(iso: string) {
@@ -47,11 +71,23 @@ function buildDrafts(session: WorkoutSession): SetDraft[] {
     for (let set = 1; set <= exercise.default_sets; set += 1) {
       const key = `${exercise.id}-${set}`
       const log = existing.get(key)
+      const mode = exercise.tracking_mode ?? 'weight_reps'
+      const duration = splitDuration(log?.duration_seconds)
       drafts.push({
         routine_exercise_id: exercise.id,
         set_number: set,
-        weight_kg: log?.weight_kg != null ? String(log.weight_kg) : '',
-        reps: log?.reps != null ? String(log.reps) : String(exercise.default_reps),
+        weight_kg: !isTimeMode(mode) || mode === 'weight_time'
+          ? log?.weight_kg != null
+            ? String(log.weight_kg)
+            : ''
+          : '',
+        reps: mode === 'weight_reps'
+          ? log?.reps != null
+            ? String(log.reps)
+            : String(exercise.default_reps)
+          : '',
+        minutes: duration.minutes,
+        seconds: duration.seconds,
       })
     }
   }
@@ -93,6 +129,9 @@ export function WorkoutSessionPage() {
       name: exercise.name,
       rest: exercise.rest_seconds,
       muscle: exercise.target_muscle,
+      mode: exercise.tracking_mode ?? 'weight_reps',
+      direction: exercise.time_direction ?? 'faster',
+      goalSeconds: exercise.default_duration_seconds ?? null,
       sets: drafts
         .map((draft, draftIndex) => ({ ...draft, draftIndex }))
         .filter((draft) => draft.routine_exercise_id === exercise.id),
@@ -121,6 +160,7 @@ export function WorkoutSessionPage() {
         set_number: draft.set_number,
         weight_kg: draft.weight_kg === '' ? null : Number(draft.weight_kg),
         reps: draft.reps === '' ? null : Number(draft.reps),
+        duration_seconds: joinDuration(draft.minutes, draft.seconds),
         completed: true,
       }))
       const { data } = await api.put<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}/logs`, {
@@ -185,7 +225,7 @@ export function WorkoutSessionPage() {
   async function completeSession() {
     const ok = await confirm({
       title: '¿Completar sesión?',
-      message: 'Se marcará como hecha en el calendario. Podrás seguir viendo los pesos en el historial.',
+      message: 'Se marcará como hecha en el calendario. Podrás seguir viendo kilos y tiempos en el historial.',
       confirmLabel: 'Completar',
       cancelLabel: 'Seguir editando',
     })
@@ -222,7 +262,8 @@ export function WorkoutSessionPage() {
     return <p className="text-sm font-semibold text-evo-danger">Sesión no encontrada.</p>
   }
 
-  const filledSets = drafts.filter((d) => d.weight_kg !== '').length
+  const modeByExercise = new Map((session.day?.exercises ?? []).map((exercise) => [exercise.id, exercise.tracking_mode ?? 'weight_reps']))
+  const filledSets = drafts.filter((draft) => setLogged(draft, modeByExercise.get(draft.routine_exercise_id) ?? 'weight_reps')).length
   const totalSets = drafts.length
 
   return (
@@ -242,7 +283,7 @@ export function WorkoutSessionPage() {
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="chip bg-evo-surface-2 text-evo-muted">
-            {filledSets}/{totalSets} series con kg
+            {filledSets}/{totalSets} series anotadas
           </span>
           <span
             className={[
@@ -274,8 +315,9 @@ export function WorkoutSessionPage() {
         <ul className="space-y-2">
           {groups.map((group, index) => {
             const open = openExerciseId === group.id
-            const doneSets = group.sets.filter((set) => set.weight_kg !== '').length
+            const doneSets = group.sets.filter((set) => setLogged(set, group.mode)).length
             const previous = previousFor(session, group.id)
+            const loggedLabel = isTimeMode(group.mode) ? 'con tiempo' : 'con kg'
             return (
               <li key={group.id} className="panel overflow-hidden">
                 <button
@@ -291,15 +333,14 @@ export function WorkoutSessionPage() {
                     <span className="block truncate font-display text-lg font-bold">{group.name}</span>
                     {previous ? (
                       <span className="mt-0.5 block text-sm font-semibold text-evo-accent">
-                        Última {formatPreviousDate(previous.recorded_on)} ·{' '}
-                        {formatLoad(previous.best_weight_kg, previous.best_reps)}
+                        Última {formatPreviousDate(previous.recorded_on)} · {scoreOf(group.mode, previous)}
                       </span>
                     ) : (
                       <span className="mt-0.5 block text-sm text-evo-muted">Primera vez</span>
                     )}
                     <span className="block text-xs text-evo-muted">
                       {group.sets.length} series
-                      {doneSets > 0 ? ` · ${doneSets} con kg` : ''}
+                      {doneSets > 0 ? ` · ${doneSets} ${loggedLabel}` : ''}
                     </span>
                   </span>
                   <span className="text-evo-muted" aria-hidden>
@@ -309,13 +350,19 @@ export function WorkoutSessionPage() {
 
                 {open ? (
                   <div className="space-y-2 border-t border-evo-border bg-evo-bg/30 px-3 py-3">
+                    {isTimeMode(group.mode) ? (
+                      <p className="px-1 text-sm text-evo-muted">
+                        {group.direction === 'longer' ? 'Más tiempo es mejor.' : 'Menos tiempo es mejor.'}
+                        {group.goalSeconds ? ` Objetivo ${formatDuration(group.goalSeconds)}.` : ''}
+                      </p>
+                    ) : null}
                     {previous ? (
                       <div className="rounded-2xl bg-evo-surface px-3 py-3">
                         <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">
                           Última vez · {formatPreviousDate(previous.recorded_on)}
                         </p>
                         <p className="mt-1 font-display text-lg font-bold">
-                          Mejor serie {formatLoad(previous.best_weight_kg, previous.best_reps)}
+                          {bestScoreLabel(group.mode, group.direction)} {scoreOf(group.mode, previous)}
                         </p>
                         <ul className="mt-2 flex flex-wrap gap-2">
                           {previous.sets.map((prev) => (
@@ -323,7 +370,7 @@ export function WorkoutSessionPage() {
                               key={prev.set_number}
                               className="rounded-full bg-evo-surface-2 px-3 py-1 text-sm font-semibold"
                             >
-                              S{prev.set_number} {formatLoad(prev.weight_kg, prev.reps)}
+                              S{prev.set_number} {scoreOf(group.mode, prev)}
                             </li>
                           ))}
                         </ul>
@@ -342,20 +389,24 @@ export function WorkoutSessionPage() {
                             <button
                               type="button"
                               className="rounded-full bg-evo-bg px-3 py-1 text-sm font-semibold text-evo-text"
-                              onClick={() =>
+                              onClick={() => {
+                                const duration = splitDuration(previousSet.duration_seconds)
                                 updateDraft(set.draftIndex, {
-                                  weight_kg: String(previousSet.weight_kg),
-                                  reps:
-                                    previousSet.reps != null ? String(previousSet.reps) : set.reps,
+                                  weight_kg:
+                                    previousSet.weight_kg != null ? String(previousSet.weight_kg) : '',
+                                  reps: previousSet.reps != null ? String(previousSet.reps) : set.reps,
+                                  minutes: duration.minutes,
+                                  seconds: duration.seconds,
                                 })
-                              }
+                              }}
                             >
-                              Usar {formatLoad(previousSet.weight_kg, previousSet.reps)}
+                              Usar {scoreOf(group.mode, previousSet)}
                             </button>
                           ) : null}
                         </div>
                         <div className="grid min-w-0 grid-cols-2 gap-2">
-                        <div className="min-w-0">
+                        {group.mode !== 'time' ? (
+                        <div className={group.mode === 'weight_time' ? 'col-span-2 min-w-0' : 'min-w-0'}>
                           <Input
                             label="Kg"
                             inputMode="decimal"
@@ -363,6 +414,8 @@ export function WorkoutSessionPage() {
                             onChange={(e) => updateDraft(set.draftIndex, { weight_kg: e.target.value })}
                           />
                         </div>
+                        ) : null}
+                        {group.mode === 'weight_reps' ? (
                         <div className="min-w-0">
                           <Input
                             label="Reps"
@@ -371,6 +424,34 @@ export function WorkoutSessionPage() {
                             onChange={(e) => updateDraft(set.draftIndex, { reps: e.target.value })}
                           />
                         </div>
+                        ) : (
+                          <>
+                            <div className="min-w-0">
+                              <Input
+                                label="Min"
+                                inputMode="numeric"
+                                value={set.minutes}
+                                placeholder="0"
+                                onChange={(e) => updateDraft(set.draftIndex, { minutes: e.target.value })}
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <Input
+                                label="Seg"
+                                inputMode="numeric"
+                                value={set.seconds}
+                                placeholder="00"
+                                onChange={(e) => updateDraft(set.draftIndex, { seconds: e.target.value })}
+                                onBlur={() => {
+                                  const total = joinDuration(set.minutes, set.seconds)
+                                  if (total == null) return
+                                  const parts = splitDuration(total)
+                                  updateDraft(set.draftIndex, parts)
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
                         </div>
                       </div>
                       )

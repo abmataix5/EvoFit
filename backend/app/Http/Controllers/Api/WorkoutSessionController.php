@@ -141,6 +141,7 @@ class WorkoutSessionController extends Controller
                 [
                     'weight_kg' => $set['weight_kg'] ?? null,
                     'reps' => $set['reps'] ?? null,
+                    'duration_seconds' => ! empty($set['duration_seconds']) ? (int) $set['duration_seconds'] : null,
                     'completed' => $set['completed'] ?? true,
                 ]
             );

@@ -6,12 +6,25 @@ import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, defaultWeekdays, type CatalogExercise } from '../lib/api'
+import {
+  directionLabel,
+  isTimeMode,
+  joinDuration,
+  modeLabel,
+  splitDuration,
+  type TimeDirection,
+  type TrackingMode,
+} from '../lib/tracking'
 
 type DraftExercise = {
   name: string
   catalog_exercise_id: number | null
+  tracking_mode: TrackingMode
+  time_direction: TimeDirection
   default_sets: number
   default_reps: number
+  duration_minutes: string
+  duration_seconds: string
   rest_seconds: number
 }
 
@@ -27,8 +40,12 @@ function emptyExercise(): DraftExercise {
   return {
     name: '',
     catalog_exercise_id: null,
+    tracking_mode: 'weight_reps',
+    time_direction: 'faster',
     default_sets: 3,
     default_reps: 10,
+    duration_minutes: '',
+    duration_seconds: '',
     rest_seconds: 90,
   }
 }
@@ -91,8 +108,13 @@ export function NewRoutinePage() {
               name: exercise.name.trim(),
               catalog_exercise_id: exercise.catalog_exercise_id,
               sort_order: index,
+              tracking_mode: exercise.tracking_mode,
+              time_direction: exercise.time_direction,
               default_sets: exercise.default_sets,
               default_reps: exercise.default_reps,
+              default_duration_seconds: isTimeMode(exercise.tracking_mode)
+                ? joinDuration(exercise.duration_minutes, exercise.duration_seconds)
+                : null,
               rest_seconds: exercise.rest_seconds,
               target_muscle: null,
             })),
@@ -309,11 +331,20 @@ export function NewRoutinePage() {
                         updateExercise(activeDay, exerciseIndex, {
                           name: next.name,
                           catalog_exercise_id: next.catalog_exercise_id,
+                          ...(next.tracking_mode !== undefined
+                            ? { tracking_mode: next.tracking_mode }
+                            : {}),
+                          ...(next.time_direction !== undefined
+                            ? { time_direction: next.time_direction }
+                            : {}),
                           ...(next.default_sets !== undefined
                             ? { default_sets: next.default_sets }
                             : {}),
                           ...(next.default_reps !== undefined
                             ? { default_reps: next.default_reps }
+                            : {}),
+                          ...(next.default_duration_seconds !== undefined
+                            ? splitDuration(next.default_duration_seconds)
                             : {}),
                           ...(next.rest_seconds !== undefined
                             ? { rest_seconds: next.rest_seconds }
@@ -321,6 +352,14 @@ export function NewRoutinePage() {
                         })
                       }
                     />
+                    {exercise.name.trim() ? (
+                      <p className="mt-2 text-sm font-semibold text-evo-accent">
+                        {modeLabel(exercise.tracking_mode)}
+                        {isTimeMode(exercise.tracking_mode)
+                          ? ` · ${directionLabel(exercise.time_direction)}`
+                          : ''}
+                      </p>
+                    ) : null}
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Input
                         label="Series"
@@ -333,17 +372,44 @@ export function NewRoutinePage() {
                           })
                         }
                       />
-                      <Input
-                        label="Reps"
-                        type="number"
-                        min={1}
-                        value={exercise.default_reps}
-                        onChange={(e) =>
-                          updateExercise(activeDay, exerciseIndex, {
-                            default_reps: Number(e.target.value),
-                          })
-                        }
-                      />
+                      {isTimeMode(exercise.tracking_mode) ? (
+                        <>
+                          <Input
+                            label="Min"
+                            inputMode="numeric"
+                            value={exercise.duration_minutes}
+                            placeholder="1"
+                            onChange={(e) =>
+                              updateExercise(activeDay, exerciseIndex, {
+                                duration_minutes: e.target.value,
+                              })
+                            }
+                          />
+                          <Input
+                            label="Seg"
+                            inputMode="numeric"
+                            value={exercise.duration_seconds}
+                            placeholder="30"
+                            onChange={(e) =>
+                              updateExercise(activeDay, exerciseIndex, {
+                                duration_seconds: e.target.value,
+                              })
+                            }
+                          />
+                        </>
+                      ) : (
+                        <Input
+                          label="Reps"
+                          type="number"
+                          min={1}
+                          value={exercise.default_reps}
+                          onChange={(e) =>
+                            updateExercise(activeDay, exerciseIndex, {
+                              default_reps: Number(e.target.value),
+                            })
+                          }
+                        />
+                      )}
                     </div>
                     {currentDay.exercises.length > 1 ? (
                       <button

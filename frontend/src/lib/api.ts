@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { TimeDirection, TrackingMode } from './tracking'
 
 // Same-origin: el proxy de Vite reenvía a Laravel y evita fallos CSRF entre puertos.
 export const api = axios.create({
@@ -41,8 +42,11 @@ export type RoutineExercise = {
   catalog_exercise_id?: number | null
   name: string
   sort_order: number
+  tracking_mode?: TrackingMode
+  time_direction?: TimeDirection
   default_sets: number
   default_reps: number
+  default_duration_seconds?: number | null
   rest_seconds?: number | null
   target_muscle?: string | null
   notes?: string | null
@@ -52,8 +56,11 @@ export type CatalogExercise = {
   id: number
   name: string
   target_muscle?: string | null
+  tracking_mode?: TrackingMode
+  time_direction?: TimeDirection
   default_sets: number
   default_reps: number
+  default_duration_seconds?: number | null
   rest_seconds: number
   notes?: string | null
   created_at?: string
@@ -85,14 +92,18 @@ export type Routine = {
 
 export type PreviousLiftSet = {
   set_number: number
-  weight_kg: number
+  weight_kg: number | null
   reps: number | null
+  duration_seconds?: number | null
 }
 
 export type PreviousLift = {
   recorded_on: string
-  best_weight_kg: number
+  tracking_mode?: TrackingMode
+  time_direction?: TimeDirection
+  best_weight_kg: number | null
   best_reps: number | null
+  best_duration_seconds?: number | null
   sets: PreviousLiftSet[]
 }
 
@@ -102,6 +113,7 @@ export type ExerciseSetLog = {
   set_number: number
   weight_kg: string | number | null
   reps: number | null
+  duration_seconds?: number | null
   completed: boolean
   exercise?: RoutineExercise
 }
@@ -165,12 +177,17 @@ export type ProgressInsight = {
 export type ProgressExerciseRow = {
   catalog_exercise_id?: number | null
   name: string
+  metric?: 'weight' | 'time'
+  time_direction?: TimeDirection | null
   status: 'improved' | 'maintained' | 'declined' | 'new'
   current_best_kg: number | null
   previous_best_kg: number | null
+  current_best_seconds?: number | null
+  previous_best_seconds?: number | null
   current_volume: number | null
   previous_volume: number | null
   delta_kg: number | null
+  delta_seconds?: number | null
   delta_pct: number | null
   coach_note?: string
 }

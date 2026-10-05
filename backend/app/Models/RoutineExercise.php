@@ -22,6 +22,9 @@ class RoutineExercise extends Model
         'default_reps',
         'rest_seconds',
         'target_muscle',
+        'tracking_mode',
+        'time_direction',
+        'default_duration_seconds',
         'notes',
     ];
 

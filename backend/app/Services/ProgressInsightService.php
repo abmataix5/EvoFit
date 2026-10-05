@@ -43,12 +43,39 @@ class ProgressInsightService
             $deltaKg = null;
             $deltaPct = null;
 
+            $metric = data_get($curr, 'metric') ?? data_get($prev, 'metric') ?? 'weight';
+            $direction = data_get($curr, 'time_direction') ?? data_get($prev, 'time_direction');
+            $deltaSeconds = null;
+            $metricsDiffer = $curr !== null && $prev !== null && ($curr['metric'] ?? 'weight') !== ($prev['metric'] ?? 'weight');
+
             if ($curr === null && $prev !== null) {
                 $status = 'declined';
                 $declined++;
             } elseif ($curr !== null && $prev === null) {
                 $status = 'new';
                 $newOnes++;
+            } elseif ($metricsDiffer) {
+                $status = 'new';
+                $newOnes++;
+            } elseif ($metric === 'time') {
+                $deltaSeconds = (int) $curr['best_seconds'] - (int) $prev['best_seconds'];
+                $base = max((int) $prev['best_seconds'], 1);
+                $deltaPct = round(($deltaSeconds / $base) * 100, 1);
+                $longer = ($direction ?? 'faster') === 'longer';
+                $better = $longer ? $deltaSeconds > 0 : $deltaSeconds < 0;
+                $worse = $longer ? $deltaSeconds < 0 : $deltaSeconds > 0;
+                $meaningful = abs($deltaSeconds) >= 2 || abs((float) $deltaPct) >= 1.5;
+
+                if ($better && $meaningful) {
+                    $status = 'improved';
+                    $improved++;
+                } elseif ($worse && $meaningful) {
+                    $status = 'declined';
+                    $declined++;
+                } else {
+                    $status = 'maintained';
+                    $maintained++;
+                }
             } else {
                 $deltaKg = round(((float) $curr['best_weight']) - ((float) $prev['best_weight']), 2);
                 $base = max((float) $prev['best_weight'], 0.01);
@@ -66,24 +93,29 @@ class ProgressInsightService
                 }
             }
 
-            if ($curr !== null) {
+            if (data_get($curr, 'metric') === 'weight') {
                 $volumeCurrent += (float) $curr['volume'];
             }
-            if ($prev !== null) {
+            if (data_get($prev, 'metric') === 'weight') {
                 $volumePrevious += (float) $prev['volume'];
             }
 
             $exercises[] = [
-                'catalog_exercise_id' => $curr['catalog_exercise_id'] ?? $prev['catalog_exercise_id'] ?? null,
-                'name' => $curr['name'] ?? $prev['name'] ?? $name,
+                'catalog_exercise_id' => data_get($curr, 'catalog_exercise_id') ?? data_get($prev, 'catalog_exercise_id'),
+                'name' => data_get($curr, 'name') ?? data_get($prev, 'name') ?? $name,
+                'metric' => $metric,
+                'time_direction' => $direction,
                 'status' => $status,
-                'current_best_kg' => $curr['best_weight'] ?? null,
-                'previous_best_kg' => $prev['best_weight'] ?? null,
-                'current_volume' => $curr['volume'] ?? null,
-                'previous_volume' => $prev['volume'] ?? null,
+                'current_best_kg' => data_get($curr, 'metric') === 'weight' ? $curr['best_weight'] : null,
+                'previous_best_kg' => data_get($prev, 'metric') === 'weight' ? $prev['best_weight'] : null,
+                'current_best_seconds' => data_get($curr, 'metric') === 'time' ? $curr['best_seconds'] : null,
+                'previous_best_seconds' => data_get($prev, 'metric') === 'time' ? $prev['best_seconds'] : null,
+                'current_volume' => data_get($curr, 'metric') === 'weight' ? $curr['volume'] : null,
+                'previous_volume' => data_get($prev, 'metric') === 'weight' ? $prev['volume'] : null,
                 'delta_kg' => $deltaKg,
+                'delta_seconds' => $deltaSeconds,
                 'delta_pct' => $deltaPct,
-                'coach_note' => $this->exerciseNote($status, $deltaKg, $deltaPct),
+                'coach_note' => $this->exerciseNote($status, $deltaKg, $deltaPct, $metric, $direction),
             ];
         }
 
@@ -98,12 +130,12 @@ class ProgressInsightService
         if ($compared === 0 && $newOnes > 0) {
             $mood = 'green';
             $label = 'Primera semana con datos reales. Buen arranque: ahora toca constancia.';
-            $tip = 'Repite los mismos ejercicios clave la semana que viene para poder comparar kilos.';
+            $tip = 'Repite los mismos ejercicios la semana que viene para comparar kilos o tiempos.';
             $focus = 'Construir base de datos';
         } elseif ($compared === 0) {
             $mood = 'orange';
-            $label = 'Aún no hay series con peso esta semana para evaluar fuerza.';
-            $tip = 'Abre una sesión, registra kilos y reps. Sin logs no hay coaching útil.';
+            $label = 'Aún no hay series con peso o tiempo esta semana para evaluar el progreso.';
+            $tip = 'Abre una sesión y anota kilos, repeticiones o el tiempo. Sin marcas no hay coaching útil.';
             $focus = 'Registrar entrenamientos';
         } elseif ($declined > $improved && $declined >= max(1, (int) ceil($compared * 0.4))) {
             $mood = 'red';
@@ -144,14 +176,18 @@ class ProgressInsightService
 
         $wins = collect($exercises)
             ->where('status', 'improved')
-            ->sortByDesc(fn ($row) => abs((float) ($row['delta_kg'] ?? 0)))
+            ->sortByDesc(fn ($row) => $row['metric'] === 'time'
+                ? abs((float) ($row['delta_seconds'] ?? 0))
+                : abs((float) ($row['delta_kg'] ?? 0)))
             ->take(3)
             ->values()
             ->all();
 
         $watch = collect($exercises)
             ->where('status', 'declined')
-            ->sortBy(fn ($row) => (float) ($row['delta_kg'] ?? 0))
+            ->sortBy(fn ($row) => $row['metric'] === 'time'
+                ? -abs((float) ($row['delta_seconds'] ?? 0))
+                : (float) ($row['delta_kg'] ?? 0))
             ->take(3)
             ->values()
             ->all();
@@ -195,8 +231,24 @@ class ProgressInsightService
         ];
     }
 
-    private function exerciseNote(string $status, ?float $deltaKg, ?float $deltaPct): string
+    private function exerciseNote(string $status, ?float $deltaKg, ?float $deltaPct, string $metric = 'weight', ?string $direction = null): string
     {
+        if ($metric === 'time') {
+            $longer = $direction === 'longer';
+
+            return match ($status) {
+                'improved' => $longer
+                    ? 'Aguantas más. Suma segundos cuando la postura siga limpia.'
+                    : 'Has bajado el tiempo. Repite esa marca antes de apretar más.',
+                'maintained' => 'Mismo tiempo. Busca 1–2 segundos de diferencia la próxima.',
+                'declined' => $longer
+                    ? 'Menos aguante. Puede ser fatiga: no fuerces el récord hoy.'
+                    : 'El tiempo ha subido. Revisa el ritmo y recupera antes de buscar marca.',
+                'new' => 'Primera marca de tiempo. Úsala como referencia.',
+                default => 'Sigue anotando el tiempo de cada serie.',
+            };
+        }
+
         return match ($status) {
             'improved' => $deltaKg !== null
                 ? 'Buen estímulo. Si las reps fueron limpias, mantén o suma +1–2,5 kg la próxima.'
@@ -257,7 +309,7 @@ class ProgressInsightService
     }
 
     /**
-     * @return Collection<string, array{best_weight: float, volume: float, name: string, catalog_exercise_id: int|null}>
+     * @return Collection<string, array{metric: string, time_direction: string|null, best_weight: float|null, best_seconds: int|null, volume: float, name: string, catalog_exercise_id: int|null}>
      */
     private function aggregateWeek(int $userId, Carbon $from, Carbon $to): Collection
     {
@@ -268,7 +320,9 @@ class ProgressInsightService
             })
             ->with('routineExercise')
             ->where('completed', true)
-            ->whereNotNull('weight_kg')
+            ->where(function ($query) {
+                $query->whereNotNull('weight_kg')->orWhereNotNull('duration_seconds');
+            })
             ->get();
 
         return $logs
@@ -281,19 +335,52 @@ class ProgressInsightService
                 return 'name:'.mb_strtolower(trim($exercise?->name ?? 'ejercicio'));
             })
             ->map(function (Collection $group) {
-                $best = (float) $group->max('weight_kg');
-                $volume = (float) $group->sum(function (ExerciseSetLog $log) {
+                $first = $group->first()?->routineExercise;
+                $mode = $first?->tracking_mode ?? 'weight_reps';
+                $timed = in_array($mode, ['time', 'weight_time'], true);
+                $direction = $first?->time_direction ?? 'faster';
+
+                if ($timed) {
+                    $timedLogs = $group->filter(fn (ExerciseSetLog $log) => $log->duration_seconds !== null);
+                    if ($timedLogs->isEmpty()) {
+                        return null;
+                    }
+
+                    $bestSeconds = $direction === 'longer'
+                        ? (int) $timedLogs->max('duration_seconds')
+                        : (int) $timedLogs->min('duration_seconds');
+
+                    return [
+                        'metric' => 'time',
+                        'time_direction' => $direction,
+                        'best_weight' => null,
+                        'best_seconds' => $bestSeconds,
+                        'volume' => 0.0,
+                        'name' => $first?->name ?? 'Ejercicio',
+                        'catalog_exercise_id' => $first?->catalog_exercise_id,
+                    ];
+                }
+
+                $weighted = $group->filter(fn (ExerciseSetLog $log) => $log->weight_kg !== null);
+                if ($weighted->isEmpty()) {
+                    return null;
+                }
+
+                $volume = (float) $weighted->sum(function (ExerciseSetLog $log) {
                     return ((float) $log->weight_kg) * ((int) ($log->reps ?? 0));
                 });
-                $first = $group->first()?->routineExercise;
 
                 return [
-                    'best_weight' => $best,
+                    'metric' => 'weight',
+                    'time_direction' => null,
+                    'best_weight' => (float) $weighted->max('weight_kg'),
+                    'best_seconds' => null,
                     'volume' => round($volume, 1),
                     'name' => $first?->name ?? 'Ejercicio',
                     'catalog_exercise_id' => $first?->catalog_exercise_id,
                 ];
-            });
+            })
+            ->filter();
     }
 
     private function buildChartSeries(array $exercises): array

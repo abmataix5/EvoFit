@@ -25,6 +25,7 @@ import {
   type ProgressPhoto,
 } from '../lib/api'
 import { localDateKey, helloLine } from '../lib/motivation'
+import { formatDuration } from '../lib/tracking'
 import { prepareProgressPhoto } from '../lib/preparePhoto'
 import axios from 'axios'
 
@@ -61,6 +62,34 @@ function formatShortDate(iso: string) {
 function formatKg(value: number | null | undefined) {
   if (value == null) return '—'
   return `${Number(value).toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg`
+}
+
+function formatMark(row: ProgressExerciseRow, which: 'current' | 'previous') {
+  if (row.metric === 'time') {
+    return formatDuration(which === 'current' ? row.current_best_seconds : row.previous_best_seconds)
+  }
+  return formatKg(which === 'current' ? row.current_best_kg : row.previous_best_kg)
+}
+
+function formatDelta(row: ProgressExerciseRow) {
+  if (row.metric === 'time' && row.delta_seconds != null) {
+    const sign = row.delta_seconds > 0 ? '+' : ''
+    return `${sign}${row.delta_seconds} s`
+  }
+  if (row.delta_kg != null) {
+    return `${row.delta_kg > 0 ? '+' : ''}${row.delta_kg} kg`
+  }
+  return statusLabel(row)
+}
+
+function statusLabel(row: ProgressExerciseRow) {
+  if (row.metric === 'time' && row.status === 'improved') {
+    return row.time_direction === 'longer' ? 'Más tiempo' : 'Más rápido'
+  }
+  if (row.metric === 'time' && row.status === 'declined') {
+    return row.time_direction === 'longer' ? 'Menos tiempo' : 'Más lento'
+  }
+  return statusUi[row.status].label
 }
 
 export function ProgressPage() {
@@ -213,7 +242,7 @@ export function ProgressPage() {
         <section className="panel space-y-2 p-5">
           <h2 className="font-display text-xl font-bold">Panel del coach</h2>
           <p className="text-sm text-evo-muted">
-            Completa una sesión con kilos y reps para activar el informe semanal.
+            Completa una sesión con kilos, repeticiones o tiempo para activar el informe semanal.
           </p>
         </section>
       )}
@@ -257,7 +286,7 @@ export function ProgressPage() {
         <div>
           <h3 className="font-display text-lg font-bold">Fuerza · semana a semana</h3>
           <p className="text-sm text-evo-muted">
-            Comparamos tu mejor serie (kg) de esta semana con la anterior. Así se ve el progreso real.
+            La gráfica compara kilos. Los ejercicios por tiempo salen en la lista, con su mejor marca.
           </p>
         </div>
 
@@ -500,11 +529,11 @@ function HighlightList({
                     tone === 'win' ? 'text-evo-lime' : 'text-evo-danger',
                   ].join(' ')}
                 >
-                  {row.delta_kg != null ? `${row.delta_kg > 0 ? '+' : ''}${row.delta_kg} kg` : statusUi[row.status].label}
+                  {formatDelta(row)}
                 </span>
               </div>
               <p className="mt-0.5 text-[0.7rem] text-evo-muted">
-                {formatKg(row.previous_best_kg)} → {formatKg(row.current_best_kg)}
+                {formatMark(row, 'previous')} → {formatMark(row, 'current')}
               </p>
             </li>
           ))}
@@ -521,14 +550,14 @@ function ExerciseRow({ row }: { row: ProgressExerciseRow }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold">
-            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{ui.label}</span> {row.name}
+            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{statusLabel(row)}</span> {row.name}
           </p>
           <p className="mt-0.5 text-xs text-evo-muted">
-            {formatKg(row.previous_best_kg)} → {formatKg(row.current_best_kg)}
+            {formatMark(row, 'previous')} → {formatMark(row, 'current')}
             {row.delta_pct != null ? ` · ${row.delta_pct > 0 ? '+' : ''}${row.delta_pct}%` : ''}
           </p>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{ui.label}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ui.className}`}>{statusLabel(row)}</span>
       </div>
       {row.coach_note ? (
         <p className="mt-2 border-t border-evo-border/50 pt-2 text-xs leading-snug text-evo-muted">

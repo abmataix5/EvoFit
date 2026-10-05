@@ -17,8 +17,11 @@ class CatalogExercise extends Model
         'name',
         'name_key',
         'target_muscle',
+        'tracking_mode',
+        'time_direction',
         'default_sets',
         'default_reps',
+        'default_duration_seconds',
         'rest_seconds',
         'notes',
     ];

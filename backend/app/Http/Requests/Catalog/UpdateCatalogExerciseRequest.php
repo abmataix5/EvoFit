@@ -18,8 +18,11 @@ class UpdateCatalogExerciseRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:160'],
             'target_muscle' => ['nullable', 'string', 'max:80'],
+            'tracking_mode' => ['sometimes', 'string', 'in:weight_reps,time,weight_time'],
+            'time_direction' => ['sometimes', 'string', 'in:faster,longer'],
             'default_sets' => ['nullable', 'integer', 'min:1', 'max:20'],
             'default_reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'default_duration_seconds' => ['nullable', 'integer', 'min:1', 'max:7200'],
             'rest_seconds' => ['nullable', 'integer', 'min:0', 'max:600'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

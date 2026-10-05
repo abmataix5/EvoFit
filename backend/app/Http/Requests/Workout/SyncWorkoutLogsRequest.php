@@ -20,6 +20,7 @@ class SyncWorkoutLogsRequest extends FormRequest
             'sets.*.set_number' => ['required', 'integer', 'min:1', 'max:20'],
             'sets.*.weight_kg' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'sets.*.reps' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'sets.*.duration_seconds' => ['nullable', 'integer', 'min:0', 'max:86400'],
             'sets.*.completed' => ['sometimes', 'boolean'],
         ];
     }

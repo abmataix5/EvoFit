@@ -13,6 +13,7 @@ import {
   type Routine,
   type WorkoutSession,
 } from '../lib/api'
+import { exercisePlanLabel, formatScore } from '../lib/tracking'
 
 export function RoutineDetailPage() {
   const { id } = useParams()
@@ -230,8 +231,7 @@ export function RoutineDetailPage() {
               <li key={exercise.id} className="rounded-xl border border-evo-border bg-evo-surface-2 px-4 py-3 text-sm">
                 <p className="font-medium">{exercise.name}</p>
                 <p className="text-evo-muted">
-                  {exercise.default_sets}×{exercise.default_reps}
-                  {exercise.rest_seconds ? ` · ${exercise.rest_seconds}s` : ''}
+                  {exercisePlanLabel(exercise)}
                   {exercise.target_muscle ? ` · ${exercise.target_muscle}` : ''}
                 </p>
               </li>
@@ -285,8 +285,8 @@ function HistorySection({
   return (
     <section className="space-y-3">
       <div>
-        <h3 className="font-display text-xl font-bold">Historial de pesos</h3>
-        <p className="text-sm text-evo-muted">Sesiones completadas o con series registradas.</p>
+        <h3 className="font-display text-xl font-bold">Historial</h3>
+        <p className="text-sm text-evo-muted">Kilos, repeticiones y tiempos de cada sesión.</p>
       </div>
       {loading ? (
         <p className="text-sm text-evo-muted">Cargando historial…</p>
@@ -325,7 +325,13 @@ function HistorySection({
                         <ul className="mt-1 space-y-1 text-xs text-evo-muted">
                           {sets.map((set) => (
                             <li key={`${name}-${set.set_number}`}>
-                              Serie {set.set_number}: {set.weight_kg ?? '—'} kg × {set.reps ?? '—'} reps
+                              Serie {set.set_number}:{' '}
+                              {formatScore({
+                                mode: set.exercise?.tracking_mode ?? 'weight_reps',
+                                weight: set.weight_kg == null || set.weight_kg === '' ? null : Number(set.weight_kg),
+                                reps: set.reps,
+                                duration: set.duration_seconds,
+                              })}
                             </li>
                           ))}
                         </ul>

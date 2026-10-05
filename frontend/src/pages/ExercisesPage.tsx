@@ -4,21 +4,38 @@ import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { TrackingModePicker } from '../components/exercises/TrackingModePicker'
 import { api, type CatalogExercise } from '../lib/api'
+import {
+  exercisePlanLabel,
+  isTimeMode,
+  joinDuration,
+  splitDuration,
+  type TimeDirection,
+  type TrackingMode,
+} from '../lib/tracking'
 
 type Draft = {
   name: string
   target_muscle: string
+  tracking_mode: TrackingMode
+  time_direction: TimeDirection
   default_sets: number
   default_reps: number
+  duration_minutes: string
+  duration_seconds: string
   rest_seconds: number
 }
 
 const emptyDraft = (): Draft => ({
   name: '',
   target_muscle: '',
+  tracking_mode: 'weight_reps',
+  time_direction: 'faster',
   default_sets: 3,
   default_reps: 10,
+  duration_minutes: '',
+  duration_seconds: '',
   rest_seconds: 90,
 })
 
@@ -51,11 +68,17 @@ export function ExercisesPage() {
 
   const save = useMutation({
     mutationFn: async () => {
+      const timed = isTimeMode(draft.tracking_mode)
       const payload = {
         name: draft.name.trim(),
         target_muscle: draft.target_muscle.trim() || null,
+        tracking_mode: draft.tracking_mode,
+        time_direction: timed ? draft.time_direction : 'faster',
         default_sets: draft.default_sets,
         default_reps: draft.default_reps,
+        default_duration_seconds: timed
+          ? joinDuration(draft.duration_minutes, draft.duration_seconds)
+          : null,
         rest_seconds: draft.rest_seconds,
       }
       if (editingId) {
@@ -99,11 +122,16 @@ export function ExercisesPage() {
 
   function startEdit(item: CatalogExercise) {
     setEditingId(item.id)
+    const duration = splitDuration(item.default_duration_seconds)
     setDraft({
       name: item.name,
       target_muscle: item.target_muscle ?? '',
+      tracking_mode: item.tracking_mode ?? 'weight_reps',
+      time_direction: item.time_direction ?? 'faster',
       default_sets: item.default_sets,
       default_reps: item.default_reps,
+      duration_minutes: duration.minutes,
+      duration_seconds: duration.seconds,
       rest_seconds: item.rest_seconds,
     })
     setError(null)
@@ -171,7 +199,13 @@ export function ExercisesPage() {
             onChange={(e) => setDraft((d) => ({ ...d, target_muscle: e.target.value }))}
             placeholder="Pecho, espalda, pierna…"
           />
-          <div className="grid grid-cols-3 gap-3">
+          <TrackingModePicker
+            mode={draft.tracking_mode}
+            direction={draft.time_direction}
+            onMode={(tracking_mode) => setDraft((d) => ({ ...d, tracking_mode }))}
+            onDirection={(time_direction) => setDraft((d) => ({ ...d, time_direction }))}
+          />
+          <div className="grid grid-cols-2 gap-3">
             <Input
               label="Series"
               type="number"
@@ -179,15 +213,34 @@ export function ExercisesPage() {
               value={draft.default_sets}
               onChange={(e) => setDraft((d) => ({ ...d, default_sets: Number(e.target.value) }))}
             />
+            {isTimeMode(draft.tracking_mode) ? (
+              <>
+                <Input
+                  label="Objetivo min"
+                  inputMode="numeric"
+                  value={draft.duration_minutes}
+                  placeholder="1"
+                  onChange={(e) => setDraft((d) => ({ ...d, duration_minutes: e.target.value }))}
+                />
+                <Input
+                  label="Objetivo seg"
+                  inputMode="numeric"
+                  value={draft.duration_seconds}
+                  placeholder="30"
+                  onChange={(e) => setDraft((d) => ({ ...d, duration_seconds: e.target.value }))}
+                />
+              </>
+            ) : (
+              <Input
+                label="Reps"
+                type="number"
+                min={1}
+                value={draft.default_reps}
+                onChange={(e) => setDraft((d) => ({ ...d, default_reps: Number(e.target.value) }))}
+              />
+            )}
             <Input
-              label="Reps"
-              type="number"
-              min={1}
-              value={draft.default_reps}
-              onChange={(e) => setDraft((d) => ({ ...d, default_reps: Number(e.target.value) }))}
-            />
-            <Input
-              label="Pausa"
+              label="Pausa (seg)"
               type="number"
               min={0}
               value={draft.rest_seconds}
@@ -232,7 +285,7 @@ export function ExercisesPage() {
                 <p className="font-display text-xl font-bold">{item.name}</p>
                 <p className="mt-1 text-base text-evo-muted">
                   {item.target_muscle ? `${item.target_muscle} · ` : ''}
-                  {item.default_sets}×{item.default_reps} · {item.rest_seconds}s de pausa
+                  {exercisePlanLabel(item)}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">

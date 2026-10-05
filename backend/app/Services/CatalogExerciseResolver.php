@@ -12,8 +12,11 @@ class CatalogExerciseResolver
      *   name?: string|null,
      *   catalog_exercise_id?: int|null,
      *   target_muscle?: string|null,
+     *   tracking_mode?: string|null,
+     *   time_direction?: string|null,
      *   default_sets?: int|null,
      *   default_reps?: int|null,
+     *   default_duration_seconds?: int|null,
      *   rest_seconds?: int|null,
      *   notes?: string|null
      * }  $payload
@@ -44,8 +47,11 @@ class CatalogExerciseResolver
      * @param  array{
      *   name?: string|null,
      *   target_muscle?: string|null,
+     *   tracking_mode?: string|null,
+     *   time_direction?: string|null,
      *   default_sets?: int|null,
      *   default_reps?: int|null,
+     *   default_duration_seconds?: int|null,
      *   rest_seconds?: int|null,
      *   notes?: string|null
      * }  $payload
@@ -71,8 +77,11 @@ class CatalogExerciseResolver
             'name' => $name,
             'name_key' => $nameKey,
             'target_muscle' => $payload['target_muscle'] ?? null,
+            'tracking_mode' => $payload['tracking_mode'] ?? 'weight_reps',
+            'time_direction' => $payload['time_direction'] ?? 'faster',
             'default_sets' => $payload['default_sets'] ?? 3,
             'default_reps' => $payload['default_reps'] ?? 10,
+            'default_duration_seconds' => $payload['default_duration_seconds'] ?? null,
             'rest_seconds' => $payload['rest_seconds'] ?? 90,
             'notes' => $payload['notes'] ?? null,
         ]);
