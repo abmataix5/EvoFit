@@ -21,6 +21,13 @@ http://{$DOMAIN} {
 	handle {
 		root * /srv/www
 		try_files {path} /index.html
+
+		@immutable path /assets/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+		@html not path /assets/* /favicon.ico /favicon-32.png /icon-192.png /apple-touch-icon.png /logo.png /site.webmanifest
+		header @html Cache-Control "no-cache, no-store, must-revalidate"
+
 		file_server
 	}
 }
