@@ -23,6 +23,10 @@ class WorkoutSessionResource extends JsonResource
             'routine' => new RoutineResource($this->whenLoaded('routine')),
             'day' => new RoutineDayResource($this->whenLoaded('day')),
             'set_logs' => ExerciseSetLogResource::collection($this->whenLoaded('setLogs')),
+            'previous_lifts' => $this->when(
+                $this->resource->previousLifts !== null,
+                $this->resource->previousLifts
+            ),
         ];
     }
 }

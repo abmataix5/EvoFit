@@ -9,6 +9,7 @@ use App\Http\Resources\WorkoutSessionResource;
 use App\Models\Routine;
 use App\Models\RoutineDay;
 use App\Models\WorkoutSession;
+use App\Services\PreviousSetLookup;
 use App\Services\TrainingCalendarPlanner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,7 +72,7 @@ class WorkoutSessionController extends Controller
         ], 201);
     }
 
-    public function show(WorkoutSession $workoutSession): WorkoutSessionResource
+    public function show(WorkoutSession $workoutSession, PreviousSetLookup $previousSets): WorkoutSessionResource
     {
         $this->authorizeSession($workoutSession);
 
@@ -79,9 +80,10 @@ class WorkoutSessionController extends Controller
             $workoutSession->update(['started_at' => now(), 'is_planned' => false]);
         }
 
-        return new WorkoutSessionResource(
-            $workoutSession->load(['routine', 'day.exercises', 'setLogs.routineExercise'])
-        );
+        $workoutSession->load(['routine', 'day.exercises', 'setLogs.routineExercise']);
+        $workoutSession->previousLifts = $previousSets->forSession($workoutSession);
+
+        return new WorkoutSessionResource($workoutSession);
     }
 
     public function update(Request $request, WorkoutSession $workoutSession): WorkoutSessionResource
@@ -122,7 +124,11 @@ class WorkoutSessionController extends Controller
         );
     }
 
-    public function syncLogs(SyncWorkoutLogsRequest $request, WorkoutSession $workoutSession): WorkoutSessionResource
+    public function syncLogs(
+        SyncWorkoutLogsRequest $request,
+        WorkoutSession $workoutSession,
+        PreviousSetLookup $previousSets
+    ): WorkoutSessionResource
     {
         $this->authorizeSession($workoutSession);
 
@@ -147,9 +153,10 @@ class WorkoutSessionController extends Controller
             ]);
         }
 
-        return new WorkoutSessionResource(
-            $workoutSession->fresh()->load(['routine', 'day.exercises', 'setLogs.routineExercise'])
-        );
+        $fresh = $workoutSession->fresh()->load(['routine', 'day.exercises', 'setLogs.routineExercise']);
+        $fresh->previousLifts = $previousSets->forSession($fresh);
+
+        return new WorkoutSessionResource($fresh);
     }
 
     private function authorizeSession(WorkoutSession $session): void

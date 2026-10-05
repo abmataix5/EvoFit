@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { api, type ExerciseSetLog, type WorkoutSession } from '../lib/api'
+import { api, type ExerciseSetLog, type PreviousLift, type WorkoutSession } from '../lib/api'
 
 type SetDraft = {
   routine_exercise_id: number
@@ -19,6 +19,20 @@ type ExerciseGroup = {
   rest?: number | null
   muscle?: string | null
   sets: Array<SetDraft & { draftIndex: number }>
+}
+
+function formatLoad(weight: number, reps: number | null) {
+  const kg = Number(weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })
+  return reps != null ? `${kg} kg × ${reps}` : `${kg} kg`
+}
+
+function formatPreviousDate(iso: string) {
+  const [, month, day] = iso.split('-')
+  return `${day}/${month}`
+}
+
+function previousFor(session: WorkoutSession, exerciseId: number): PreviousLift | null {
+  return session.previous_lifts?.[String(exerciseId)] ?? null
 }
 
 function buildDrafts(session: WorkoutSession): SetDraft[] {
@@ -261,6 +275,7 @@ export function WorkoutSessionPage() {
           {groups.map((group, index) => {
             const open = openExerciseId === group.id
             const doneSets = group.sets.filter((set) => set.weight_kg !== '').length
+            const previous = previousFor(session, group.id)
             return (
               <li key={group.id} className="panel overflow-hidden">
                 <button
@@ -274,10 +289,16 @@ export function WorkoutSessionPage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-display text-lg font-bold">{group.name}</span>
+                    {previous ? (
+                      <span className="mt-0.5 block text-sm font-semibold text-evo-accent">
+                        Última {formatPreviousDate(previous.recorded_on)} ·{' '}
+                        {formatLoad(previous.best_weight_kg, previous.best_reps)}
+                      </span>
+                    ) : (
+                      <span className="mt-0.5 block text-sm text-evo-muted">Primera vez</span>
+                    )}
                     <span className="block text-xs text-evo-muted">
                       {group.sets.length} series
-                      {group.muscle ? ` · ${group.muscle}` : ''}
-                      {group.rest ? ` · descanso ${group.rest}s` : ''}
                       {doneSets > 0 ? ` · ${doneSets} con kg` : ''}
                     </span>
                   </span>
@@ -288,12 +309,52 @@ export function WorkoutSessionPage() {
 
                 {open ? (
                   <div className="space-y-2 border-t border-evo-border bg-evo-bg/30 px-3 py-3">
-                    {group.sets.map((set) => (
+                    {previous ? (
+                      <div className="rounded-2xl bg-evo-surface px-3 py-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">
+                          Última vez · {formatPreviousDate(previous.recorded_on)}
+                        </p>
+                        <p className="mt-1 font-display text-lg font-bold">
+                          Mejor serie {formatLoad(previous.best_weight_kg, previous.best_reps)}
+                        </p>
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {previous.sets.map((prev) => (
+                            <li
+                              key={prev.set_number}
+                              className="rounded-full bg-evo-surface-2 px-3 py-1 text-sm font-semibold"
+                            >
+                              S{prev.set_number} {formatLoad(prev.weight_kg, prev.reps)}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {group.sets.map((set) => {
+                      const previousSet = previous?.sets.find((prev) => prev.set_number === set.set_number)
+                      return (
                       <div
                         key={`${group.id}-${set.set_number}`}
-                        className="grid min-w-0 grid-cols-[2.25rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 rounded-2xl border border-evo-border bg-evo-surface-2 p-3"
+                        className="min-w-0 rounded-2xl border border-evo-border bg-evo-surface-2 p-3"
                       >
-                        <span className="pb-3 text-sm font-bold text-evo-accent">S{set.set_number}</span>
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold text-evo-accent">Serie {set.set_number}</span>
+                          {previousSet ? (
+                            <button
+                              type="button"
+                              className="rounded-full bg-evo-bg px-3 py-1 text-sm font-semibold text-evo-text"
+                              onClick={() =>
+                                updateDraft(set.draftIndex, {
+                                  weight_kg: String(previousSet.weight_kg),
+                                  reps:
+                                    previousSet.reps != null ? String(previousSet.reps) : set.reps,
+                                })
+                              }
+                            >
+                              Usar {formatLoad(previousSet.weight_kg, previousSet.reps)}
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className="grid min-w-0 grid-cols-2 gap-2">
                         <div className="min-w-0">
                           <Input
                             label="Kg"
@@ -310,8 +371,10 @@ export function WorkoutSessionPage() {
                             onChange={(e) => updateDraft(set.draftIndex, { reps: e.target.value })}
                           />
                         </div>
+                        </div>
                       </div>
-                    ))}
+                      )
+                    })}
                     {index < groups.length - 1 ? (
                       <Button
                         type="button"

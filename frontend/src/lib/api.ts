@@ -83,6 +83,19 @@ export type Routine = {
   exercises_count?: number
 }
 
+export type PreviousLiftSet = {
+  set_number: number
+  weight_kg: number
+  reps: number | null
+}
+
+export type PreviousLift = {
+  recorded_on: string
+  best_weight_kg: number
+  best_reps: number | null
+  sets: PreviousLiftSet[]
+}
+
 export type ExerciseSetLog = {
   id: number
   routine_exercise_id: number
@@ -106,6 +119,7 @@ export type WorkoutSession = {
   routine?: Routine
   day?: RoutineDay
   set_logs?: ExerciseSetLog[]
+  previous_lifts?: Record<string, PreviousLift>
 }
 
 export type ProgressInsight = {

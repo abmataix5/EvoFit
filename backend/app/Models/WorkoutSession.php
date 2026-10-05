@@ -11,6 +11,9 @@ class WorkoutSession extends Model
 {
     use BelongsToTenant;
 
+    /** @var array<int, array<string, mixed>>|null */
+    public ?array $previousLifts = null;
+
     protected $fillable = [
         'tenant_id',
         'user_id',
