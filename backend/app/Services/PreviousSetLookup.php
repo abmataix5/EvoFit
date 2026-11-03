@@ -24,9 +24,14 @@ class PreviousSetLookup
     {
         $session->loadMissing('day.exercises');
         $exercises = $session->day?->exercises ?? collect();
-        if ($exercises->isEmpty() || $session->scheduled_date === null) {
+        if ($exercises->isEmpty()) {
             return [];
         }
+
+        // Se compara por cuándo se entrenó de verdad, no por la fecha planificada:
+        // una sesión del jueves hecha el martes cuenta como del martes.
+        $trainedAt = 'COALESCE(workout_sessions.started_at, workout_sessions.completed_at, workout_sessions.scheduled_date)';
+        $reference = ($session->started_at ?? now())->toDateTimeString();
 
         $catalogIds = $exercises->pluck('catalog_exercise_id')->filter()->unique()->values();
         $nameKeys = $exercises
@@ -41,7 +46,7 @@ class PreviousSetLookup
             ->where('workout_sessions.user_id', $session->user_id)
             ->where('workout_sessions.tenant_id', $session->tenant_id)
             ->where('workout_sessions.id', '!=', $session->id)
-            ->whereDate('workout_sessions.scheduled_date', '<', $session->scheduled_date->toDateString())
+            ->whereRaw($trainedAt.' < ?', [$reference])
             ->where(function ($query) {
                 $query->whereNotNull('exercise_set_logs.weight_kg')
                     ->orWhereNotNull('exercise_set_logs.duration_seconds');
@@ -60,12 +65,12 @@ class PreviousSetLookup
                     }
                 }
             })
-            ->orderByDesc('workout_sessions.scheduled_date')
+            ->orderByRaw($trainedAt.' DESC')
             ->orderByDesc('workout_sessions.id')
             ->orderBy('exercise_set_logs.set_number')
             ->get([
                 'workout_sessions.id as session_id',
-                'workout_sessions.scheduled_date',
+                DB::raw($trainedAt.' as trained_at'),
                 'routine_exercises.catalog_exercise_id',
                 'routine_exercises.name',
                 'exercise_set_logs.set_number',
@@ -83,7 +88,12 @@ class PreviousSetLookup
             $direction = $exercise->time_direction ?? 'faster';
             $timed = in_array($mode, ['time', 'weight_time'], true);
 
-            $matches = $rows->filter(function ($row) use ($catalogId, $nameKey) {
+            // Solo filas con el dato que importa (kg o tiempo): si la última vez no se
+            // apuntaron kilos, se salta a la anterior que sí los tenga.
+            $matches = $rows->filter(function ($row) use ($catalogId, $nameKey, $timed) {
+                if ($timed ? $row->duration_seconds === null : $row->weight_kg === null) {
+                    return false;
+                }
                 $sameName = $nameKey !== '' && mb_strtolower(trim((string) $row->name)) === $nameKey;
                 if ($catalogId) {
                     if ((int) $row->catalog_exercise_id === (int) $catalogId) {
@@ -103,17 +113,8 @@ class PreviousSetLookup
             $latestSessionId = (int) $matches->first()->session_id;
             $latest = $matches
                 ->where('session_id', $latestSessionId)
-                ->filter(function ($row) use ($timed) {
-                    return $timed
-                        ? $row->duration_seconds !== null
-                        : $row->weight_kg !== null;
-                })
                 ->sortBy('set_number')
                 ->values();
-
-            if ($latest->isEmpty()) {
-                continue;
-            }
 
             $best = $latest->sortByDesc(function ($row) use ($timed, $direction) {
                 if ($timed) {
@@ -127,7 +128,7 @@ class PreviousSetLookup
             })->first();
 
             $result[$exercise->id] = [
-                'recorded_on' => substr((string) $latest->first()->scheduled_date, 0, 10),
+                'recorded_on' => substr((string) $latest->first()->trained_at, 0, 10),
                 'tracking_mode' => $mode,
                 'time_direction' => $direction,
                 'best_weight_kg' => $best->weight_kg !== null ? (float) $best->weight_kg : null,
