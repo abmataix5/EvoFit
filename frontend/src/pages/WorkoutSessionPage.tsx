@@ -59,6 +59,20 @@ function setLogged(draft: SetDraft, mode: TrackingMode) {
   return draft.weight_kg.trim() !== ''
 }
 
+function parseDecimal(value: string): number | null {
+  const trimmed = value.trim().replace(',', '.')
+  if (trimmed === '' || trimmed === '.') return null
+  const n = Number(trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed)
+  return Number.isFinite(n) ? n : null
+}
+
+function parseInteger(value: string): number | null {
+  const trimmed = value.trim()
+  if (trimmed === '') return null
+  const n = Number(trimmed)
+  return Number.isFinite(n) ? Math.round(n) : null
+}
+
 function formatPreviousDate(iso: string) {
   const [, month, day] = iso.split('-')
   return `${day}/${month}`
@@ -114,6 +128,7 @@ export function WorkoutSessionPage() {
     queryKey: ['workout-session', sessionId],
     enabled: Number.isFinite(sessionId),
     refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data } = await api.get<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}`)
       return data.data
@@ -126,10 +141,22 @@ export function WorkoutSessionPage() {
   const draftsRef = useRef<SetDraft[]>([])
   const hydratedRef = useRef(false)
   const pendingRef = useRef(false)
+  const dirtyRef = useRef(false)
+  const editSeqRef = useRef(0)
+  const savedSeqRef = useRef(0)
   const saveTimerRef = useRef<number | null>(null)
   const flushRef = useRef<() => void>(() => {})
 
   const session = sessionQuery.data
+
+  useEffect(() => {
+    hydratedRef.current = false
+    dirtyRef.current = false
+    pendingRef.current = false
+    editSeqRef.current = 0
+    savedSeqRef.current = 0
+    setDrafts([])
+  }, [sessionId])
 
   const groups = useMemo<ExerciseGroup[]>(() => {
     const exercises = session?.day?.exercises ?? []
@@ -148,7 +175,8 @@ export function WorkoutSessionPage() {
   }, [session, drafts])
 
   useEffect(() => {
-    if (!session || pendingRef.current) return
+    if (!session) return
+    if (dirtyRef.current || pendingRef.current || editSeqRef.current !== savedSeqRef.current) return
     const next = buildDrafts(session)
     setDrafts(next)
     draftsRef.current = next
@@ -164,11 +192,12 @@ export function WorkoutSessionPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (complete: boolean) => {
+      const seq = editSeqRef.current
       const sets = draftsRef.current.map((draft) => ({
         routine_exercise_id: draft.routine_exercise_id,
         set_number: draft.set_number,
-        weight_kg: draft.weight_kg === '' ? null : Number(draft.weight_kg),
-        reps: draft.reps === '' ? null : Number(draft.reps),
+        weight_kg: parseDecimal(draft.weight_kg),
+        reps: parseInteger(draft.reps),
         duration_seconds: joinDuration(draft.minutes, draft.seconds),
         completed: true,
       }))
@@ -176,12 +205,16 @@ export function WorkoutSessionPage() {
         sets,
         complete,
       })
-      return { complete, session: data.data }
+      return { complete, session: data.data, seq }
     },
     onMutate: () => setSaveState('saving'),
-    onSuccess: async ({ complete, session: saved }) => {
+    onSuccess: async ({ complete, session: saved, seq }) => {
+      if (seq === editSeqRef.current) {
+        dirtyRef.current = false
+        savedSeqRef.current = seq
+        queryClient.setQueryData(['workout-session', sessionId], saved)
+      }
       setSaveState('saved')
-      queryClient.setQueryData(['workout-session', sessionId], saved)
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
       await queryClient.invalidateQueries({ queryKey: ['routine-history'] })
       if (pendingRef.current) {
@@ -218,10 +251,12 @@ export function WorkoutSessionPage() {
     saveTimerRef.current = window.setTimeout(() => {
       saveTimerRef.current = null
       flushAutosave()
-    }, 250)
+    }, 900)
   }
 
   function updateDraft(index: number, patch: Partial<SetDraft>) {
+    dirtyRef.current = true
+    editSeqRef.current += 1
     setDrafts((current) => {
       const next = current.map((item, i) => (i === index ? { ...item, ...patch } : item))
       draftsRef.current = next
