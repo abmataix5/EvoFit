@@ -1,8 +1,9 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ComponentProps } from 'react'
+import { Link, type LinkProps } from 'react-router-dom'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'lime'
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = ComponentProps<'button'> & {
   variant?: Variant
   fullWidth?: boolean
   size?: 'md' | 'lg'
@@ -19,6 +20,35 @@ const variants: Record<Variant, string> = {
   lime: 'bg-evo-lime text-[#102000] hover:brightness-110',
 }
 
+export function buttonClasses({
+  variant = 'primary',
+  fullWidth,
+  size = 'md',
+  className = '',
+}: { variant?: Variant; fullWidth?: boolean; size?: 'md' | 'lg'; className?: string }) {
+  return [
+    'inline-flex items-center justify-center gap-2 rounded-2xl font-bold transition active:scale-[0.98]',
+    'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-evo-accent/40',
+    'disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100',
+    'touch-manipulation',
+    size === 'lg' ? 'min-h-14 px-5 text-base' : 'min-h-12 px-4 text-sm',
+    variants[variant],
+    fullWidth ? 'w-full' : '',
+    className,
+  ].join(' ')
+}
+
+/** Enlace con aspecto de botón (evita meter un <button> dentro de un <a>). */
+export function ButtonLink({
+  variant,
+  fullWidth,
+  size,
+  className,
+  ...props
+}: LinkProps & { variant?: Variant; fullWidth?: boolean; size?: 'md' | 'lg' }) {
+  return <Link className={buttonClasses({ variant, fullWidth, size, className })} {...props} />
+}
+
 export function Button({
   variant = 'primary',
   fullWidth,
@@ -29,16 +59,7 @@ export function Button({
 }: Props) {
   return (
     <button
-      className={[
-        'inline-flex items-center justify-center gap-2 rounded-2xl font-bold transition active:scale-[0.98]',
-        'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-evo-accent/40',
-        'disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100',
-        'touch-manipulation',
-        size === 'lg' ? 'min-h-14 px-5 text-base' : 'min-h-12 px-4 text-sm',
-        variants[variant],
-        fullWidth ? 'w-full' : '',
-        className,
-      ].join(' ')}
+      className={buttonClasses({ variant, fullWidth, size, className })}
       disabled={disabled}
       {...props}
     />

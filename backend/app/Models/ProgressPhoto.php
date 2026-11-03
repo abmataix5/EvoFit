@@ -30,7 +30,9 @@ class ProgressPhoto extends Model
     protected static function booted(): void
     {
         static::deleting(function (ProgressPhoto $photo): void {
-            Storage::disk($photo->disk)->delete($photo->path);
+            if ($photo->path) {
+                Storage::disk($photo->disk ?: 'local')->delete($photo->path);
+            }
         });
     }
 
@@ -41,6 +43,7 @@ class ProgressPhoto extends Model
 
     public function url(): string
     {
-        return '/storage/'.ltrim($this->path, '/');
+        // Las fotos son privadas: se sirven a través de la API con sesión y dueño.
+        return '/api/v1/progress/photos/'.$this->id.'/image';
     }
 }

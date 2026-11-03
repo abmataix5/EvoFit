@@ -7,7 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { api, ensureCsrfCookie, type User } from '../../lib/api'
+import { api, ensureCsrfCookie, UNAUTHORIZED_EVENT, type User } from '../../lib/api'
+import { queryClient } from '../../lib/queryClient'
+import { clearAllWorkoutDrafts } from '../../lib/workoutDrafts'
 
 type AuthContextValue = {
   user: User | null
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     await ensureCsrfCookie()
     const { data } = await api.post<{ user: User }>('/auth/login', { email, password })
+    queryClient.clear()
     setUser(data.user)
   }, [])
 
@@ -68,8 +71,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(async () => {
-    await api.post('/auth/logout')
-    setUser(null)
+    try {
+      await api.post('/auth/logout')
+    } catch {
+      // Aunque falle la red, se sale igualmente en este dispositivo.
+    } finally {
+      // Nada del usuario anterior debe quedar visible a quien entre después en este móvil.
+      queryClient.clear()
+      clearAllWorkoutDrafts()
+      setUser(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    function onUnauthorized() {
+      queryClient.clear()
+      setUser(null)
+    }
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
   }, [])
 
   const value = useMemo(

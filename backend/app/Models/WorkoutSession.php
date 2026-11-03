@@ -38,6 +38,24 @@ class WorkoutSession extends Model
         ];
     }
 
+    /**
+     * Momento real de entrenamiento: cuándo se empezó (o terminó) de verdad y,
+     * si nunca se abrió, la fecha planificada. Una sesión del jueves hecha el
+     * martes cuenta como del martes.
+     */
+    public static function trainedAtSql(string $table = 'workout_sessions'): string
+    {
+        return "COALESCE({$table}.started_at, {$table}.completed_at, {$table}.scheduled_date)";
+    }
+
+    /**
+     * Igual que trainedAtSql() pero solo la fecha (Y-m-d), válido en MariaDB y SQLite.
+     */
+    public static function trainedOnSql(string $table = 'workout_sessions'): string
+    {
+        return 'DATE('.static::trainedAtSql($table).')';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

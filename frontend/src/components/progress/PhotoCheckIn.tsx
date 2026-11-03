@@ -3,11 +3,7 @@ import { createPortal } from 'react-dom'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import type { ProgressPhoto } from '../../lib/api'
-
-function formatShortDate(iso: string) {
-  const [, m, d] = iso.split('-')
-  return `${d}/${m}`
-}
+import { formatShortDate } from '../../lib/dates'
 
 function formatLongDate(iso: string) {
   try {
@@ -37,6 +33,7 @@ type Props = {
   onCaption: (value: string) => void
   onPhotoFile: (file: File | null) => void
   onUpload: () => void
+  onDelete: (photo: ProgressPhoto) => Promise<boolean>
 }
 
 export function PhotoCheckIn({
@@ -49,6 +46,7 @@ export function PhotoCheckIn({
   onCaption,
   onPhotoFile,
   onUpload,
+  onDelete,
 }: Props) {
   const [mode, setMode] = useState<'gallery' | 'compare'>('gallery')
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -272,6 +270,14 @@ export function PhotoCheckIn({
           onClose={() => setLightboxIndex(null)}
           onChange={setLightboxIndex}
           onCompare={startCompareFrom}
+          onDelete={async (photo) => {
+            const deleted = await onDelete(photo)
+            if (!deleted) return
+            if (photo.id === leftId) setLeftId(null)
+            if (photo.id === rightId) setRightId(null)
+            const remaining = photos.length - 1
+            setLightboxIndex(remaining <= 0 ? null : Math.min(lightboxIndex, remaining - 1))
+          }}
         />
       ) : null}
     </section>
@@ -415,12 +421,14 @@ function PhotoLightbox({
   onClose,
   onChange,
   onCompare,
+  onDelete,
 }: {
   photos: ProgressPhoto[]
   index: number
   onClose: () => void
   onChange: (index: number) => void
   onCompare: (photoId: number) => void
+  onDelete: (photo: ProgressPhoto) => void
 }) {
   const photo = photos[index]
   const canPrev = index > 0
@@ -466,15 +474,22 @@ function PhotoLightbox({
             <button
               type="button"
               onClick={() => onCompare(photo.id)}
-              className="rounded-xl bg-evo-accent px-3 py-2 text-xs font-bold text-[#111]"
+              className="min-h-11 rounded-xl bg-evo-accent px-3 text-sm font-bold text-[#111]"
             >
               Comparar
             </button>
           ) : null}
           <button
             type="button"
+            onClick={() => onDelete(photo)}
+            className="min-h-11 rounded-xl bg-evo-danger/25 px-3 text-sm font-bold text-white"
+          >
+            Borrar
+          </button>
+          <button
+            type="button"
             onClick={onClose}
-            className="rounded-xl bg-white/15 px-3 py-2 text-xs font-bold text-white"
+            className="min-h-11 rounded-xl bg-white/15 px-3 text-sm font-bold text-white"
           >
             Cerrar
           </button>

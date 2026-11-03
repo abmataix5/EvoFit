@@ -19,14 +19,33 @@ class RoutineDay extends Model
         'name',
         'focus',
         'notes',
+        'archived_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'archived_at' => 'datetime',
+        ];
+    }
 
     public function routine(): BelongsTo
     {
         return $this->belongsTo(Routine::class);
     }
 
+    /**
+     * Ejercicios visibles del día (sin los archivados).
+     */
     public function exercises(): HasMany
+    {
+        return $this->hasMany(RoutineExercise::class)->whereNull('routine_exercises.archived_at')->orderBy('sort_order');
+    }
+
+    /**
+     * Todos los ejercicios del día, incluidos los archivados.
+     */
+    public function allExercises(): HasMany
     {
         return $this->hasMany(RoutineExercise::class)->orderBy('sort_order');
     }

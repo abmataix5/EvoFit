@@ -13,6 +13,8 @@ use App\Services\ProgressInsightService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProgressController extends Controller
 {
@@ -65,13 +67,13 @@ class ProgressController extends Controller
 
         $path = $file->store(
             'progress/'.$request->user()->tenant_id.'/'.$request->user()->id,
-            'public'
+            'local'
         );
 
         $photo = ProgressPhoto::query()->create([
             'user_id' => $request->user()->id,
             'recorded_on' => $payload['recorded_on'],
-            'disk' => 'public',
+            'disk' => 'local',
             'path' => $path,
             'caption' => $payload['caption'] ?? null,
         ]);
@@ -79,6 +81,39 @@ class ProgressController extends Controller
         return response()->json([
             'photo' => new ProgressPhotoResource($photo),
         ], 201);
+    }
+
+    public function destroyBodyWeight(BodyWeightEntry $bodyWeightEntry): JsonResponse
+    {
+        $this->authorize('delete', $bodyWeightEntry);
+        $bodyWeightEntry->delete();
+
+        return response()->json(['message' => 'Peso eliminado.']);
+    }
+
+    public function destroyPhoto(ProgressPhoto $progressPhoto): JsonResponse
+    {
+        $this->authorize('delete', $progressPhoto);
+        // El modelo borra también el archivo (evento deleting).
+        $progressPhoto->delete();
+
+        return response()->json(['message' => 'Foto eliminada.']);
+    }
+
+    /**
+     * Sirve la foto privada solo a su dueño.
+     */
+    public function photoImage(ProgressPhoto $progressPhoto): StreamedResponse
+    {
+        $this->authorize('view', $progressPhoto);
+
+        $disk = Storage::disk($progressPhoto->disk ?: 'local');
+        abort_unless($progressPhoto->path && $disk->exists($progressPhoto->path), 404);
+
+        return $disk->response($progressPhoto->path, null, [
+            'Cache-Control' => 'private, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function insights(Request $request, ProgressInsightService $insights): JsonResponse

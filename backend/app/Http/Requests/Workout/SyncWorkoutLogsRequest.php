@@ -2,26 +2,60 @@
 
 namespace App\Http\Requests\Workout;
 
+use App\Models\RoutineExercise;
+use App\Models\WorkoutSession;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class SyncWorkoutLogsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('update', $this->route('workoutSession'));
     }
 
     public function rules(): array
     {
         return [
             'complete' => ['sometimes', 'boolean'],
-            'sets' => ['required', 'array', 'min:1'],
-            'sets.*.routine_exercise_id' => ['required', 'integer', 'exists:routine_exercises,id'],
+            'sets' => ['sometimes', 'array'],
+            'sets.*.routine_exercise_id' => ['required', 'integer'],
             'sets.*.set_number' => ['required', 'integer', 'min:1', 'max:20'],
             'sets.*.weight_kg' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'sets.*.reps' => ['nullable', 'integer', 'min:0', 'max:100'],
             'sets.*.duration_seconds' => ['nullable', 'integer', 'min:0', 'max:86400'],
+            'sets.*.rpe' => ['nullable', 'numeric', 'min:1', 'max:10'],
+            'sets.*.notes' => ['nullable', 'string', 'max:255'],
             'sets.*.completed' => ['sometimes', 'boolean'],
+            'remove_sets' => ['sometimes', 'array'],
+            'remove_sets.*.routine_exercise_id' => ['required', 'integer'],
+            'remove_sets.*.set_number' => ['required', 'integer', 'min:1', 'max:20'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            /** @var WorkoutSession $session */
+            $session = $this->route('workoutSession');
+
+            // Solo ejercicios del día de esta sesión (incluidos los archivados, que conservan sus series).
+            $allowed = $session->routine_day_id === null
+                ? []
+                : RoutineExercise::query()
+                    ->where('routine_day_id', $session->routine_day_id)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+            foreach (['sets', 'remove_sets'] as $key) {
+                foreach ((array) $this->input($key, []) as $i => $item) {
+                    $id = $item['routine_exercise_id'] ?? null;
+                    if ($id !== null && is_numeric($id) && ! in_array((int) $id, $allowed, true)) {
+                        $validator->errors()->add("$key.$i.routine_exercise_id", 'Ese ejercicio no pertenece al día de esta sesión.');
+                    }
+                }
+            }
+        });
     }
 }

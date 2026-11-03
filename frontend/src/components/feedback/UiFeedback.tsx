@@ -2,7 +2,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -81,43 +83,13 @@ export function UiFeedbackProvider({ children }: { children: ReactNode }) {
       </div>
 
       {confirmState ? (
-        <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 p-4 sm:items-center"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirm-title"
-        >
-          <div className="panel w-full max-w-md space-y-4 p-5">
-            <div>
-              <h2 id="confirm-title" className="font-display text-xl font-bold">
-                {confirmState.options.title}
-              </h2>
-              <p className="mt-2 text-sm text-evo-muted">{confirmState.options.message}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => {
-                  confirmState.resolve(false)
-                  setConfirmState(null)
-                }}
-              >
-                {confirmState.options.cancelLabel ?? 'Cancelar'}
-              </Button>
-              <Button
-                variant={confirmState.options.danger ? 'danger' : 'primary'}
-                fullWidth
-                onClick={() => {
-                  confirmState.resolve(true)
-                  setConfirmState(null)
-                }}
-              >
-                {confirmState.options.confirmLabel ?? 'Confirmar'}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          options={confirmState.options}
+          onAnswer={(answer) => {
+            confirmState.resolve(answer)
+            setConfirmState(null)
+          }}
+        />
       ) : null}
     </UiFeedbackContext.Provider>
   )
@@ -129,4 +101,81 @@ export function useUiFeedback() {
     throw new Error('useUiFeedback debe usarse dentro de UiFeedbackProvider')
   }
   return ctx
+}
+
+/** Diálogo modal: foco dentro, Escape cancela y al cerrar el foco vuelve a donde estaba. */
+function ConfirmDialog({
+  options,
+  onAnswer,
+}: {
+  options: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }
+  onAnswer: (answer: boolean) => void
+}) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  const cancelRef = useRef<HTMLButtonElement>(null)
+  const answerRef = useRef(onAnswer)
+  useEffect(() => {
+    answerRef.current = onAnswer
+  }, [onAnswer])
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    cancelRef.current?.focus()
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        answerRef.current(false)
+        return
+      }
+      if (event.key !== 'Tab' || !panelRef.current) return
+      const focusables = panelRef.current.querySelectorAll<HTMLElement>('button:not([disabled])')
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (!first || !last) return
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      previous?.focus?.()
+    }
+  }, [])
+
+  return (
+    <div
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 p-4 sm:items-center"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-message"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onAnswer(false)
+      }}
+    >
+      <div ref={panelRef} className="safe-bottom panel w-full max-w-md space-y-4 p-5">
+        <div>
+          <h2 id="confirm-title" className="font-display text-xl font-bold">
+            {options.title}
+          </h2>
+          <p id="confirm-message" className="mt-2 text-sm text-evo-muted">
+            {options.message}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button ref={cancelRef} variant="secondary" size="lg" fullWidth onClick={() => onAnswer(false)}>
+            {options.cancelLabel ?? 'Cancelar'}
+          </Button>
+          <Button variant={options.danger ? 'danger' : 'primary'} size="lg" fullWidth onClick={() => onAnswer(true)}>
+            {options.confirmLabel ?? 'Confirmar'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }

@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRoutineRequest extends FormRequest
 {
+    use RoutineDaysRules;
+
     public function authorize(): bool
     {
         return true;
@@ -20,24 +22,12 @@ class StoreRoutineRequest extends FormRequest
             'is_active' => ['sometimes', 'boolean'],
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
-            'days' => ['required', 'array', 'min:1', 'max:7'],
-            'days.*.day_index' => ['required', 'integer', 'min:1', 'max:7'],
-            'days.*.weekday' => ['required', 'integer', 'min:1', 'max:7'],
-            'days.*.name' => ['required', 'string', 'max:80'],
-            'days.*.focus' => ['nullable', 'string', 'max:40'],
-            'days.*.notes' => ['nullable', 'string', 'max:500'],
-            'days.*.exercises' => ['nullable', 'array'],
-            'days.*.exercises.*.catalog_exercise_id' => ['nullable', 'integer', 'exists:catalog_exercises,id'],
-            'days.*.exercises.*.name' => ['required_without:days.*.exercises.*.catalog_exercise_id', 'nullable', 'string', 'max:160'],
-            'days.*.exercises.*.sort_order' => ['nullable', 'integer', 'min:0'],
-            'days.*.exercises.*.tracking_mode' => ['nullable', 'string', 'in:weight_reps,time,weight_time'],
-            'days.*.exercises.*.time_direction' => ['nullable', 'string', 'in:faster,longer'],
-            'days.*.exercises.*.default_sets' => ['nullable', 'integer', 'min:1', 'max:20'],
-            'days.*.exercises.*.default_reps' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'days.*.exercises.*.default_duration_seconds' => ['nullable', 'integer', 'min:1', 'max:7200'],
-            'days.*.exercises.*.rest_seconds' => ['nullable', 'integer', 'min:0', 'max:600'],
-            'days.*.exercises.*.target_muscle' => ['nullable', 'string', 'max:80'],
-            'days.*.exercises.*.notes' => ['nullable', 'string', 'max:500'],
+            ...$this->dayRules('required'),
         ];
+    }
+
+    public function messages(): array
+    {
+        return $this->dayMessages();
     }
 }

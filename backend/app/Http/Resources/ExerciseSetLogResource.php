@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ExerciseSetLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\ExerciseSetLog */
+/** @mixin ExerciseSetLog */
 class ExerciseSetLogResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -17,6 +18,8 @@ class ExerciseSetLogResource extends JsonResource
             'weight_kg' => $this->weight_kg,
             'reps' => $this->reps,
             'duration_seconds' => $this->duration_seconds,
+            'rpe' => $this->rpe !== null ? (float) $this->rpe : null,
+            'notes' => $this->notes,
             'completed' => $this->completed,
             'exercise' => new RoutineExerciseResource($this->whenLoaded('routineExercise')),
         ];

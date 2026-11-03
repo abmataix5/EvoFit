@@ -26,7 +26,15 @@ class RoutineExercise extends Model
         'time_direction',
         'default_duration_seconds',
         'notes',
+        'archived_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'archived_at' => 'datetime',
+        ];
+    }
 
     public function routine(): BelongsTo
     {

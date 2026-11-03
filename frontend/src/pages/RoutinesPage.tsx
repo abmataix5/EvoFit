@@ -1,19 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
-import { Button } from '../components/ui/Button'
+import { Button, ButtonLink } from '../components/ui/Button'
 import { api, type Routine } from '../lib/api'
+import { formatShortDate } from '../lib/dates'
 
 function formatRange(routine: Routine) {
   if (!routine.starts_on && !routine.ends_on) return 'Indefinida'
-  if (routine.starts_on && !routine.ends_on) return `Desde ${routine.starts_on}`
-  if (!routine.starts_on && routine.ends_on) return `Hasta ${routine.ends_on}`
-  return `${routine.starts_on} → ${routine.ends_on}`
+  if (routine.starts_on && !routine.ends_on) return `Desde ${formatShortDate(routine.starts_on)}`
+  if (!routine.starts_on && routine.ends_on) return `Hasta ${formatShortDate(routine.ends_on)}`
+  return `${formatShortDate(routine.starts_on)} → ${formatShortDate(routine.ends_on)}`
 }
 
 export function RoutinesPage() {
   const queryClient = useQueryClient()
-  const { confirm, notify } = useUiFeedback()
+  const { notify } = useUiFeedback()
   const { data, isLoading } = useQuery({
     queryKey: ['routines'],
     queryFn: async () => {
@@ -34,32 +35,9 @@ export function RoutinesPage() {
     },
   })
 
-  const deleteRoutine = useMutation({
-    mutationFn: async (id: number) => {
-      await api.delete(`/routines/${id}`)
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['routines'] })
-      await queryClient.invalidateQueries({ queryKey: ['calendar'] })
-      await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
-      notify('Rutina eliminada', 'success')
-    },
-  })
-
-  async function confirmDelete(routine: Routine) {
-    const ok = await confirm({
-      title: `¿Borrar "${routine.name}"?`,
-      message: 'Se eliminarán también sus días y sesiones asociadas. Esta acción no se puede deshacer.',
-      confirmLabel: 'Borrar',
-      cancelLabel: 'Cancelar',
-      danger: true,
-    })
-    if (ok) deleteRoutine.mutate(routine.id)
-  }
-
   const active = (data ?? []).filter((r) => r.is_active)
   const inactive = (data ?? []).filter((r) => !r.is_active)
-  const busy = toggleActive.isPending || deleteRoutine.isPending
+  const busy = toggleActive.isPending
 
   if (!isLoading && !data?.length) {
     return (
@@ -72,11 +50,9 @@ export function RoutinesPage() {
               Crea la primera. Los días que elijas se colocan solos en la agenda.
             </p>
           </div>
-          <Link to="/routines/new" className="block">
-            <Button size="lg" fullWidth>
-              Crear rutina
-            </Button>
-          </Link>
+          <ButtonLink to="/routines/new" size="lg" fullWidth>
+            Crear rutina
+          </ButtonLink>
           <Link to="/exercises" className="inline-flex text-base font-bold text-evo-accent">
             Ver catálogo de ejercicios
           </Link>
@@ -87,11 +63,14 @@ export function RoutinesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
+      <div className="space-y-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">Rutinas</h1>
           <p className="mt-1 text-base text-evo-muted">Solo las activas salen en la agenda.</p>
         </div>
+        <ButtonLink to="/routines/new" size="lg" fullWidth>
+          Nueva rutina
+        </ButtonLink>
       </div>
 
       {isLoading ? (
@@ -103,7 +82,6 @@ export function RoutinesPage() {
             empty="No hay rutinas activas."
             routines={active}
             onToggle={(routine) => toggleActive.mutate({ id: routine.id, is_active: false })}
-            onDelete={confirmDelete}
             busy={busy}
           />
           <RoutineGroup
@@ -111,7 +89,6 @@ export function RoutinesPage() {
             empty="No hay rutinas pausadas."
             routines={inactive}
             onToggle={(routine) => toggleActive.mutate({ id: routine.id, is_active: true })}
-            onDelete={confirmDelete}
             busy={busy}
           />
         </>
@@ -125,14 +102,12 @@ function RoutineGroup({
   empty,
   routines,
   onToggle,
-  onDelete,
   busy,
 }: {
   title: string
   empty: string
   routines: Routine[]
   onToggle: (routine: Routine) => void
-  onDelete: (routine: Routine) => void
   busy: boolean
 }) {
   return (
@@ -157,7 +132,7 @@ function RoutineGroup({
                     className={[
                       'chip',
                       routine.is_active
-                        ? 'bg-evo-lime/20 text-[#102000]'
+                        ? 'bg-evo-lime text-[#102000]'
                         : 'bg-evo-surface-2 text-evo-muted',
                     ].join(' ')}
                   >
@@ -174,14 +149,9 @@ function RoutineGroup({
                 >
                   {routine.is_active ? 'Pausar' : 'Activar'}
                 </Button>
-                <Button
-                  variant="danger"
-                  className="!min-h-11 flex-1"
-                  disabled={busy}
-                  onClick={() => onDelete(routine)}
-                >
-                  Borrar
-                </Button>
+                <ButtonLink to={`/routines/${routine.id}/edit`} variant="secondary" className="!min-h-11 flex-1">
+                  Editar
+                </ButtonLink>
               </div>
             </li>
           ))}

@@ -30,7 +30,13 @@ services:
     volumes:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
+      # Volumen histórico (antes servido por Caddy en /storage). Se mantiene para no
+      # perder fotos antiguas: el arranque las mueve a storage/app/private.
       - backend_storage:/var/www/html/storage/app/public
+      # Archivos privados (fotos de progreso).
+      - backend_private:/var/www/html/storage/app/private
+      # Copias de la BD antes de cada migración (y las diarias del servicio backup).
+      - ./backups:/backups
     environment:
       APP_NAME: EvoFit
       APP_ENV: production
@@ -46,7 +52,9 @@ services:
       SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS}
       SESSION_DOMAIN: ${SESSION_DOMAIN:-}
       SESSION_DRIVER: file
-      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+      # Workers de `artisan serve` (php -S) para atender peticiones en paralelo.
+      PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-4}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
       mariadb:
@@ -67,12 +75,38 @@ services:
       - "443:443"
     environment:
       DOMAIN: ${DOMAIN}
+      # Por defecto el dominio tal cual => HTTPS automático. Detrás de Cloudflare en modo
+      # "Flexible" pon SITE_ADDRESS=http://tu-dominio en .env (ver deploy/Caddyfile).
+      SITE_ADDRESS: ${SITE_ADDRESS:-${DOMAIN}}
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - backend_storage:/srv/storage:ro
     depends_on:
       - backend
+    networks:
+      - evofit
+
+  # Copia diaria: volcado de la BD + fotos en ./backups del host (14 días de retención).
+  backup:
+    image: mariadb:11.4
+    container_name: evofit-backup
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      DB_HOST: mariadb
+      DB_DATABASE: ${DB_DATABASE:-evofit}
+      DB_USERNAME: ${DB_USERNAME:-evofit}
+      MYSQL_PWD: ${DB_PASSWORD}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+    volumes:
+      - ./backups:/backups
+      - backend_storage:/data/public:ro
+      - backend_private:/data/private:ro
+      - ./deploy/backup.sh:/usr/local/bin/evofit-backup.sh:ro
+    entrypoint: ["bash", "/usr/local/bin/evofit-backup.sh"]
     networks:
       - evofit
 
@@ -80,6 +114,7 @@ volumes:
   mariadb_data:
   backend_vendor:
   backend_storage:
+  backend_private:
   caddy_data:
   caddy_config:
 

@@ -170,7 +170,7 @@ export function helloLine(name?: string | null) {
 }
 
 export function getDayMotivation(date = new Date()): DayMotivation {
-  const pack = packs[date.getDay()] ?? packs[1]
+  const pack = (packs[date.getDay()] ?? packs[1])!
   const idx = dayOfYear(date) % pack.messages.length
   const picked = pack.messages[idx]!
   return {
@@ -188,9 +188,4 @@ export function formatHeaderDay(date = new Date()) {
   return { day, num, full: `${day} ${num}` }
 }
 
-export function localDateKey(date = new Date()) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+export { localDateKey } from './dates'

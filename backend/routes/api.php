@@ -2,16 +2,19 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogExerciseController;
+use App\Http\Controllers\Api\ExerciseHistoryController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\WorkoutSessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::middleware('throttle:6,1')->group(function (): void {
+        Route::post('/auth/register', [AuthController::class, 'register']);
+        Route::post('/auth/login', [AuthController::class, 'login']);
+    });
 
-    Route::middleware(['auth:sanctum', 'tenant'])->group(function (): void {
+    Route::middleware(['auth:sanctum', 'tenant', 'throttle:120,1'])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -35,5 +38,10 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/progress/photos', [ProgressController::class, 'photos']);
         Route::post('/progress/photos', [ProgressController::class, 'storePhoto']);
         Route::get('/progress/insights', [ProgressController::class, 'insights']);
+        Route::delete('/progress/body-weight/{bodyWeightEntry}', [ProgressController::class, 'destroyBodyWeight']);
+        Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage']);
+        Route::delete('/progress/photos/{progressPhoto}', [ProgressController::class, 'destroyPhoto']);
+
+        Route::get('/exercise-history', [ExerciseHistoryController::class, 'show']);
     });
 });

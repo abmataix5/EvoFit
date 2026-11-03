@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Models\WorkoutSession;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class PreviousSetLookup
 {
+    public function __construct(private readonly ExerciseLogQuery $logs) {}
+
     /**
-     * Última sesión anterior de cada ejercicio, con la mejor marca según cómo se mide.
+     * Última sesión anterior de cada ejercicio, con la mejor marca según cómo se mide,
+     * más los récords de todas las sesiones anteriores.
      *
      * @return array<int, array{
      *   recorded_on: string,
@@ -17,7 +20,11 @@ class PreviousSetLookup
      *   best_weight_kg: float|null,
      *   best_reps: int|null,
      *   best_duration_seconds: int|null,
-     *   sets: array<int, array{set_number: int, weight_kg: float|null, reps: int|null, duration_seconds: int|null}>
+     *   sets: array<int, array{set_number: int, weight_kg: float|null, reps: int|null, duration_seconds: int|null}>,
+     *   record_weight_kg: float|null,
+     *   record_reps: int|null,
+     *   record_est_1rm: float|null,
+     *   record_duration_seconds: int|null
      * }>
      */
     public function forSession(WorkoutSession $session): array
@@ -30,81 +37,36 @@ class PreviousSetLookup
 
         // Se compara por cuándo se entrenó de verdad, no por la fecha planificada:
         // una sesión del jueves hecha el martes cuenta como del martes.
-        $trainedAt = 'COALESCE(workout_sessions.started_at, workout_sessions.completed_at, workout_sessions.scheduled_date)';
+        $trainedAt = WorkoutSession::trainedAtSql();
         $reference = ($session->started_at ?? now())->toDateTimeString();
 
-        $catalogIds = $exercises->pluck('catalog_exercise_id')->filter()->unique()->values();
-        $nameKeys = $exercises
-            ->map(fn ($exercise) => mb_strtolower(trim((string) $exercise->name)))
-            ->filter()
-            ->unique()
-            ->values();
-
-        $rows = DB::table('exercise_set_logs')
-            ->join('workout_sessions', 'workout_sessions.id', '=', 'exercise_set_logs.workout_session_id')
-            ->join('routine_exercises', 'routine_exercises.id', '=', 'exercise_set_logs.routine_exercise_id')
-            ->where('workout_sessions.user_id', $session->user_id)
-            ->where('workout_sessions.tenant_id', $session->tenant_id)
+        $rows = $this->logs
+            ->rowsFor((int) $session->user_id, (int) $session->tenant_id, $exercises)
             ->where('workout_sessions.id', '!=', $session->id)
             ->whereRaw($trainedAt.' < ?', [$reference])
             ->where(function ($query) {
                 $query->whereNotNull('exercise_set_logs.weight_kg')
                     ->orWhereNotNull('exercise_set_logs.duration_seconds');
             })
-            ->where(function ($query) use ($catalogIds, $nameKeys) {
-                if ($catalogIds->isNotEmpty()) {
-                    $query->whereIn('routine_exercises.catalog_exercise_id', $catalogIds->all());
-                }
-                if ($nameKeys->isNotEmpty()) {
-                    $placeholders = implode(',', array_fill(0, $nameKeys->count(), '?'));
-                    $sql = 'LOWER(routine_exercises.name) IN ('.$placeholders.')';
-                    if ($catalogIds->isNotEmpty()) {
-                        $query->orWhereRaw($sql, $nameKeys->all());
-                    } else {
-                        $query->whereRaw($sql, $nameKeys->all());
-                    }
-                }
-            })
             ->orderByRaw($trainedAt.' DESC')
             ->orderByDesc('workout_sessions.id')
             ->orderBy('exercise_set_logs.set_number')
-            ->get([
-                'workout_sessions.id as session_id',
-                DB::raw($trainedAt.' as trained_at'),
-                'routine_exercises.catalog_exercise_id',
-                'routine_exercises.name',
-                'exercise_set_logs.set_number',
-                'exercise_set_logs.weight_kg',
-                'exercise_set_logs.reps',
-                'exercise_set_logs.duration_seconds',
-            ]);
+            ->get();
 
         $result = [];
 
         foreach ($exercises as $exercise) {
-            $catalogId = $exercise->catalog_exercise_id;
-            $nameKey = mb_strtolower(trim((string) $exercise->name));
             $mode = $exercise->tracking_mode ?? 'weight_reps';
             $direction = $exercise->time_direction ?? 'faster';
-            $timed = in_array($mode, ['time', 'weight_time'], true);
+            $timed = ExerciseLogQuery::isTimed($mode);
+
+            $all = $rows->filter(fn ($row) => ExerciseLogQuery::matches($row, $exercise))->values();
 
             // Solo filas con el dato que importa (kg o tiempo): si la última vez no se
             // apuntaron kilos, se salta a la anterior que sí los tenga.
-            $matches = $rows->filter(function ($row) use ($catalogId, $nameKey, $timed) {
-                if ($timed ? $row->duration_seconds === null : $row->weight_kg === null) {
-                    return false;
-                }
-                $sameName = $nameKey !== '' && mb_strtolower(trim((string) $row->name)) === $nameKey;
-                if ($catalogId) {
-                    if ((int) $row->catalog_exercise_id === (int) $catalogId) {
-                        return true;
-                    }
-
-                    return $row->catalog_exercise_id === null && $sameName;
-                }
-
-                return $sameName;
-            })->values();
+            $matches = $all
+                ->filter(fn ($row) => $timed ? $row->duration_seconds !== null : $row->weight_kg !== null)
+                ->values();
 
             if ($matches->isEmpty()) {
                 continue;
@@ -140,9 +102,57 @@ class PreviousSetLookup
                     'reps' => $row->reps !== null ? (int) $row->reps : null,
                     'duration_seconds' => $row->duration_seconds !== null ? (int) $row->duration_seconds : null,
                 ])->all(),
+                ...self::records($all, $mode, $direction),
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Récords históricos. Las series marcadas como no completadas no cuentan.
+     *
+     * @param  Collection<int, object>  $rows
+     * @return array{record_weight_kg: float|null, record_reps: int|null, record_est_1rm: float|null, record_duration_seconds: int|null}
+     */
+    public static function records(Collection $rows, string $mode, string $direction): array
+    {
+        $rows = $rows->filter(fn ($row) => $row->completed === null || (bool) $row->completed);
+
+        $weighted = $rows->filter(fn ($row) => $row->weight_kg !== null);
+        $recordWeight = $weighted->isNotEmpty() ? (float) $weighted->max(fn ($row) => (float) $row->weight_kg) : null;
+
+        $recordReps = null;
+        if ($recordWeight !== null) {
+            $reps = $weighted
+                ->filter(fn ($row) => abs((float) $row->weight_kg - $recordWeight) < 0.001 && $row->reps !== null)
+                ->map(fn ($row) => (int) $row->reps);
+            $recordReps = $reps->isNotEmpty() ? (int) $reps->max() : null;
+        }
+
+        $recordOneRm = null;
+        if ($mode === 'weight_reps') {
+            $estimates = $weighted
+                ->map(fn ($row) => ExerciseLogQuery::epley((float) $row->weight_kg, $row->reps !== null ? (int) $row->reps : null))
+                ->filter(fn ($value) => $value !== null);
+            $recordOneRm = $estimates->isNotEmpty() ? round((float) $estimates->max(), 1) : null;
+        }
+
+        $recordDuration = null;
+        if (ExerciseLogQuery::isTimed($mode)) {
+            $durations = $rows
+                ->filter(fn ($row) => $row->duration_seconds !== null)
+                ->map(fn ($row) => (int) $row->duration_seconds);
+            if ($durations->isNotEmpty()) {
+                $recordDuration = $direction === 'longer' ? (int) $durations->max() : (int) $durations->min();
+            }
+        }
+
+        return [
+            'record_weight_kg' => $recordWeight,
+            'record_reps' => $recordReps,
+            'record_est_1rm' => $recordOneRm,
+            'record_duration_seconds' => $recordDuration,
+        ];
     }
 }

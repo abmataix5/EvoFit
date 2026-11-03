@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\WorkoutSession;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\WorkoutSession */
+/** @mixin WorkoutSession */
 class WorkoutSessionResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -23,9 +24,11 @@ class WorkoutSessionResource extends JsonResource
             'routine' => new RoutineResource($this->whenLoaded('routine')),
             'day' => new RoutineDayResource($this->whenLoaded('day')),
             'set_logs' => ExerciseSetLogResource::collection($this->whenLoaded('setLogs')),
+            // Objeto {routine_exercise_id: …}: como array con claves numéricas el
+            // JsonResource lo reindexaría como lista y se perderían los ids.
             'previous_lifts' => $this->when(
                 $this->resource->previousLifts !== null,
-                $this->resource->previousLifts
+                fn () => (object) $this->resource->previousLifts
             ),
         ];
     }

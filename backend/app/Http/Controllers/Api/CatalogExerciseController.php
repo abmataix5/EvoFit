@@ -10,6 +10,7 @@ use App\Models\CatalogExercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class CatalogExerciseController extends Controller
 {
@@ -20,10 +21,12 @@ class CatalogExerciseController extends Controller
             ->orderBy('name');
 
         if ($search = trim((string) $request->query('q', ''))) {
-            $query->where(function ($builder) use ($search) {
+            // % y _ son comodines de LIKE: se escapan (con '!', portable MariaDB/SQLite).
+            $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+            $query->where(function ($builder) use ($like) {
                 $builder
-                    ->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('target_muscle', 'like', '%'.$search.'%');
+                    ->whereRaw("name LIKE ? ESCAPE '!'", [$like])
+                    ->orWhereRaw("target_muscle LIKE ? ESCAPE '!'", [$like]);
             });
         }
 
@@ -54,41 +57,31 @@ class CatalogExerciseController extends Controller
 
     public function update(UpdateCatalogExerciseRequest $request, CatalogExercise $catalogExercise): CatalogExerciseResource
     {
-        $this->authorizeExercise($catalogExercise);
-
         $payload = $request->validated();
-        $catalogExercise->update($payload);
 
-        // Mantener el nombre alineado en rutinas que usan este catálogo.
-        if (array_key_exists('name', $payload)) {
-            $catalogExercise->routineExercises()->update([
-                'name' => $catalogExercise->name,
-            ]);
-        }
+        DB::transaction(function () use ($catalogExercise, $payload) {
+            $catalogExercise->update($payload);
 
-        $sync = [];
-        foreach (['target_muscle', 'tracking_mode', 'time_direction', 'default_duration_seconds'] as $field) {
-            if (array_key_exists($field, $payload)) {
-                $sync[$field] = $catalogExercise->{$field};
+            // Mantener alineadas las rutinas que usan este catálogo.
+            $sync = [];
+            foreach (['name', 'target_muscle', 'tracking_mode', 'time_direction', 'default_duration_seconds'] as $field) {
+                if (array_key_exists($field, $payload)) {
+                    $sync[$field] = $catalogExercise->{$field};
+                }
             }
-        }
-        if ($sync !== []) {
-            $catalogExercise->routineExercises()->update($sync);
-        }
+            if ($sync !== []) {
+                $catalogExercise->routineExercises()->update($sync);
+            }
+        });
 
         return new CatalogExerciseResource($catalogExercise->fresh());
     }
 
     public function destroy(CatalogExercise $catalogExercise): JsonResponse
     {
-        $this->authorizeExercise($catalogExercise);
+        $this->authorize('delete', $catalogExercise);
         $catalogExercise->delete();
 
         return response()->json(['message' => 'Ejercicio eliminado del catálogo.']);
-    }
-
-    private function authorizeExercise(CatalogExercise $exercise): void
-    {
-        abort_unless($exercise->user_id === auth()->id(), 403, 'No autorizado.');
     }
 }

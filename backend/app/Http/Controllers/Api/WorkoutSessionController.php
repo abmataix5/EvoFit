@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Workout\CalendarRequest;
 use App\Http\Requests\Workout\StoreWorkoutSessionRequest;
 use App\Http\Requests\Workout\SyncWorkoutLogsRequest;
+use App\Http\Requests\Workout\UpdateWorkoutSessionRequest;
 use App\Http\Resources\WorkoutSessionResource;
 use App\Models\Routine;
 use App\Models\RoutineDay;
@@ -12,26 +14,25 @@ use App\Models\WorkoutSession;
 use App\Services\PreviousSetLookup;
 use App\Services\TrainingCalendarPlanner;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
 class WorkoutSessionController extends Controller
 {
-    public function calendar(Request $request, TrainingCalendarPlanner $planner): AnonymousResourceCollection
+    private const DETAIL_RELATIONS = ['routine', 'day.exercises', 'setLogs.routineExercise'];
+
+    public function calendar(CalendarRequest $request, TrainingCalendarPlanner $planner): AnonymousResourceCollection
     {
-        $validated = $request->validate([
-            'from' => ['required', 'date'],
-            'to' => ['required', 'date', 'after_or_equal:from'],
-        ]);
+        $validated = $request->validated();
 
         $planner->syncRange($request->user(), $validated['from'], $validated['to']);
 
         // Solo rutinas activas: las pausadas no aparecen en el calendario.
         $sessions = WorkoutSession::query()
-            ->with(['routine', 'day.exercises', 'setLogs.routineExercise'])
+            ->with(self::DETAIL_RELATIONS)
             ->where('user_id', $request->user()->id)
-            ->whereBetween('scheduled_date', [$validated['from'], $validated['to']])
+            ->whereDate('scheduled_date', '>=', $validated['from'])
+            ->whereDate('scheduled_date', '<=', $validated['to'])
             ->whereHas('routine', fn ($q) => $q->where('is_active', true))
             ->orderBy('scheduled_date')
             ->get();
@@ -45,7 +46,7 @@ class WorkoutSessionController extends Controller
         $routine = Routine::query()->findOrFail($payload['routine_id']);
         $day = RoutineDay::query()->findOrFail($payload['routine_day_id']);
 
-        abort_unless($routine->user_id === $request->user()->id, 403);
+        $this->authorize('view', $routine);
         abort_unless($day->routine_id === $routine->id, 422, 'El día no pertenece a esa rutina.');
 
         $session = WorkoutSession::query()->firstOrCreate(
@@ -66,38 +67,45 @@ class WorkoutSessionController extends Controller
         }
 
         return response()->json([
-            'session' => new WorkoutSessionResource(
-                $session->load(['routine', 'day.exercises', 'setLogs.routineExercise'])
-            ),
+            'session' => new WorkoutSessionResource($session->load(self::DETAIL_RELATIONS)),
         ], 201);
     }
 
     public function show(WorkoutSession $workoutSession, PreviousSetLookup $previousSets): WorkoutSessionResource
     {
-        $this->authorizeSession($workoutSession);
+        $this->authorize('view', $workoutSession);
 
         if ($workoutSession->started_at === null) {
             $workoutSession->update(['started_at' => now(), 'is_planned' => false]);
         }
 
-        $workoutSession->load(['routine', 'day.exercises', 'setLogs.routineExercise']);
-        $workoutSession->previousLifts = $previousSets->forSession($workoutSession);
-
-        return new WorkoutSessionResource($workoutSession);
+        return $this->detail($workoutSession, $previousSets);
     }
 
-    public function update(Request $request, WorkoutSession $workoutSession): WorkoutSessionResource
-    {
-        $this->authorizeSession($workoutSession);
+    public function update(
+        UpdateWorkoutSessionRequest $request,
+        WorkoutSession $workoutSession,
+        PreviousSetLookup $previousSets
+    ): WorkoutSessionResource {
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'routine_day_id' => ['required', 'integer', 'exists:routine_days,id'],
-        ]);
+        DB::transaction(function () use ($workoutSession, $validated) {
+            if (array_key_exists('notes', $validated)) {
+                $workoutSession->update(['notes' => $validated['notes']]);
+            }
 
-        $day = RoutineDay::query()->findOrFail($validated['routine_day_id']);
-        abort_unless($day->routine_id === $workoutSession->routine_id, 422, 'El día debe ser de la misma rutina.');
+            if (! array_key_exists('routine_day_id', $validated)) {
+                return;
+            }
 
-        DB::transaction(function () use ($workoutSession, $day) {
+            $day = RoutineDay::query()->whereNull('archived_at')->find($validated['routine_day_id']);
+            abort_if($day === null, 422, 'Ese día no existe.');
+            abort_unless($day->routine_id === $workoutSession->routine_id, 422, 'El día debe ser de la misma rutina.');
+
+            if ($day->id === $workoutSession->routine_day_id) {
+                return;
+            }
+
             $conflict = WorkoutSession::query()
                 ->where('user_id', $workoutSession->user_id)
                 ->where('routine_day_id', $day->id)
@@ -119,49 +127,65 @@ class WorkoutSessionController extends Controller
             ]);
         });
 
-        return new WorkoutSessionResource(
-            $workoutSession->fresh()->load(['routine', 'day.exercises', 'setLogs.routineExercise'])
-        );
+        return $this->detail($workoutSession->fresh(), $previousSets);
     }
 
     public function syncLogs(
         SyncWorkoutLogsRequest $request,
         WorkoutSession $workoutSession,
         PreviousSetLookup $previousSets
-    ): WorkoutSessionResource
-    {
-        $this->authorizeSession($workoutSession);
+    ): WorkoutSessionResource {
+        $sets = $request->validated('sets') ?? [];
+        $removals = $request->validated('remove_sets') ?? [];
 
-        foreach ($request->validated('sets') as $set) {
-            $workoutSession->setLogs()->updateOrCreate(
-                [
-                    'routine_exercise_id' => $set['routine_exercise_id'],
-                    'set_number' => $set['set_number'],
-                ],
-                [
+        DB::transaction(function () use ($request, $workoutSession, $sets, $removals) {
+            foreach ($removals as $removal) {
+                $workoutSession->setLogs()
+                    ->where('routine_exercise_id', $removal['routine_exercise_id'])
+                    ->where('set_number', $removal['set_number'])
+                    ->delete();
+            }
+
+            foreach ($sets as $set) {
+                $values = [
                     'weight_kg' => $set['weight_kg'] ?? null,
                     'reps' => $set['reps'] ?? null,
                     'duration_seconds' => ! empty($set['duration_seconds']) ? (int) $set['duration_seconds'] : null,
-                    'completed' => $set['completed'] ?? true,
-                ]
-            );
-        }
+                    'completed' => array_key_exists('completed', $set) ? (bool) $set['completed'] : true,
+                ];
+                // rpe/notes solo se tocan si vienen en la petición (el autosave puede no enviarlos).
+                if (array_key_exists('rpe', $set)) {
+                    $values['rpe'] = $set['rpe'] !== null ? round((float) $set['rpe'], 1) : null;
+                }
+                if (array_key_exists('notes', $set)) {
+                    $values['notes'] = blank($set['notes']) ? null : trim((string) $set['notes']);
+                }
 
-        if ($request->boolean('complete')) {
-            $workoutSession->update([
-                'completed_at' => now(),
-                'is_planned' => false,
-            ]);
-        }
+                $workoutSession->setLogs()->updateOrCreate(
+                    [
+                        'routine_exercise_id' => $set['routine_exercise_id'],
+                        'set_number' => $set['set_number'],
+                    ],
+                    $values
+                );
+            }
 
-        $fresh = $workoutSession->fresh()->load(['routine', 'day.exercises', 'setLogs.routineExercise']);
-        $fresh->previousLifts = $previousSets->forSession($fresh);
+            if ($request->boolean('complete')) {
+                $workoutSession->update([
+                    'completed_at' => now(),
+                    'is_planned' => false,
+                ]);
+            }
+        });
 
-        return new WorkoutSessionResource($fresh);
+        return $this->detail($workoutSession->fresh(), $previousSets);
     }
 
-    private function authorizeSession(WorkoutSession $session): void
+    private function detail(WorkoutSession $session, PreviousSetLookup $previousSets): WorkoutSessionResource
     {
-        abort_unless($session->user_id === auth()->id(), 403);
+        $session->load(self::DETAIL_RELATIONS);
+        $session->previousLifts = $previousSets->forSession($session);
+
+        return new WorkoutSessionResource($session);
     }
 }

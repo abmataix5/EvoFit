@@ -13,6 +13,18 @@ export const api = axios.create({
   xsrfHeaderName: 'X-XSRF-TOKEN',
 })
 
+/** Evento global cuando el servidor dice que la sesión ya no vale (caducada o cerrada en otro sitio). */
+export const UNAUTHORIZED_EVENT = 'evofit:unauthorized'
+
+api.interceptors.response.use(undefined, (error) => {
+  const status = error?.response?.status
+  const url: string = error?.config?.url ?? ''
+  if ((status === 401 || status === 419) && !url.startsWith('/auth/')) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+  }
+  return Promise.reject(error)
+})
+
 export async function ensureCsrfCookie(): Promise<void> {
   await axios.get('/sanctum/csrf-cookie', {
     withCredentials: true,
@@ -105,6 +117,29 @@ export type PreviousLift = {
   best_reps: number | null
   best_duration_seconds?: number | null
   sets: PreviousLiftSet[]
+  /** Récords de siempre (antes de esta sesión). */
+  record_weight_kg?: number | null
+  record_reps?: number | null
+  record_est_1rm?: number | null
+  record_duration_seconds?: number | null
+}
+
+export type ExerciseHistoryEntry = {
+  date: string
+  session_id: number
+  best_weight_kg: number | null
+  best_reps: number | null
+  best_duration_seconds: number | null
+  est_1rm: number | null
+  volume_kg: number | null
+  sets: Array<PreviousLiftSet & { rpe?: number | null }>
+}
+
+export type ExerciseHistory = {
+  name: string
+  tracking_mode: TrackingMode
+  time_direction: TimeDirection
+  entries: ExerciseHistoryEntry[]
 }
 
 export type ExerciseSetLog = {
@@ -114,6 +149,8 @@ export type ExerciseSetLog = {
   weight_kg: string | number | null
   reps: number | null
   duration_seconds?: number | null
+  rpe?: number | null
+  notes?: string | null
   completed: boolean
   exercise?: RoutineExercise
 }
@@ -205,7 +242,7 @@ export function defaultWeekdays(count: number): number[] {
     6: [1, 2, 3, 4, 5, 6],
     7: [1, 2, 3, 4, 5, 6, 7],
   }
-  return map[count] ?? map[3]
+  return map[count] ?? map[3] ?? [1, 3, 5]
 }
 
 export type BodyWeightEntry = {

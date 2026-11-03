@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { api, type Routine, type RoutineDay, type WorkoutSession } from '../lib/api'
+import { localDateKey, startOfWeek } from '../lib/dates'
 import { exercisePlanLabel } from '../lib/tracking'
 
 const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -24,18 +25,7 @@ const MONTHS = [
 
 type ViewMode = 'week' | 'month'
 
-function fmt(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function startOfWeek(base: Date) {
-  const d = new Date(base)
-  const day = d.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
+const fmt = localDateKey
 
 function monthBounds(year: number, month: number) {
   const from = new Date(year, month, 1)
@@ -73,7 +63,7 @@ function sessionStatus(session: WorkoutSession) {
 export function CalendarPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const now = new Date()
+  const [now] = useState(() => new Date())
   const [view, setView] = useState<ViewMode>('week')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -180,7 +170,7 @@ export function CalendarPage() {
     if (sameMonth) {
       return `${from.getDate()}–${to.getDate()} ${MONTHS[from.getMonth()]}`
     }
-    return `${from.getDate()} ${MONTHS[from.getMonth()].slice(0, 3)} – ${to.getDate()} ${MONTHS[to.getMonth()].slice(0, 3)}`
+    return `${from.getDate()} ${MONTHS[from.getMonth()]?.slice(0, 3)} – ${to.getDate()} ${MONTHS[to.getMonth()]?.slice(0, 3)}`
   }, [weekStart])
 
   const title = view === 'month' ? `${MONTHS[month]} ${year}` : weekLabel
@@ -219,9 +209,10 @@ export function CalendarPage() {
           <div className="inline-flex rounded-xl border border-evo-border bg-evo-surface-2 p-1">
             <button
               type="button"
+              aria-pressed={view === 'week'}
               onClick={() => setView('week')}
               className={[
-                'rounded-lg px-3.5 py-2 text-xs font-bold transition',
+                'min-h-11 rounded-lg px-4 text-sm font-bold transition',
                 view === 'week' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
               ].join(' ')}
             >
@@ -229,9 +220,10 @@ export function CalendarPage() {
             </button>
             <button
               type="button"
+              aria-pressed={view === 'month'}
               onClick={() => setView('month')}
               className={[
-                'rounded-lg px-3.5 py-2 text-xs font-bold transition',
+                'min-h-11 rounded-lg px-4 text-sm font-bold transition',
                 view === 'month' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
               ].join(' ')}
             >
@@ -254,7 +246,7 @@ export function CalendarPage() {
             <button
               type="button"
               onClick={goToday}
-              className="mt-0.5 text-xs font-bold text-evo-accent"
+              className="mt-0.5 min-h-9 rounded-lg px-3 text-sm font-bold text-evo-accent"
             >
               Ir a hoy
             </button>
@@ -425,7 +417,7 @@ export function CalendarPage() {
                   >
                     <span className="font-semibold">{cell.day}</span>
                     {sessions[0]?.day?.name ? (
-                      <span className="mt-0.5 max-w-full truncate px-0.5 text-[0.55rem] text-evo-muted">
+                      <span className="mt-0.5 max-w-full truncate px-0.5 text-[0.65rem] text-evo-muted">
                         {sessions[0].day.name}
                       </span>
                     ) : null}

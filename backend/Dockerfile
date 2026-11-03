@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
+    mariadb-client \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql zip intl mbstring pcntl gd \
     && echo 'upload_max_filesize=16M' > /usr/local/etc/php/conf.d/uploads.ini \

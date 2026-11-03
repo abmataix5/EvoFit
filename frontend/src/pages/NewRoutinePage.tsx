@@ -1,11 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { ExerciseCatalogPicker } from '../components/exercises/ExerciseCatalogPicker'
 import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, defaultWeekdays, type CatalogExercise } from '../lib/api'
+import {
+  TRAINING_TEMPLATES,
+  WEEKDAY_LABELS,
+  api,
+  defaultWeekdays,
+  type CatalogExercise,
+  type Routine,
+} from '../lib/api'
+import { invalidateTraining } from '../lib/queryClient'
 import {
   directionLabel,
   isTimeMode,
@@ -17,6 +26,8 @@ import {
 } from '../lib/tracking'
 
 type DraftExercise = {
+  /** Solo al editar: ejercicio ya guardado (conserva su historial). */
+  id?: number
   name: string
   catalog_exercise_id: number | null
   tracking_mode: TrackingMode
@@ -29,6 +40,7 @@ type DraftExercise = {
 }
 
 type DraftDay = {
+  id?: number
   day_index: number
   weekday: number
   name: string
@@ -50,8 +62,53 @@ function emptyExercise(): DraftExercise {
   }
 }
 
+function draftsFromRoutine(routine: Routine): DraftDay[] {
+  return [...(routine.days ?? [])]
+    .sort((a, b) => a.day_index - b.day_index)
+    .map((day, index) => ({
+      id: day.id,
+      day_index: index + 1,
+      weekday: day.weekday ?? index + 1,
+      name: day.name,
+      focus: day.focus ?? '',
+      exercises: [...(day.exercises ?? [])]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((exercise) => {
+          const duration = splitDuration(exercise.default_duration_seconds)
+          return {
+            id: exercise.id,
+            name: exercise.name,
+            catalog_exercise_id: exercise.catalog_exercise_id ?? null,
+            tracking_mode: exercise.tracking_mode ?? 'weight_reps',
+            time_direction: exercise.time_direction ?? 'faster',
+            default_sets: exercise.default_sets,
+            default_reps: exercise.default_reps,
+            duration_minutes: duration.minutes,
+            duration_seconds: duration.seconds,
+            rest_seconds: exercise.rest_seconds ?? 90,
+          }
+        }),
+    }))
+}
+
+/** Ajusta el número de días sin perder lo ya escrito: se conservan los primeros y se añaden de plantilla. */
+function resizeDays(current: DraftDay[], count: number): DraftDay[] {
+  const fresh = buildDaysFromTemplate(count)
+  const used = new Set(current.slice(0, count).map((day) => day.weekday))
+  const freeWeekdays = [1, 2, 3, 4, 5, 6, 7].filter((w) => !used.has(w))
+  return fresh.map((templateDay, index) => {
+    const existing = current[index]
+    if (existing) return { ...existing, day_index: index + 1 }
+    return { ...templateDay, weekday: freeWeekdays.shift() ?? templateDay.weekday }
+  })
+}
+
+function hasContent(days: DraftDay[]) {
+  return days.some((day) => day.exercises.some((e) => e.name.trim()))
+}
+
 function buildDaysFromTemplate(count: number): DraftDay[] {
-  const template = TRAINING_TEMPLATES[count] ?? TRAINING_TEMPLATES[3]
+  const template = (TRAINING_TEMPLATES[count] ?? TRAINING_TEMPLATES[3])!
   const weekdays = defaultWeekdays(count)
   return template.days.slice(0, count).map((day, index) => ({
     day_index: index + 1,
@@ -63,8 +120,13 @@ function buildDaysFromTemplate(count: number): DraftDay[] {
 }
 
 export function NewRoutinePage() {
+  const { id } = useParams()
+  const editingId = id ? Number(id) : null
+  const isEditing = editingId != null && Number.isFinite(editingId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { confirm } = useUiFeedback()
+  const loadedRef = useRef(false)
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [sessionsPerWeek, setSessionsPerWeek] = useState(4)
@@ -72,6 +134,32 @@ export function NewRoutinePage() {
   const [activeDay, setActiveDay] = useState(0)
   const [days, setDays] = useState<DraftDay[]>(() => buildDaysFromTemplate(4))
   const [error, setError] = useState<string | null>(null)
+  const [dates, setDates] = useState<{ starts_on: string | null; ends_on: string | null }>({
+    starts_on: null,
+    ends_on: null,
+  })
+
+  const routineQuery = useQuery({
+    queryKey: ['routine', editingId],
+    enabled: isEditing,
+    queryFn: async () => {
+      const { data } = await api.get<{ data: Routine }>(`/routines/${editingId}`)
+      return data.data
+    },
+  })
+
+  // Al editar, el formulario se rellena una sola vez con la rutina guardada.
+  useEffect(() => {
+    const routine = routineQuery.data
+    if (!routine || loadedRef.current) return
+    loadedRef.current = true
+    const loaded = draftsFromRoutine(routine)
+    setName(routine.name)
+    setIsActive(routine.is_active)
+    setSessionsPerWeek(Math.max(1, Math.min(7, loaded.length || routine.sessions_per_week)))
+    setDays(loaded.length > 0 ? loaded : buildDaysFromTemplate(routine.sessions_per_week))
+    setDates({ starts_on: routine.starts_on ?? null, ends_on: routine.ends_on ?? null })
+  }, [routineQuery.data])
 
   const { data: catalog = [] } = useQuery({
     queryKey: ['catalog-exercises'],
@@ -81,13 +169,40 @@ export function NewRoutinePage() {
     },
   })
 
-  const template = TRAINING_TEMPLATES[sessionsPerWeek] ?? TRAINING_TEMPLATES[3]
+  const template = (TRAINING_TEMPLATES[sessionsPerWeek] ?? TRAINING_TEMPLATES[3])!
   const currentDay = days[activeDay]
 
-  useEffect(() => {
-    setDays(buildDaysFromTemplate(sessionsPerWeek))
+  async function changeSessionsPerWeek(count: number) {
+    if (count === sessionsPerWeek) return
+    if (count < days.length && hasContent(days.slice(count))) {
+      const ok = await confirm({
+        title: `¿Pasar a ${count} días?`,
+        message: `Se quitarán los días ${days
+          .slice(count)
+          .map((d) => d.name)
+          .join(', ')} con sus ejercicios.`,
+        confirmLabel: 'Quitar días',
+        cancelLabel: 'Cancelar',
+        danger: true,
+      })
+      if (!ok) return
+    }
+    setSessionsPerWeek(count)
+    setDays((current) => (hasContent(current) || isEditing ? resizeDays(current, count) : buildDaysFromTemplate(count)))
     setActiveDay(0)
-  }, [sessionsPerWeek])
+  }
+
+  function moveExercise(dayIndex: number, from: number, to: number) {
+    setDays((current) =>
+      current.map((day, i) => {
+        if (i !== dayIndex || to < 0 || to >= day.exercises.length) return day
+        const exercises = [...day.exercises]
+        const [moved] = exercises.splice(from, 1)
+        if (moved) exercises.splice(to, 0, moved)
+        return { ...day, exercises }
+      }),
+    )
+  }
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -95,16 +210,18 @@ export function NewRoutinePage() {
         name,
         sessions_per_week: sessionsPerWeek,
         is_active: isActive,
-        starts_on: null,
-        ends_on: null,
-        days: days.map((day) => ({
-          day_index: day.day_index,
+        starts_on: dates.starts_on,
+        ends_on: dates.ends_on,
+        days: days.map((day, dayPosition) => ({
+          ...(day.id ? { id: day.id } : {}),
+          day_index: dayPosition + 1,
           weekday: day.weekday,
           name: day.name,
           focus: day.focus || null,
           exercises: day.exercises
             .filter((exercise) => exercise.name.trim() || exercise.catalog_exercise_id)
             .map((exercise, index) => ({
+              ...(exercise.id ? { id: exercise.id } : {}),
               name: exercise.name.trim(),
               catalog_exercise_id: exercise.catalog_exercise_id,
               sort_order: index,
@@ -120,16 +237,24 @@ export function NewRoutinePage() {
             })),
         })),
       }
+      if (isEditing) {
+        await api.put(`/routines/${editingId}`, payload)
+        return editingId as number
+      }
       const { data } = await api.post<{ routine: { id: number } }>('/routines', payload)
       return data.routine.id
     },
     onSuccess: async (routineId) => {
       await queryClient.invalidateQueries({ queryKey: ['routines'] })
-      await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
       await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
-      navigate(`/routines/${routineId}`)
+      await invalidateTraining()
+      navigate(`/routines/${routineId}`, { replace: isEditing })
     },
-    onError: () => setError('No se pudo guardar. Revisa nombre y ejercicios.'),
+    onError: (err: unknown) => {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(message ?? 'No se pudo guardar. Revisa nombre y ejercicios.')
+    },
   })
 
   function updateDay(index: number, patch: Partial<DraftDay>) {
@@ -173,16 +298,27 @@ export function NewRoutinePage() {
     mutation.mutate()
   }
 
+  if (isEditing && routineQuery.isLoading) {
+    return <p className="text-sm text-evo-muted">Cargando rutina…</p>
+  }
+
+  if (isEditing && routineQuery.isError) {
+    return <p className="text-sm font-semibold text-evo-danger">No se pudo cargar la rutina.</p>
+  }
+
   const dayProgress = days.map((day) => day.exercises.some((e) => e.name.trim()))
 
   return (
     <div className="no-x-scroll mx-auto max-w-xl space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Link to="/routines" className="text-sm font-semibold text-evo-accent">
-            ← Rutinas
+          <Link
+            to={isEditing ? `/routines/${editingId}` : '/routines'}
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent"
+          >
+            ← {isEditing ? 'Volver' : 'Rutinas'}
           </Link>
-          <h2 className="mt-1 font-display text-2xl font-bold">Nueva rutina</h2>
+          <h2 className="mt-1 font-display text-2xl font-bold">{isEditing ? 'Editar rutina' : 'Nueva rutina'}</h2>
           <p className="text-sm text-evo-muted">
             {step === 1 ? 'Paso 1 · Datos básicos' : 'Paso 2 · Ejercicios por día'}
           </p>
@@ -211,9 +347,10 @@ export function NewRoutinePage() {
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setSessionsPerWeek(n)}
+                    onClick={() => void changeSessionsPerWeek(n)}
+                    aria-pressed={sessionsPerWeek === n}
                     className={[
-                      'rounded-xl border-2 py-3 text-center text-sm font-bold transition',
+                      'min-h-12 rounded-xl border-2 py-3 text-center text-base font-bold transition',
                       sessionsPerWeek === n
                       ? 'border-evo-accent bg-evo-accent text-[#111]'
                       : 'border-evo-border bg-evo-surface-2 text-evo-text',
@@ -258,7 +395,7 @@ export function NewRoutinePage() {
                 type="button"
                 onClick={() => setActiveDay(index)}
                 className={[
-                  'rounded-xl border-2 px-2 py-2.5 text-left transition',
+                  'min-h-16 rounded-xl border-2 px-2.5 py-2.5 text-left transition',
                   index === activeDay
                     ? 'border-evo-accent bg-evo-accent/10'
                     : 'border-evo-border bg-evo-surface',
@@ -268,7 +405,7 @@ export function NewRoutinePage() {
                   <span className="text-xs font-bold">D{day.day_index}</span>
                   <span className="text-xs">{dayProgress[index] ? '✓' : '·'}</span>
                 </span>
-                <span className="mt-0.5 block truncate text-[0.7rem] font-semibold">{day.name}</span>
+                <span className="mt-0.5 block truncate text-sm font-semibold">{day.name}</span>
                 <span className="block text-xs text-evo-muted">
                   {WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3)}
                 </span>
@@ -313,7 +450,7 @@ export function NewRoutinePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold">Ejercicios</p>
-                  <Link to="/exercises" className="text-xs font-semibold text-evo-accent">
+                  <Link to="/exercises" className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent">
                     Gestionar catálogo
                   </Link>
                 </div>
@@ -360,7 +497,7 @@ export function NewRoutinePage() {
                           : ''}
                       </p>
                     ) : null}
-                    <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div className="mt-2 grid grid-cols-3 gap-2">
                       <Input
                         label="Series"
                         type="number"
@@ -410,20 +547,70 @@ export function NewRoutinePage() {
                           }
                         />
                       )}
+                      {!isTimeMode(exercise.tracking_mode) ? (
+                        <Input
+                          label="Descanso (s)"
+                          type="number"
+                          min={0}
+                          step={15}
+                          value={exercise.rest_seconds}
+                          onChange={(e) =>
+                            updateExercise(activeDay, exerciseIndex, {
+                              rest_seconds: Number(e.target.value),
+                            })
+                          }
+                        />
+                      ) : null}
                     </div>
-                    {currentDay.exercises.length > 1 ? (
+                    {isTimeMode(exercise.tracking_mode) ? (
+                      <div className="mt-2">
+                        <Input
+                          label="Descanso (s)"
+                          type="number"
+                          min={0}
+                          step={15}
+                          value={exercise.rest_seconds}
+                          onChange={(e) =>
+                            updateExercise(activeDay, exerciseIndex, {
+                              rest_seconds: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </div>
+                    ) : null}
+                    <div className="mt-2 flex gap-2">
                       <button
                         type="button"
-                        className="mt-2 text-xs font-semibold text-evo-danger"
-                        onClick={() =>
-                          updateDay(activeDay, {
-                            exercises: currentDay.exercises.filter((_, i) => i !== exerciseIndex),
-                          })
-                        }
+                        className="min-h-11 min-w-11 rounded-xl bg-evo-surface px-3 text-base font-bold disabled:opacity-30"
+                        aria-label="Subir ejercicio"
+                        disabled={exerciseIndex === 0}
+                        onClick={() => moveExercise(activeDay, exerciseIndex, exerciseIndex - 1)}
                       >
-                        Quitar
+                        ↑
                       </button>
-                    ) : null}
+                      <button
+                        type="button"
+                        className="min-h-11 min-w-11 rounded-xl bg-evo-surface px-3 text-base font-bold disabled:opacity-30"
+                        aria-label="Bajar ejercicio"
+                        disabled={exerciseIndex === currentDay.exercises.length - 1}
+                        onClick={() => moveExercise(activeDay, exerciseIndex, exerciseIndex + 1)}
+                      >
+                        ↓
+                      </button>
+                      {currentDay.exercises.length > 1 ? (
+                        <button
+                          type="button"
+                          className="ml-auto min-h-11 rounded-xl px-4 text-sm font-bold text-evo-danger hover:bg-evo-danger/10"
+                          onClick={() =>
+                            updateDay(activeDay, {
+                              exercises: currentDay.exercises.filter((_, i) => i !== exerciseIndex),
+                            })
+                          }
+                        >
+                          Quitar
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
                 <Button
@@ -492,7 +679,7 @@ export function NewRoutinePage() {
           {error ? <p className="text-sm font-semibold text-evo-danger">{error}</p> : null}
 
           <Button type="submit" size="lg" fullWidth disabled={mutation.isPending}>
-            {mutation.isPending ? 'Guardando…' : 'Crear rutina'}
+            {mutation.isPending ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear rutina'}
           </Button>
         </form>
       )}

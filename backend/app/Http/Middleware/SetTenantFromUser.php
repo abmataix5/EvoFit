@@ -13,9 +13,10 @@ class SetTenantFromUser
     {
         $user = $request->user();
 
-        if ($user !== null && $user->tenant_id !== null) {
-            TenantContext::set($user->tenant_id);
-        }
+        // Sin tenant no hay datos que servir: mejor 403 que una consulta sin filtrar.
+        abort_if($user === null || $user->tenant_id === null, 403, 'Cuenta sin espacio de trabajo.');
+
+        TenantContext::set((int) $user->tenant_id);
 
         try {
             return $next($request);

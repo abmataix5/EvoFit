@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { CopyDayPicker } from '../components/routines/CopyDayPicker'
-import { Button } from '../components/ui/Button'
+import { Button, ButtonLink } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import {
   FOCUS_LABELS,
@@ -13,6 +13,8 @@ import {
   type Routine,
   type WorkoutSession,
 } from '../lib/api'
+import { formatDayLabel, localDateKey } from '../lib/dates'
+import { invalidateTraining } from '../lib/queryClient'
 import { exercisePlanLabel, formatScore } from '../lib/tracking'
 
 export function RoutineDetailPage() {
@@ -56,7 +58,8 @@ export function RoutineDetailPage() {
 
   const startSession = useMutation({
     mutationFn: async (dayId: number) => {
-      const today = new Date().toISOString().slice(0, 10)
+      // Fecha local: con toISOString de madrugada salía el día anterior.
+      const today = localDateKey()
       const { data } = await api.post<{ session: WorkoutSession }>('/workout-sessions', {
         routine_id: routineId,
         routine_day_id: dayId,
@@ -65,9 +68,10 @@ export function RoutineDetailPage() {
       return data.session
     },
     onSuccess: async (session) => {
-      await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      void invalidateTraining()
       navigate(`/workout/${session.id}`)
     },
+    onError: () => notify('No se pudo empezar la sesión. Revisa la conexión.', 'error'),
   })
 
   const toggleActive = useMutation({
@@ -143,30 +147,15 @@ export function RoutineDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ButtonLink to={`/routines/${routine.id}/edit`} variant="secondary">
+            Editar
+          </ButtonLink>
           <Button
             variant={routine.is_active ? 'secondary' : 'lime'}
             disabled={toggleActive.isPending || deleteRoutine.isPending}
             onClick={() => toggleActive.mutate(!routine.is_active)}
           >
             {routine.is_active ? 'Pausar' : 'Activar'}
-          </Button>
-          <Button
-            variant="danger"
-            disabled={toggleActive.isPending || deleteRoutine.isPending}
-            onClick={() => {
-              void (async () => {
-                const ok = await confirm({
-                  title: `¿Borrar "${routine.name}"?`,
-                  message: 'Se eliminarán días y sesiones asociadas. Esta acción no se puede deshacer.',
-                  confirmLabel: 'Borrar',
-                  cancelLabel: 'Cancelar',
-                  danger: true,
-                })
-                if (ok) deleteRoutine.mutate()
-              })()
-            }}
-          >
-            Borrar
           </Button>
         </div>
       </div>
@@ -193,7 +182,7 @@ export function RoutineDetailPage() {
               type="button"
               onClick={() => setSelectedDayId(day.id)}
               className={[
-                'rounded-2xl border-2 px-3 py-2 text-left text-xs',
+                'min-h-16 rounded-2xl border-2 px-3 py-2.5 text-left text-sm',
                 selected
                   ? 'border-evo-accent bg-evo-accent/10 text-evo-accent'
                   : 'border-evo-border bg-evo-surface text-evo-muted',
@@ -228,12 +217,20 @@ export function RoutineDetailPage() {
           </div>
           <ul className="space-y-2">
             {(activeDay.exercises ?? []).map((exercise) => (
-              <li key={exercise.id} className="rounded-xl border border-evo-border bg-evo-surface-2 px-4 py-3 text-sm">
-                <p className="font-medium">{exercise.name}</p>
-                <p className="text-evo-muted">
-                  {exercisePlanLabel(exercise)}
-                  {exercise.target_muscle ? ` · ${exercise.target_muscle}` : ''}
-                </p>
+              <li key={exercise.id}>
+                <Link
+                  to={`/exercise-history/${exercise.id}`}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-evo-border bg-evo-surface-2 px-4 py-3 text-sm hover:border-evo-accent"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-medium">{exercise.name}</span>
+                    <span className="block text-evo-muted">
+                      {exercisePlanLabel(exercise)}
+                      {exercise.target_muscle ? ` · ${exercise.target_muscle}` : ''}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-bold text-evo-accent">Historial →</span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -267,6 +264,30 @@ export function RoutineDetailPage() {
         expandedSession={expandedSession}
         setExpandedSession={setExpandedSession}
       />
+
+      <section className="rounded-2xl border-2 border-evo-danger/30 p-4">
+        <h3 className="font-display text-lg font-bold">Borrar rutina</h3>
+        <p className="mt-1 text-sm text-evo-muted">Se eliminan sus días y sesiones. No se puede deshacer.</p>
+        <Button
+          className="mt-3"
+          variant="danger"
+          disabled={toggleActive.isPending || deleteRoutine.isPending}
+          onClick={() => {
+            void (async () => {
+              const ok = await confirm({
+                title: `¿Borrar "${routine.name}"?`,
+                message: 'Se eliminarán días y sesiones asociadas. Esta acción no se puede deshacer.',
+                confirmLabel: 'Borrar',
+                cancelLabel: 'Cancelar',
+                danger: true,
+              })
+              if (ok) deleteRoutine.mutate()
+            })()
+          }}
+        >
+          Borrar rutina
+        </Button>
+      </section>
     </div>
   )
 }
@@ -298,20 +319,24 @@ function HistorySection({
         <ul className="space-y-2">
           {history.map((session) => {
             const open = expandedSession === session.id
-            const grouped = groupLogs(session.set_logs ?? [])
+            const logged = (session.set_logs ?? []).filter(
+              (log) => (log.weight_kg != null && log.weight_kg !== '') || log.duration_seconds != null || log.reps != null,
+            )
+            const grouped = groupLogs(logged)
             return (
               <li key={session.id} className="panel overflow-hidden">
                 <button
                   type="button"
-                  className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+                  aria-expanded={open}
+                  className="flex min-h-14 w-full items-center justify-between gap-2 px-4 py-3 text-left"
                   onClick={() => setExpandedSession(open ? null : session.id)}
                 >
                   <div>
                     <p className="font-semibold">
-                      {session.scheduled_date} · {session.day?.name ?? 'Sesión'}
+                      <span className="capitalize">{formatDayLabel(session.scheduled_date)}</span> · {session.day?.name ?? 'Sesión'}
                     </p>
                     <p className="text-xs text-evo-muted">
-                      {(session.set_logs ?? []).length} series ·{' '}
+                      {logged.length} series ·{' '}
                       {session.completed_at ? 'Completada' : 'Con registros'}
                     </p>
                   </div>
@@ -337,7 +362,7 @@ function HistorySection({
                         </ul>
                       </div>
                     ))}
-                    <Link to={`/workout/${session.id}`} className="inline-flex text-sm font-semibold text-evo-accent">
+                    <Link to={`/workout/${session.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent">
                       Abrir sesión →
                     </Link>
                   </div>

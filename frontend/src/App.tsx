@@ -1,22 +1,46 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { BrandLogo } from './components/BrandLogo'
 import { UiFeedbackProvider } from './components/feedback/UiFeedback'
 import { AppShell } from './components/layout/AppShell'
 import { AuthProvider, useAuth } from './features/auth/AuthContext'
-import { CalendarPage } from './pages/CalendarPage'
-import { DashboardPage } from './pages/DashboardPage'
-import { ExercisesPage } from './pages/ExercisesPage'
-import { InstallPage } from './pages/InstallPage'
+import { queryClient } from './lib/queryClient'
 import { LoginPage } from './pages/LoginPage'
-import { NewRoutinePage } from './pages/NewRoutinePage'
-import { ProgressPage } from './pages/ProgressPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { RoutineDetailPage } from './pages/RoutineDetailPage'
-import { RoutinesPage } from './pages/RoutinesPage'
-import { WorkoutSessionPage } from './pages/WorkoutSessionPage'
 
-const queryClient = new QueryClient()
+// Cada página se descarga cuando se abre: el primer arranque en el móvil pesa mucho menos.
+// Si tras un despliegue ya no existe el trozo antiguo, se recarga una vez para coger la versión nueva.
+const page = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
+  lazy(async () => {
+    try {
+      const mod = await load()
+      sessionStorage.removeItem('evofit:chunk-reload')
+      return { default: mod[name] }
+    } catch (error) {
+      if (!sessionStorage.getItem('evofit:chunk-reload')) {
+        sessionStorage.setItem('evofit:chunk-reload', '1')
+        window.location.reload()
+        return { default: () => null }
+      }
+      throw error
+    }
+  })
+
+const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
+const DashboardPage = page(() => import('./pages/DashboardPage'), 'DashboardPage')
+const ExercisesPage = page(() => import('./pages/ExercisesPage'), 'ExercisesPage')
+const ExerciseHistoryPage = page(() => import('./pages/ExerciseHistoryPage'), 'ExerciseHistoryPage')
+const InstallPage = page(() => import('./pages/InstallPage'), 'InstallPage')
+const NewRoutinePage = page(() => import('./pages/NewRoutinePage'), 'NewRoutinePage')
+const ProgressPage = page(() => import('./pages/ProgressPage'), 'ProgressPage')
+const RoutineDetailPage = page(() => import('./pages/RoutineDetailPage'), 'RoutineDetailPage')
+const RoutinesPage = page(() => import('./pages/RoutinesPage'), 'RoutinesPage')
+const WorkoutSessionPage = page(() => import('./pages/WorkoutSessionPage'), 'WorkoutSessionPage')
+
+function PageFallback() {
+  return <p className="text-sm text-evo-muted">Cargando…</p>
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -43,6 +67,7 @@ export default function App() {
       <UiFeedbackProvider>
         <AuthProvider>
           <BrowserRouter>
+            <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -58,6 +83,8 @@ export default function App() {
                 <Route path="routines" element={<RoutinesPage />} />
                 <Route path="routines/new" element={<NewRoutinePage />} />
                 <Route path="routines/:id" element={<RoutineDetailPage />} />
+                <Route path="routines/:id/edit" element={<NewRoutinePage />} />
+                <Route path="exercise-history/:routineExerciseId" element={<ExerciseHistoryPage />} />
                 <Route path="exercises" element={<ExercisesPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="progress" element={<ProgressPage />} />
@@ -65,6 +92,7 @@ export default function App() {
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </AuthProvider>
       </UiFeedbackProvider>

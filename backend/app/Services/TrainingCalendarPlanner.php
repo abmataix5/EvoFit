@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Routine;
-use App\Models\WorkoutSession;
 use App\Models\User;
+use App\Models\WorkoutSession;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
@@ -28,25 +28,28 @@ class TrainingCalendarPlanner
             return;
         }
 
-        $period = CarbonPeriod::create($from, $to);
+        // Una sola consulta para saber qué (rutina, fecha) ya tienen sesión.
+        $existing = WorkoutSession::query()
+            ->where('user_id', $user->id)
+            ->whereIn('routine_id', $routines->pluck('id')->all())
+            ->whereDate('scheduled_date', '>=', $from)
+            ->whereDate('scheduled_date', '<=', $to)
+            ->get(['routine_id', 'scheduled_date'])
+            ->mapWithKeys(fn (WorkoutSession $session) => [
+                $session->routine_id.'|'.$session->scheduled_date->toDateString() => true,
+            ])
+            ->all();
 
-        foreach ($period as $date) {
+        $now = now();
+        $rows = [];
+
+        foreach (CarbonPeriod::create($from, $to) as $date) {
             /** @var Carbon $date */
             $dateString = $date->toDateString();
             $isoWeekday = (int) $date->isoWeekday();
 
             foreach ($routines as $routine) {
-                if (! $routine->isEffectiveOn($date)) {
-                    continue;
-                }
-
-                $alreadyHasSession = WorkoutSession::query()
-                    ->where('user_id', $user->id)
-                    ->where('routine_id', $routine->id)
-                    ->whereDate('scheduled_date', $dateString)
-                    ->exists();
-
-                if ($alreadyHasSession) {
+                if (! $routine->isEffectiveOn($date) || isset($existing[$routine->id.'|'.$dateString])) {
                     continue;
                 }
 
@@ -55,16 +58,40 @@ class TrainingCalendarPlanner
                     continue;
                 }
 
-                WorkoutSession::query()->create([
+                $rows[] = [
+                    'tenant_id' => $routine->tenant_id,
                     'user_id' => $user->id,
                     'routine_id' => $routine->id,
                     'routine_day_id' => $day->id,
                     'scheduled_date' => $dateString,
                     'is_planned' => true,
                     'was_swapped' => false,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
+
+        // insertOrIgnore: si dos peticiones planifican a la vez, el índice único evita duplicados.
+        foreach (array_chunk($rows, 500) as $chunk) {
+            WorkoutSession::query()->insertOrIgnore($chunk);
+        }
+    }
+
+    /**
+     * Tras editar los días de una rutina: borra sesiones futuras que nadie ha tocado
+     * (sin series, sin completar, sin empezar) para que se vuelvan a planificar.
+     */
+    public function resetFutureSessions(Routine $routine): void
+    {
+        WorkoutSession::query()
+            ->where('routine_id', $routine->id)
+            ->where('user_id', $routine->user_id)
+            ->whereDate('scheduled_date', '>=', now()->toDateString())
+            ->whereNull('completed_at')
+            ->whereNull('started_at')
+            ->whereDoesntHave('setLogs')
+            ->delete();
     }
 
     /**

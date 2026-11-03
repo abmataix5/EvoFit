@@ -160,9 +160,10 @@ class ProgressInsightService
             ->whereHas('routine', fn ($q) => $q->where('is_active', true))
             ->count();
 
+        // Completadas: cuentan en la semana en que se entrenaron de verdad.
         $sessionsCompleted = WorkoutSession::query()
             ->where('user_id', $user->id)
-            ->whereBetween('scheduled_date', [$currentStart->toDateString(), $currentEnd->toDateString()])
+            ->whereRaw(WorkoutSession::trainedOnSql().' between ? and ?', [$currentStart->toDateString(), $currentEnd->toDateString()])
             ->whereNotNull('completed_at')
             ->count();
 
@@ -315,8 +316,9 @@ class ProgressInsightService
     {
         $logs = ExerciseSetLog::query()
             ->whereHas('workoutSession', function ($query) use ($userId, $from, $to) {
+                // Fecha real de entrenamiento, no la planificada.
                 $query->where('user_id', $userId)
-                    ->whereBetween('scheduled_date', [$from->toDateString(), $to->toDateString()]);
+                    ->whereRaw(WorkoutSession::trainedOnSql().' between ? and ?', [$from->toDateString(), $to->toDateString()]);
             })
             ->with('routineExercise')
             ->where('completed', true)

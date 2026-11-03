@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { useAuth } from '../features/auth/AuthContext'
 import { PhotoCheckIn } from '../components/progress/PhotoCheckIn'
+import { formatShortDate } from '../lib/dates'
 import {
   api,
   type BodyWeightEntry,
@@ -43,10 +44,6 @@ const statusUi = {
   new: { label: 'Nuevo', className: 'bg-evo-accent/20 text-evo-accent-soft' },
 } as const
 
-function formatShortDate(iso: string) {
-  const [, m, d] = iso.split('-')
-  return `${d}/${m}`
-}
 
 function formatKg(value: number | null | undefined) {
   if (value == null) return '—'
@@ -88,7 +85,7 @@ function statusLabel(row: ProgressExerciseRow) {
 export function ProgressPage() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
-  const { notify } = useUiFeedback()
+  const { notify, confirm } = useUiFeedback()
   const today = localDateKey()
   const [weightOn, setWeightOn] = useState(today)
   const [photoOn, setPhotoOn] = useState(today)
@@ -148,6 +145,40 @@ export function ProgressPage() {
     },
     onError: () => notify('No se pudo guardar el peso', 'error'),
   })
+
+  const deleteWeight = useMutation({
+    mutationFn: async (entryId: number) => {
+      await api.delete(`/progress/body-weight/${entryId}`)
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['body-weights'] }),
+        queryClient.invalidateQueries({ queryKey: ['progress-insights'] }),
+      ])
+      notify('Peso borrado', 'success')
+    },
+    onError: () => notify('No se pudo borrar', 'error'),
+  })
+
+  async function deletePhoto(photo: ProgressPhoto) {
+    const ok = await confirm({
+      title: '¿Borrar esta foto?',
+      message: 'Se elimina para siempre del servidor.',
+      confirmLabel: 'Borrar',
+      cancelLabel: 'Cancelar',
+      danger: true,
+    })
+    if (!ok) return false
+    try {
+      await api.delete(`/progress/photos/${photo.id}`)
+      await queryClient.invalidateQueries({ queryKey: ['progress-photos'] })
+      notify('Foto borrada', 'success')
+      return true
+    } catch {
+      notify('No se pudo borrar la foto', 'error')
+      return false
+    }
+  }
 
   const uploadPhoto = useMutation({
     mutationFn: async () => {
@@ -434,7 +465,18 @@ export function ProgressPage() {
                 {[...(weightsQuery.data ?? [])].slice(0, 6).map((entry) => (
                   <li key={entry.id} className="flex items-center justify-between gap-3 text-sm">
                     <span className="text-evo-muted">{formatShortDate(entry.recorded_on)}</span>
-                    <span className="font-bold tabular-nums">{formatKg(Number(entry.weight_kg))}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="font-bold tabular-nums">{formatKg(Number(entry.weight_kg))}</span>
+                      <button
+                        type="button"
+                        aria-label={`Borrar peso del ${formatShortDate(entry.recorded_on)}`}
+                        disabled={deleteWeight.isPending}
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-evo-muted hover:bg-evo-danger/15 hover:text-evo-danger"
+                        onClick={() => deleteWeight.mutate(entry.id)}
+                      >
+                        ✕
+                      </button>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -455,6 +497,7 @@ export function ProgressPage() {
         onCaption={setCaption}
         onPhotoFile={setPhotoFile}
         onUpload={() => uploadPhoto.mutate()}
+        onDelete={deletePhoto}
       />
       </section>
     </div>

@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { Button } from '../components/ui/Button'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router-dom'
+import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { ButtonLink } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import { api, type Routine, type WorkoutSession, type ProgressInsight } from '../lib/api'
-import { firstName, getDayMotivation, helloLine, localDateKey } from '../lib/motivation'
+import { addDays, localDateKey, startOfWeek } from '../lib/dates'
+import { firstName, getDayMotivation, helloLine } from '../lib/motivation'
+import { invalidateTraining } from '../lib/queryClient'
 
 export function DashboardPage() {
   const { user } = useAuth()
@@ -18,22 +21,35 @@ export function DashboardPage() {
     },
   })
 
+  const navigate = useNavigate()
+  const { notify } = useUiFeedback()
+  const weekFrom = localDateKey(startOfWeek())
+  const weekTo = localDateKey(addDays(startOfWeek(), 6))
+
   const calendarQuery = useQuery({
-    queryKey: ['calendar-week'],
+    queryKey: ['calendar-week', weekFrom, weekTo],
     queryFn: async () => {
-      const today = new Date()
-      const from = new Date(today)
-      const day = from.getDay()
-      const diff = day === 0 ? -6 : 1 - day
-      from.setDate(from.getDate() + diff)
-      const to = new Date(from)
-      to.setDate(from.getDate() + 6)
-      const fmt = (d: Date) => localDateKey(d)
       const { data } = await api.get<{ data: WorkoutSession[] }>('/workout-sessions/calendar', {
-        params: { from: fmt(from), to: fmt(to) },
+        params: { from: weekFrom, to: weekTo },
       })
       return data.data
     },
+  })
+
+  const trainAnyway = useMutation({
+    mutationFn: async (payload: { routineId: number; dayId: number }) => {
+      const { data } = await api.post<{ session: WorkoutSession }>('/workout-sessions', {
+        routine_id: payload.routineId,
+        routine_day_id: payload.dayId,
+        scheduled_date: localDateKey(),
+      })
+      return data.session
+    },
+    onSuccess: (session) => {
+      void invalidateTraining()
+      navigate(`/workout/${session.id}`)
+    },
+    onError: () => notify('No se pudo empezar la sesión. Revisa la conexión.', 'error'),
   })
 
   const insightsQuery = useQuery({
@@ -94,17 +110,42 @@ export function DashboardPage() {
                     </p>
                     <p className="text-sm text-evo-muted">{session.routine?.name}</p>
                   </div>
-                  <Link to={`/workout/${session.id}`}>
-                    <Button size="lg">Empezar</Button>
-                  </Link>
+                  <ButtonLink to={`/workout/${session.id}`} size="lg">
+                    {session.completed_at ? 'Ver' : (session.set_logs?.length ?? 0) > 0 ? 'Continuar' : 'Empezar'}
+                  </ButtonLink>
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border-2 border-dashed border-evo-border p-4">
+              <div className="space-y-3 rounded-2xl border-2 border-dashed border-evo-border p-4">
                 <p className="font-semibold">Hoy no hay sesión planificada</p>
-                <Link to="/calendar" className="mt-3 inline-flex">
-                  <Button variant="secondary">Ver agenda</Button>
-                </Link>
+                {activeRoutines.some((r) => (r.days?.length ?? 0) > 0) ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-evo-muted">¿Entrenas igualmente? Elige el día:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {activeRoutines.flatMap((routine) =>
+                        (routine.days ?? [])
+                          .filter((day) => (day.exercises?.length ?? 0) > 0)
+                          .map((day) => (
+                            <button
+                              key={day.id}
+                              type="button"
+                              disabled={trainAnyway.isPending}
+                              onClick={() => trainAnyway.mutate({ routineId: routine.id, dayId: day.id })}
+                              className="min-h-12 rounded-2xl bg-evo-surface-2 px-4 text-left text-sm font-bold disabled:opacity-50"
+                            >
+                              {day.name}
+                              {activeRoutines.length > 1 ? (
+                                <span className="block text-xs font-semibold text-evo-muted">{routine.name}</span>
+                              ) : null}
+                            </button>
+                          )),
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+                <ButtonLink to="/calendar" variant="secondary">
+                  Ver agenda
+                </ButtonLink>
               </div>
             )}
           </div>
@@ -123,27 +164,27 @@ export function DashboardPage() {
           <p className="text-sm text-evo-text">
             {insightsQuery.data?.summary.label ?? 'Registra kilos para ver tu tendencia.'}
           </p>
-          <Link to="/progress">
-            <Button variant="lime">Ver progreso</Button>
-          </Link>
+          <ButtonLink to="/progress" variant="lime">
+            Ver progreso
+          </ButtonLink>
         </section>
       </div>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-xl font-bold">Tus rutinas</h2>
-          <Link to="/routines/new">
-            <Button variant="secondary">+ Nueva</Button>
-          </Link>
+          <ButtonLink to="/routines/new" variant="secondary">
+            + Nueva
+          </ButtonLink>
         </div>
         {routinesQuery.isLoading ? (
           <p className="text-sm text-evo-muted">Cargando rutinas…</p>
         ) : activeRoutines.length === 0 ? (
           <div className="panel border-dashed p-5 text-center">
             <p className="font-semibold">No hay rutinas activas</p>
-            <Link to="/routines/new" className="mt-3 inline-flex">
-              <Button>Crear rutina</Button>
-            </Link>
+            <ButtonLink to="/routines/new" className="mt-3">
+              Crear rutina
+            </ButtonLink>
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">

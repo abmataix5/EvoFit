@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\RoutineDay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\RoutineDay */
+/** @mixin RoutineDay */
 class RoutineDayResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -18,9 +19,10 @@ class RoutineDayResource extends JsonResource
             'focus' => $this->focus,
             'notes' => $this->notes,
             'exercises' => RoutineExerciseResource::collection($this->whenLoaded('exercises')),
+            // Sin consultas extra: solo si viene precargado con withCount('exercises').
             'exercises_count' => $this->when(
-                ! $this->relationLoaded('exercises'),
-                fn () => $this->exercises()->count()
+                ! $this->relationLoaded('exercises') && $this->resource->getAttribute('exercises_count') !== null,
+                fn () => (int) $this->resource->getAttribute('exercises_count')
             ),
         ];
     }

@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react'
+import { useId, type InputHTMLAttributes } from 'react'
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   label: string
@@ -7,7 +7,8 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 export function Input({ label, error, hint, id, className = '', ...props }: Props) {
-  const inputId = id ?? props.name
+  const autoId = useId()
+  const inputId = id ?? (props.name ? `${props.name}-${autoId}` : autoId)
   const hintId = hint ? `${inputId}-hint` : undefined
   const errorId = error ? `${inputId}-error` : undefined
 
