@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { BrandLogo } from '../BrandLogo'
 import { useUiFeedback } from '../feedback/UiFeedback'
 import { Icon } from '../icons/Icon'
+import { ThemeSwitch } from './ThemeSwitch'
 import { Button } from '../ui/Button'
 import { formatHeaderDay, helloLine } from '../../lib/motivation'
 
@@ -121,6 +122,7 @@ export function AppShell() {
             <p className="mt-1 font-display text-lg font-bold">{user?.name}</p>
             <p className="truncate text-sm text-evo-muted">{user?.email}</p>
           </div>
+          <ThemeSwitch />
           <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
             Cerrar sesión
           </Button>
@@ -128,7 +130,7 @@ export function AppShell() {
       </aside>
 
       <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-clip">
-        <header className="safe-top sticky top-0 z-20 hidden border-b border-evo-border/70 bg-[#151b26]/92 backdrop-blur-md lg:block">
+        <header className="safe-top sticky top-0 z-20 hidden border-b border-evo-border/70 bg-evo-surface/92 backdrop-blur-md lg:block">
           <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
             <div className="min-w-0 justify-self-start">
               <p className="truncate font-display text-sm font-semibold leading-none text-evo-text">
@@ -157,7 +159,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <header className="safe-top sticky top-0 z-50 border-b border-white/10 bg-evo-bg/85 backdrop-blur-xl lg:hidden">
+        <header className="safe-top sticky top-0 z-50 border-b border-evo-border/40 bg-evo-bg/85 backdrop-blur-xl lg:hidden">
           <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-3">
             <span aria-hidden />
             <Link to="/" aria-label="Ir al inicio" className="justify-self-center">
@@ -188,7 +190,7 @@ export function AppShell() {
         {!hideTabs ? (
           <nav
             aria-label="Principal"
-            className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-evo-bg/95 px-2 pt-1.5 backdrop-blur-xl lg:hidden"
+            className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-evo-border/40 bg-evo-bg/95 px-2 pt-1.5 backdrop-blur-xl lg:hidden"
           >
             <ul className="mx-auto grid max-w-lg grid-cols-5">
               {navItems.map((item) => (
@@ -237,7 +239,7 @@ export function AppShell() {
           inert={!menuOpen}
           aria-label="Cuenta"
           className={[
-            'fixed right-0 top-[calc(env(safe-area-inset-top)+3.5rem)] z-40 flex w-[min(20.5rem,86vw)] flex-col rounded-bl-3xl border-l border-white/10 bg-evo-surface px-4 pb-5 shadow-2xl lg:hidden',
+            'fixed right-0 top-[calc(env(safe-area-inset-top)+3.5rem)] z-40 flex w-[min(20.5rem,86vw)] flex-col rounded-bl-3xl border-l border-evo-border/40 bg-evo-surface px-4 pb-5 shadow-2xl lg:hidden',
             'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
             menuOpen ? 'translate-x-0' : 'translate-x-full',
           ].join(' ')}
@@ -251,6 +253,7 @@ export function AppShell() {
           <div className="safe-bottom mt-5 space-y-3 rounded-3xl bg-evo-surface-2 p-4">
             <p className="truncate font-display text-lg font-bold">{user?.name}</p>
             <p className="truncate text-sm text-evo-muted">{user?.email}</p>
+            <ThemeSwitch />
             <Button variant="secondary" fullWidth size="lg" onClick={() => void handleLogout()}>
               Cerrar sesión
             </Button>

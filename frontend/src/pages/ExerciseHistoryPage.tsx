@@ -139,25 +139,25 @@ export function ExerciseHistoryPage() {
               <div className="h-56 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" vertical={false} />
-                    <XAxis dataKey="fecha" tick={{ fill: '#c5d0de', fontSize: 12 }} interval="preserveStartEnd" minTickGap={28} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-evo-border)" strokeOpacity={0.6} vertical={false} />
+                    <XAxis dataKey="fecha" tick={{ fill: 'var(--color-evo-muted)', fontSize: 12 }} interval="preserveStartEnd" minTickGap={28} />
                     <YAxis
-                      tick={{ fill: '#c5d0de', fontSize: 12 }}
+                      tick={{ fill: 'var(--color-evo-muted)', fontSize: 12 }}
                       width={44}
                       domain={['auto', 'auto']}
                       tickFormatter={(v: number) => (timed ? formatDuration(v) : String(v))}
                     />
                     <Tooltip
-                      contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
+                      contentStyle={{ background: 'var(--color-evo-surface)', border: '1px solid var(--color-evo-border)', borderRadius: 12, color: 'var(--color-evo-text)' }}
                       formatter={(v) => (timed ? formatDuration(Number(v)) : formatKg(Number(v)))}
                     />
                     <Line
                       type="monotone"
                       dataKey="value"
                       name={timed ? 'Tiempo' : metricLabels[metric]}
-                      stroke="#ff8a4c"
+                      stroke="var(--color-evo-accent)"
                       strokeWidth={2.5}
-                      dot={{ r: 3, fill: '#ff8a4c' }}
+                      dot={{ r: 3, fill: 'var(--color-evo-accent)' }}
                       connectNulls
                     />
                   </LineChart>

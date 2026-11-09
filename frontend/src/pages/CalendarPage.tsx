@@ -204,14 +204,13 @@ export function CalendarPage() {
   return (
     <div className="no-x-scroll space-y-4">
       <section className="panel space-y-4 p-4 lg:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
             <h2 className="font-display text-2xl font-bold">Agenda</h2>
             <p className="mt-0.5 text-sm text-evo-muted">
-              {completedCount}/{plannedCount || 0} sesiones hechas esta {view === 'week' ? 'semana' : 'mes'}
+              {completedCount}/{plannedCount || 0} sesiones hechas {view === 'week' ? 'esta semana' : 'este mes'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() =>
@@ -220,36 +219,34 @@ export function CalendarPage() {
                 date: view === 'week' ? range.from : selectedDate?.startsWith(range.from.slice(0, 7)) ? selectedDate : range.from,
               })
             }
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-evo-border bg-evo-surface-2 px-3 text-sm font-bold text-evo-text transition hover:border-evo-accent"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border border-evo-border bg-evo-surface-2 px-3 text-sm font-bold text-evo-text transition hover:border-evo-accent"
           >
             <Icon name="download" className="h-4 w-4 text-evo-accent" />
             Informe
           </button>
-          <div className="inline-flex rounded-xl border border-evo-border bg-evo-surface-2 p-1">
+        </div>
+
+        <div role="radiogroup" aria-label="Vista" className="grid grid-cols-2 gap-1 rounded-xl border border-evo-border bg-evo-surface-2 p-1">
+          {(
+            [
+              ['week', 'Semana'],
+              ['month', 'Mes'],
+            ] as const
+          ).map(([mode, label]) => (
             <button
+              key={mode}
               type="button"
-              aria-pressed={view === 'week'}
-              onClick={() => setView('week')}
+              role="radio"
+              aria-checked={view === mode}
+              onClick={() => setView(mode)}
               className={[
-                'min-h-11 rounded-lg px-4 text-sm font-bold transition',
-                view === 'week' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
+                'min-h-11 rounded-lg text-sm font-bold transition',
+                view === mode ? 'bg-evo-accent text-[#111]' : 'text-evo-muted hover:text-evo-text',
               ].join(' ')}
             >
-              Semana
+              {label}
             </button>
-            <button
-              type="button"
-              aria-pressed={view === 'month'}
-              onClick={() => setView('month')}
-              className={[
-                'min-h-11 rounded-lg px-4 text-sm font-bold transition',
-                view === 'month' ? 'bg-evo-accent text-[#111]' : 'text-evo-muted',
-              ].join(' ')}
-            >
-              Mes
-            </button>
-          </div>
-          </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-2">
@@ -513,7 +510,7 @@ function DayDetail({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Este día</p>
-          <h3 className="font-display text-xl font-bold capitalize">{dateLabel}</h3>
+          <h3 className="font-display text-xl font-bold first-letter:uppercase">{dateLabel}</h3>
         </div>
         {reportable.length > 1 ? (
           <Button variant="secondary" onClick={onReportDay}>
@@ -562,8 +559,8 @@ function DayDetail({
                   <ul className="space-y-1.5">
                     {exercises.map((exercise) => (
                       <li key={exercise.id} className="flex items-baseline justify-between gap-3 text-sm">
-                        <span className="min-w-0 truncate font-semibold">{exercise.name}</span>
-                        <span className="shrink-0 text-evo-muted">{exercisePlanLabel(exercise)}</span>
+                        <span className="min-w-0 flex-1 truncate font-semibold">{exercise.name}</span>
+                        <span className="max-w-[60%] text-right text-evo-muted">{exercisePlanLabel(exercise)}</span>
                       </li>
                     ))}
                   </ul>

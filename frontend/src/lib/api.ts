@@ -347,3 +347,17 @@ export const FOCUS_LABELS: Record<string, string> = {
   core: 'Core',
   mobility: 'Movilidad',
 }
+
+export type TrainingHighlights = {
+  streak: { weeks: number; this_week: number; best: number; active: boolean }
+  last_record: {
+    exercise: string
+    routine_exercise_id: number
+    session_id: number
+    weight_kg: number
+    reps: number | null
+    previous_kg: number
+    date: string
+  } | null
+  month: { sessions: number }
+}

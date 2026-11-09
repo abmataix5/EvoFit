@@ -13,6 +13,7 @@ import {
   type ExerciseGroup,
   type SetDraft,
 } from './model'
+import { PlatesSheet } from './PlatesSheet'
 
 type Props = {
   group: ExerciseGroup
@@ -25,6 +26,8 @@ type Props = {
   addSet: (draft: SetDraft) => void
   removeSet: (exerciseId: number, setNumber: number) => void
   onSetDone: (group: ExerciseGroup) => void
+  /** La serie recién marcada supera el récord de siempre. */
+  onRecord?: (group: ExerciseGroup, draft: SetDraft) => void
 }
 
 const cellInput =
@@ -77,8 +80,10 @@ export function ExerciseCard({
   addSet,
   removeSet,
   onSetDone,
+  onRecord,
 }: Props) {
   const [detailsFor, setDetailsFor] = useState<number | null>(null)
+  const [platesOpen, setPlatesOpen] = useState(false)
   const doneSets = group.sets.filter((set) => set.done && setLogged(set, group.mode)).length
   const allDone = group.sets.length > 0 && doneSets === group.sets.length
   const previous = group.previous
@@ -108,7 +113,24 @@ export function ExerciseCard({
     }
     updateDraft(set.draftIndex, patch)
     onSetDone(group)
+    if (onRecord && isRecordSet(group, merged)) onRecord(group, merged)
   }
+
+  /** Peso de trabajo para la calculadora: la próxima serie, lo sugerido o lo de la última vez. */
+  function workingWeight(): number | null {
+    const next = group.sets.find((set) => !set.done) ?? group.sets[0]
+    const typed = next ? Number(next.weight_kg.replace(',', '.')) : NaN
+    if (next && next.weight_kg.trim() !== '' && Number.isFinite(typed)) return typed
+    if (suggestion) return suggestion.weight
+    const ph = next ? Number(placeholdersFor(group, next.set_number).weight_kg) : NaN
+    if (Number.isFinite(ph) && ph > 0) return ph
+    return previous?.best_weight_kg ?? null
+  }
+
+  const usesWeight = group.mode !== 'time'
+  const platesChip = usesWeight ? (
+    <ActionChip onClick={() => setPlatesOpen(true)}>🏋 Discos y calentamiento</ActionChip>
+  ) : null
 
   function repeatLastTime() {
     if (!previous) return
@@ -228,6 +250,7 @@ export function ExerciseCard({
                     ↑ Subir a {formatKg(suggestion.weight)}
                   </ActionChip>
                 ) : null}
+                {platesChip}
               </div>
               {suggestion?.kind === 'up' ? (
                 <p className="mt-2 text-xs text-evo-muted">
@@ -236,14 +259,17 @@ export function ExerciseCard({
               ) : null}
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-evo-surface px-3 py-3">
-              <p className="text-sm text-evo-muted">Aún no hay marcas de este ejercicio.</p>
-              <Link
-                to={`/exercise-history/${group.id}`}
-                className="shrink-0 rounded-xl bg-evo-surface-2 px-3 py-2.5 text-sm font-bold"
-              >
-                Historial
-              </Link>
+            <div className="rounded-2xl bg-evo-surface px-3 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-evo-muted">Aún no hay marcas de este ejercicio.</p>
+                <Link
+                  to={`/exercise-history/${group.id}`}
+                  className="shrink-0 rounded-xl bg-evo-surface-2 px-3 py-2.5 text-sm font-bold"
+                >
+                  Historial
+                </Link>
+              </div>
+              {platesChip ? <div className="mt-3 flex flex-wrap gap-2">{platesChip}</div> : null}
             </div>
           )}
 
@@ -403,7 +429,9 @@ export function ExerciseCard({
                   </div>
 
                   {record ? (
-                    <p className="mt-1 px-1 text-xs font-bold text-evo-warn">🔥 ¡Nuevo récord personal!</p>
+                    <p className="evo-pop mt-1.5 inline-flex items-center gap-1 rounded-full bg-evo-warn/15 px-2.5 py-1 text-xs font-bold text-evo-warn">
+                      🏆 ¡Nuevo récord personal!
+                    </p>
                   ) : null}
 
                   {detailsOpen ? (
@@ -456,6 +484,10 @@ export function ExerciseCard({
               − Quitar última
             </button>
           </div>
+
+          {platesOpen ? (
+            <PlatesSheet exerciseName={group.name} initialWeight={workingWeight()} onClose={() => setPlatesOpen(false)} />
+          ) : null}
 
           {onNext ? (
             <button

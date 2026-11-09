@@ -18,6 +18,26 @@
   --font-display: 'Outfit', system-ui, sans-serif;
 }
 
+/* Modo claro: mismas variables con otros valores. Los textos de color se oscurecen para leerse sobre blanco. */
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-evo-bg: #f2f4f7;
+  --color-evo-surface: #ffffff;
+  --color-evo-surface-2: #eceff4;
+  --color-evo-border: #c3cdd9;
+  --color-evo-text: #111923;
+  --color-evo-muted: #4d5b6c;
+  --color-evo-accent: #f07a3a;
+  --color-evo-accent-soft: #f59a68;
+  --color-evo-lime: #9be04a;
+  --color-evo-danger: #d33a50;
+  --color-evo-warn: #f5b82e;
+}
+
 @layer base {
   html {
     font-family: var(--font-evo);
@@ -93,6 +113,12 @@
   video {
     max-width: 100%;
   }
+
+  html[data-theme='light'] {
+    background:
+      radial-gradient(880px 420px at 0% -10%, rgba(240, 122, 58, 0.12), transparent 55%),
+      linear-gradient(180deg, #f7f8fa 0%, #f2f4f7 60%, #eef1f5 100%);
+  }
 }
 
 @layer utilities {
@@ -124,5 +150,71 @@
   .no-x-scroll {
     overflow-x: clip;
     max-width: 100%;
+  }
+
+  :root[data-theme='light'] .panel {
+    border-color: var(--color-evo-border);
+    background: var(--color-evo-surface);
+    box-shadow: 0 8px 24px rgba(17, 25, 35, 0.06);
+  }
+
+  /* Textos de color sobre fondo claro: tonos más oscuros para contraste AA. */
+  :root[data-theme='light'] .text-evo-accent {
+    color: #b8460e;
+  }
+  :root[data-theme='light'] .text-evo-accent-soft {
+    color: #c2561c;
+  }
+  :root[data-theme='light'] .text-evo-lime {
+    color: #2d7414;
+  }
+  :root[data-theme='light'] .text-evo-warn {
+    color: #8a5a00;
+  }
+  :root[data-theme='light'] .text-evo-danger {
+    color: #b42339;
+  }
+}
+
+/* Récords: aparición con rebote. Sin animación si el sistema pide menos movimiento. */
+@keyframes evo-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes evo-rise {
+  0% { transform: translateY(24px) scale(0.92); opacity: 0; }
+  12% { transform: translateY(0) scale(1.04); opacity: 1; }
+  18% { transform: scale(1); }
+  85% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-12px); opacity: 0; }
+}
+
+@keyframes evo-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+}
+
+.evo-pop {
+  animation: evo-pop 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.evo-record-toast {
+  animation: evo-rise 3600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.evo-burst {
+  animation: evo-burst 900ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evo-pop,
+  .evo-record-toast,
+  .evo-burst {
+    animation-duration: 1ms;
+  }
+  .evo-record-toast {
+    animation: none;
   }
 }

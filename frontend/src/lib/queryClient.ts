@@ -29,6 +29,8 @@ export const TRAINING_KEYS = [
   ['calendar-week'],
   ['routine-history'],
   ['progress-insights'],
+  ['progress-highlights'],
+  ['progress-muscles'],
   ['exercise-history'],
 ] as const
 

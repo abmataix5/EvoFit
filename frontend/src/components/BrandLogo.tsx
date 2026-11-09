@@ -20,7 +20,7 @@ export function BrandLogo({ size = 'md', showTagline = false, className = '' }: 
       <img
         src="/logo.png"
         alt="EvoFit"
-        className={[sizes[size], 'object-contain'].join(' ')}
+        className={[sizes[size], 'rounded-[22%] object-contain'].join(' ')}
         width={px[size]}
         height={px[size]}
         decoding="async"

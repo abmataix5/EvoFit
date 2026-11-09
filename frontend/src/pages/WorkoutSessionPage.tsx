@@ -1,15 +1,27 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { ExerciseCard } from '../features/workout/ExerciseCard'
 import { SessionReportButton } from '../features/reports/SessionReportButton'
 import { sessionHasReport } from '../lib/reports'
+import { RecordCelebration, type RecordEvent } from '../features/workout/RecordCelebration'
 import { RestTimer, type RestTimerState } from '../features/workout/RestTimer'
 import { WorkoutSummary } from '../features/workout/WorkoutSummary'
-import { modeOf, previousFor, sessionStats, type ExerciseGroup } from '../features/workout/model'
+import {
+  estimateOneRepMax,
+  formatKg,
+  modeOf,
+  parseDecimal,
+  parseInteger,
+  previousFor,
+  sessionStats,
+  type ExerciseGroup,
+  type SetDraft,
+} from '../features/workout/model'
+import { formatDuration, isTimeMode, joinDuration } from '../lib/tracking'
 import { useWakeLock } from '../features/workout/useWakeLock'
 import { useWorkoutAutosave, type SaveState } from '../features/workout/useWorkoutAutosave'
 import { api, type WorkoutSession } from '../lib/api'
@@ -51,6 +63,54 @@ export function WorkoutSessionPage() {
   const [restTimer, setRestTimer] = useState<RestTimerState>(null)
   const [finished, setFinished] = useState<{ stats: ReturnType<typeof sessionStats>; minutes: number | null } | null>(null)
   const [completing, setCompleting] = useState(false)
+  const [recordEvent, setRecordEvent] = useState<RecordEvent | null>(null)
+  const clearRecord = useCallback(() => setRecordEvent(null), [])
+
+  // Mejores marcas ya celebradas por ejercicio en esta visita: igualarlas no vuelve a saltar.
+  const celebrated = useRef(new Map<number, { weight: number; e1rm: number; time: number }>())
+
+  const celebrate = useCallback((group: ExerciseGroup, draft: SetDraft) => {
+    const previous = group.previous
+    const weightNow = parseDecimal(draft.weight_kg) ?? 0
+    const e1rmNow = estimateOneRepMax(parseDecimal(draft.weight_kg), parseInteger(draft.reps)) ?? 0
+    const duration = joinDuration(draft.minutes, draft.seconds)
+    const timeNow = duration == null ? -Infinity : group.direction === 'longer' ? duration : -duration
+    const seen = celebrated.current.get(group.id)
+    if (seen) {
+      const better = isTimeMode(group.mode) ? timeNow > seen.time : weightNow > seen.weight || e1rmNow > seen.e1rm
+      if (!better) return
+    }
+    celebrated.current.set(group.id, {
+      weight: Math.max(seen?.weight ?? 0, weightNow),
+      e1rm: Math.max(seen?.e1rm ?? 0, e1rmNow),
+      time: Math.max(seen?.time ?? -Infinity, timeNow),
+    })
+
+    if (isTimeMode(group.mode)) {
+      setRecordEvent({
+        id: Date.now(),
+        exercise: group.name,
+        label: formatDuration(joinDuration(draft.minutes, draft.seconds)),
+        previous: previous?.record_duration_seconds != null ? formatDuration(previous.record_duration_seconds) : null,
+      })
+      return
+    }
+    const weight = parseDecimal(draft.weight_kg)
+    const reps = parseInteger(draft.reps)
+    const heavier = weight != null && previous?.record_weight_kg != null && weight > previous.record_weight_kg
+    setRecordEvent({
+      id: Date.now(),
+      exercise: group.name,
+      label: heavier || reps == null
+        ? `${formatKg(weight)}${reps ? ` × ${reps}` : ''}`
+        : `1RM est. ${formatKg(estimateOneRepMax(weight, reps))}`,
+      previous: heavier
+        ? `${formatKg(previous?.record_weight_kg)}${previous?.record_reps ? ` × ${previous.record_reps}` : ''}`
+        : previous?.record_est_1rm != null
+          ? `1RM est. ${formatKg(previous.record_est_1rm)}`
+          : null,
+    })
+  }, [])
 
   useWakeLock(Boolean(session) && !finished)
 
@@ -233,6 +293,7 @@ export function WorkoutSessionPage() {
               addSet={autosave.addSet}
               removeSet={autosave.removeSet}
               onSetDone={startRest}
+              onRecord={celebrate}
             />
           ))}
         </ul>
@@ -244,6 +305,8 @@ export function WorkoutSessionPage() {
         saving={notesMutation.isPending}
         onSave={(notes) => notesMutation.mutate(notes)}
       />
+
+      {recordEvent ? <RecordCelebration event={recordEvent} onDone={clearRecord} /> : null}
 
       <div className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-evo-border bg-evo-bg/95 px-4 pt-3 backdrop-blur-md lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:px-0 lg:pt-0">
         <RestTimer timer={restTimer} onChange={setRestTimer} />

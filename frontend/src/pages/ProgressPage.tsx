@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { useAuth } from '../features/auth/AuthContext'
 import { PhotoCheckIn } from '../components/progress/PhotoCheckIn'
+import { MuscleBalance } from '../features/progress/MuscleBalance'
 import { formatShortDate } from '../lib/dates'
 import {
   api,
@@ -369,6 +370,8 @@ export function ProgressPage() {
             </ul>
           )}
         </div>
+
+        <MuscleBalance />
       </div>
       </section>
 
@@ -434,26 +437,26 @@ export function ProgressPage() {
                   <AreaChart data={weightChart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="weightFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#b6f36a" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#b6f36a" stopOpacity={0} />
+                        <stop offset="0%" stopColor="var(--color-evo-lime)" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="var(--color-evo-lime)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3d4c60" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-evo-border)" strokeOpacity={0.6} vertical={false} />
                     <XAxis
                       dataKey="fecha"
-                      tick={{ fill: '#c5d0de', fontSize: 12 }}
+                      tick={{ fill: 'var(--color-evo-muted)', fontSize: 12 }}
                       interval="preserveStartEnd"
                       minTickGap={28}
                     />
                     <YAxis
-                      tick={{ fill: '#c5d0de', fontSize: 12 }}
+                      tick={{ fill: 'var(--color-evo-muted)', fontSize: 12 }}
                       domain={['dataMin - 1', 'dataMax + 1']}
                       width={36}
                     />
                     <Tooltip
-                      contentStyle={{ background: '#161e29', border: '1px solid #4a5a70', borderRadius: 12, color: '#f6f8fb' }}
+                      contentStyle={{ background: 'var(--color-evo-surface)', border: '1px solid var(--color-evo-border)', borderRadius: 12, color: 'var(--color-evo-text)' }}
                     />
-                    <Area type="monotone" dataKey="kg" name="Kg" stroke="#b6f36a" fill="url(#weightFill)" strokeWidth={2.5} />
+                    <Area type="monotone" dataKey="kg" name="Kg" stroke="var(--color-evo-lime)" fill="url(#weightFill)" strokeWidth={2.5} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : weightChart.length === 0 ? (
@@ -657,7 +660,7 @@ function CompareRow({
         <p className="shrink-0 text-sm font-bold text-evo-accent">{formatDelta(row)}</p>
       </div>
       <Meter label="Antes" value={previous ?? null} max={max} text={formatMark(row, 'previous')} color="#7d8da3" />
-      <Meter label="Ahora" value={current ?? null} max={max} text={formatMark(row, 'current')} color="#ff8a4c" />
+      <Meter label="Ahora" value={current ?? null} max={max} text={formatMark(row, 'current')} color="var(--color-evo-accent)" />
     </li>
   )
 }

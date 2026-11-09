@@ -39,6 +39,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/progress/photos', [ProgressController::class, 'photos']);
         Route::post('/progress/photos', [ProgressController::class, 'storePhoto']);
         Route::get('/progress/insights', [ProgressController::class, 'insights']);
+        Route::get('/progress/highlights', [ProgressController::class, 'highlights']);
+        Route::get('/progress/muscles', [ProgressController::class, 'muscles']);
         Route::delete('/progress/body-weight/{bodyWeightEntry}', [ProgressController::class, 'destroyBodyWeight']);
         Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage']);
         Route::delete('/progress/photos/{progressPhoto}', [ProgressController::class, 'destroyPhoto']);

@@ -10,6 +10,7 @@ use App\Http\Resources\ProgressPhotoResource;
 use App\Models\BodyWeightEntry;
 use App\Models\ProgressPhoto;
 use App\Services\ProgressInsightService;
+use App\Services\TrainingHighlightsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -119,5 +120,17 @@ class ProgressController extends Controller
     public function insights(Request $request, ProgressInsightService $insights): JsonResponse
     {
         return response()->json($insights->weeklyComparison($request->user()));
+    }
+
+    public function highlights(Request $request, TrainingHighlightsService $service): JsonResponse
+    {
+        return response()->json($service->highlights($request->user()));
+    }
+
+    public function muscles(Request $request, TrainingHighlightsService $service): JsonResponse
+    {
+        $validated = $request->validate(['weeks' => ['nullable', 'integer', 'min:4', 'max:26']]);
+
+        return response()->json($service->muscles($request->user(), (int) ($validated['weeks'] ?? 8)));
     }
 }
