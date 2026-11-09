@@ -5,6 +5,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { ExerciseCard } from '../features/workout/ExerciseCard'
+import { SessionReportButton } from '../features/reports/SessionReportButton'
+import { sessionHasReport } from '../lib/reports'
 import { RestTimer, type RestTimerState } from '../features/workout/RestTimer'
 import { WorkoutSummary } from '../features/workout/WorkoutSummary'
 import { modeOf, previousFor, sessionStats, type ExerciseGroup } from '../features/workout/model'
@@ -157,6 +159,7 @@ export function WorkoutSessionPage() {
   if (finished) {
     return (
       <WorkoutSummary
+        sessionId={session.id}
         title={session.day?.name ?? session.routine?.name ?? 'Entrenamiento'}
         stats={finished.stats}
         minutes={finished.minutes}
@@ -178,12 +181,17 @@ export function WorkoutSessionPage() {
         >
           ← {session.routine?.name ?? 'Rutina'}
         </Link>
-        <div>
-          <h1 className="font-display text-2xl font-bold">{session.day?.name ?? 'Entrenamiento'}</h1>
-          <p className="text-sm capitalize text-evo-muted">
-            {formatDayLabel(session.scheduled_date)}
-            {session.completed_at ? ' · completada' : ''}
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold">{session.day?.name ?? 'Entrenamiento'}</h1>
+            <p className="text-sm capitalize text-evo-muted">
+              {formatDayLabel(session.scheduled_date)}
+              {session.completed_at ? ' · completada' : ''}
+            </p>
+          </div>
+          {sessionHasReport(session) ? (
+            <SessionReportButton sessionId={session.id} label="Descargar informe PDF de la sesión" compact />
+          ) : null}
         </div>
         <div>
           <div className="flex items-center justify-between text-sm font-semibold">

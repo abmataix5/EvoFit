@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CatalogExerciseController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
+use App\Http\Controllers\Api\WorkoutReportController;
 use App\Http\Controllers\Api\WorkoutSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,5 +44,11 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('/progress/photos/{progressPhoto}', [ProgressController::class, 'destroyPhoto']);
 
         Route::get('/exercise-history', [ExerciseHistoryController::class, 'show']);
+
+        // Generar un PDF cuesta más que una consulta: límite propio.
+        Route::middleware('throttle:20,1')->group(function (): void {
+            Route::get('/reports/workouts', [WorkoutReportController::class, 'range']);
+            Route::get('/workout-sessions/{workoutSession}/report', [WorkoutReportController::class, 'session']);
+        });
     });
 });

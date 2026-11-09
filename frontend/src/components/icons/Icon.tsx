@@ -1,4 +1,4 @@
-type IconName = 'home' | 'routines' | 'catalog' | 'calendar' | 'progress' | 'user' | 'menu' | 'close'
+type IconName = 'home' | 'routines' | 'catalog' | 'calendar' | 'progress' | 'user' | 'menu' | 'close' | 'download' | 'file'
 
 type Props = {
   name: IconName
@@ -48,6 +48,13 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
       ) : null}
       {name === 'menu' ? <path {...common} d="M4 7h16M4 12h16M4 17h16" /> : null}
       {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}
+      {name === 'download' ? <path {...common} d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" /> : null}
+      {name === 'file' ? (
+        <>
+          <path {...common} d="M14 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8L14 3.5Z" />
+          <path {...common} d="M14 3.5V8h4.5M9 13h6M9 16.5h4" />
+        </>
+      ) : null}
     </svg>
   )
 }

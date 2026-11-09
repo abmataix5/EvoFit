@@ -27,12 +27,15 @@ mkdir -p \
 
 chmod -R ug+rwx storage bootstrap/cache || true
 
-if [ ! -f vendor/autoload.php ]; then
+# vendor/ vive en un volumen: se reinstala si falta o si composer.lock ha cambiado desde la última vez.
+lock_hash="$(sha1sum composer.lock 2>/dev/null | cut -d' ' -f1)"
+if [ ! -f vendor/autoload.php ] || [ "$(cat vendor/.composer-lock-hash 2>/dev/null)" != "$lock_hash" ]; then
   if [ "$APP_ENV" = "production" ]; then
     composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
   else
     composer install --no-interaction --prefer-dist
   fi
+  echo "$lock_hash" > vendor/.composer-lock-hash
 fi
 
 # Una caché de configuración vieja haría que artisan ignorase el .env que escribimos ahora.

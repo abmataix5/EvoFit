@@ -1,12 +1,15 @@
 import { Button } from '../../components/ui/Button'
+import { SessionReportButton } from '../reports/SessionReportButton'
 import type { SessionStats } from './model'
 
 export function WorkoutSummary({
+  sessionId,
   title,
   stats,
   minutes,
   onDone,
 }: {
+  sessionId: number
   title: string
   stats: SessionStats
   minutes: number | null
@@ -45,9 +48,12 @@ export function WorkoutSummary({
         )}
       </div>
 
-      <Button size="lg" fullWidth onClick={onDone}>
-        Ir a la agenda
-      </Button>
+      <div className="space-y-2">
+        <Button size="lg" fullWidth onClick={onDone}>
+          Ir a la agenda
+        </Button>
+        <SessionReportButton sessionId={sessionId} size="lg" fullWidth label="Descargar resumen en PDF" />
+      </div>
     </div>
   )
 }

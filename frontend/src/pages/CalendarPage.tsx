@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Icon } from '../components/icons/Icon'
 import { Button } from '../components/ui/Button'
+import { ReportSheet, type ReportPeriod } from '../features/reports/ReportSheet'
+import { SessionReportButton } from '../features/reports/SessionReportButton'
+import { sessionHasReport } from '../lib/reports'
 import { api, type Routine, type RoutineDay, type WorkoutSession } from '../lib/api'
 import { localDateKey, startOfWeek } from '../lib/dates'
 import { exercisePlanLabel } from '../lib/tracking'
@@ -71,6 +75,7 @@ export function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(todayKey())
   const [swapSessionId, setSwapSessionId] = useState<number | null>(null)
   const [swapDayId, setSwapDayId] = useState<number | ''>('')
+  const [report, setReport] = useState<{ period: ReportPeriod; date: string } | null>(null)
   const detailRef = useRef<HTMLDivElement>(null)
 
   const range = useMemo(() => {
@@ -206,6 +211,20 @@ export function CalendarPage() {
               {completedCount}/{plannedCount || 0} sesiones hechas esta {view === 'week' ? 'semana' : 'mes'}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setReport({
+                period: view,
+                date: view === 'week' ? range.from : selectedDate?.startsWith(range.from.slice(0, 7)) ? selectedDate : range.from,
+              })
+            }
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-evo-border bg-evo-surface-2 px-3 text-sm font-bold text-evo-text transition hover:border-evo-accent"
+          >
+            <Icon name="download" className="h-4 w-4 text-evo-accent" />
+            Informe
+          </button>
           <div className="inline-flex rounded-xl border border-evo-border bg-evo-surface-2 p-1">
             <button
               type="button"
@@ -229,6 +248,7 @@ export function CalendarPage() {
             >
               Mes
             </button>
+          </div>
           </div>
         </div>
 
@@ -380,6 +400,7 @@ export function CalendarPage() {
                         onSwapDay={setSwapDayId}
                         onSaveSwap={() => swapMutation.mutate()}
                         onOpen={(id) => navigate(`/workout/${id}`)}
+                        onReportDay={() => setReport({ period: 'day', date: item.key })}
                       />
                     </div>
                   ) : null}
@@ -446,12 +467,17 @@ export function CalendarPage() {
                   onSwapDay={setSwapDayId}
                   onSaveSwap={() => swapMutation.mutate()}
                   onOpen={(id) => navigate(`/workout/${id}`)}
+                  onReportDay={() => setReport({ period: 'day', date: selectedDate ?? today })}
                 />
               </div>
             ) : null}
           </>
         )}
       </section>
+
+      {report ? (
+        <ReportSheet initialPeriod={report.period} initialDate={report.date} onClose={() => setReport(null)} />
+      ) : null}
     </div>
   )
 }
@@ -467,6 +493,7 @@ function DayDetail({
   onSwapDay,
   onSaveSwap,
   onOpen,
+  onReportDay,
 }: {
   dateLabel: string
   sessions: WorkoutSession[]
@@ -478,12 +505,22 @@ function DayDetail({
   onSwapDay: (id: number | '') => void
   onSaveSwap: () => void
   onOpen: (id: number) => void
+  onReportDay: () => void
 }) {
+  const reportable = sessions.filter(sessionHasReport)
   return (
     <div className="space-y-3 rounded-2xl border-2 border-evo-accent/40 bg-evo-bg/40 p-3">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Este día</p>
-        <h3 className="font-display text-xl font-bold capitalize">{dateLabel}</h3>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wide text-evo-accent">Este día</p>
+          <h3 className="font-display text-xl font-bold capitalize">{dateLabel}</h3>
+        </div>
+        {reportable.length > 1 ? (
+          <Button variant="secondary" onClick={onReportDay}>
+            <Icon name="download" />
+            PDF del día
+          </Button>
+        ) : null}
       </div>
 
       {sessions.length === 0 ? (
@@ -533,9 +570,18 @@ function DayDetail({
                 ) : (
                   <p className="text-sm text-evo-muted">Este día no tiene ejercicios.</p>
                 )}
-                <Button size="lg" fullWidth onClick={() => onOpen(session.id)}>
-                  {session.completed_at ? 'Ver entrenamiento' : 'Abrir entrenamiento'}
-                </Button>
+                {sessionHasReport(session) ? (
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <Button size="lg" fullWidth onClick={() => onOpen(session.id)}>
+                      {session.completed_at ? 'Ver entrenamiento' : 'Abrir entrenamiento'}
+                    </Button>
+                    <SessionReportButton sessionId={session.id} size="lg" label="Descargar informe PDF de la sesión" compact />
+                  </div>
+                ) : (
+                  <Button size="lg" fullWidth onClick={() => onOpen(session.id)}>
+                    {session.completed_at ? 'Ver entrenamiento' : 'Abrir entrenamiento'}
+                  </Button>
+                )}
                 {!session.completed_at && routineDays.length > 1 ? (
                   <div className="space-y-2 border-t border-evo-border pt-3">
                     <p className="text-sm font-semibold">¿Tocaba otro día del plan?</p>
