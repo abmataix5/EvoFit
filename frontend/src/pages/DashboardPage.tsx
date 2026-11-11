@@ -2,7 +2,8 @@ import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
-import { Button, ButtonLink } from '../components/ui/Button'
+import { ButtonLink } from '../components/ui/Button'
+import { Icon } from '../components/icons/Icon'
 import {
   api,
   type ProgressInsight,
@@ -11,7 +12,8 @@ import {
   type TrainingHighlights,
   type WorkoutSession,
 } from '../lib/api'
-import { addDays, formatDayLabel, localDateKey, relativeDayLabel, startOfWeek } from '../lib/dates'
+import { addDays, localDateKey, relativeDayLabel, startOfWeek, upcomingDayLabel } from '../lib/dates'
+import { routinesQuery } from '../lib/queries'
 import { invalidateTraining } from '../lib/queryClient'
 import { PostList } from '../features/feed/PostList'
 import { feedQuery } from '../lib/feed'
@@ -34,298 +36,76 @@ function kg(value: number) {
   return `${value.toLocaleString('es-ES', { maximumFractionDigits: 2 })} kg`
 }
 
-/** Lo de siempre: entreno de hoy, racha, semana y último récord. */
+function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 px-1">
+      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-evo-muted">{children}</h2>
+      {action}
+    </div>
+  )
+}
+
+/** Mi día: lo que toca hoy, cómo va la semana y tu progreso. Solo lo necesario. */
 function MyDayView() {
-  const navigate = useNavigate()
-  const { notify } = useUiFeedback()
   const weekStart = startOfWeek()
   const weekFrom = localDateKey(weekStart)
   const weekTo = localDateKey(addDays(weekStart, 6))
   const todayKey = localDateKey()
 
-  const routinesQuery = useQuery({
-    queryKey: ['routines'],
-    queryFn: async () => {
-      const { data } = await api.get<{ data: Routine[] }>('/routines')
-      return data.data
-    },
-  })
-
+  const routines = useQuery(routinesQuery)
   const calendarQuery = useQuery({
     queryKey: ['calendar-week', weekFrom, weekTo],
-    queryFn: async () => {
-      const { data } = await api.get<{ data: WorkoutSession[] }>('/workout-sessions/calendar', {
-        params: { from: weekFrom, to: weekTo },
-      })
-      return data.data
-    },
+    queryFn: async () =>
+      (await api.get<{ data: WorkoutSession[] }>('/workout-sessions/calendar', { params: { from: weekFrom, to: weekTo } })).data.data,
   })
-
   const highlightsQuery = useQuery({
     queryKey: ['progress-highlights'],
-    queryFn: async () => {
-      const { data } = await api.get<TrainingHighlights>('/progress/highlights')
-      return data
-    },
+    queryFn: async () => (await api.get<TrainingHighlights>('/progress/highlights')).data,
   })
-
   const insightsQuery = useQuery({
     queryKey: ['progress-insights'],
-    queryFn: async () => {
-      const { data } = await api.get<ProgressInsight>('/progress/insights')
-      return data
-    },
+    queryFn: async () => (await api.get<ProgressInsight>('/progress/insights')).data,
   })
 
-  const trainAnyway = useMutation({
-    mutationFn: async (payload: { routineId: number; dayId: number }) => {
-      const { data } = await api.post<{ session: WorkoutSession }>('/workout-sessions', {
-        routine_id: payload.routineId,
-        routine_day_id: payload.dayId,
-        scheduled_date: todayKey,
-      })
-      return data.session
-    },
-    onSuccess: (session) => {
-      void invalidateTraining()
-      navigate(`/workout/${session.id}`)
-    },
-    onError: () => notify('No se pudo empezar la sesión. Revisa la conexión.', 'error'),
-  })
-
-  const activeRoutines = routinesQuery.data?.filter((r) => r.is_active) ?? []
+  const activeRoutines = routines.data?.filter((r) => r.is_active) ?? []
   const weekSessions = calendarQuery.data ?? []
-  const completed = weekSessions.filter((s) => s.completed_at).length
-  const planned = Math.max(
-    activeRoutines.reduce((sum, r) => sum + (r.sessions_per_week || 0), 0),
-    weekSessions.length,
-  )
   const todaySessions = weekSessions.filter((s) => s.scheduled_date === todayKey)
   const nextSession = weekSessions.find((s) => s.scheduled_date > todayKey && !s.completed_at)
-  const highlights = highlightsQuery.data
-  const mood = insightsQuery.data?.summary.mood
-  const pickableDays = activeRoutines.flatMap((routine) =>
-    (routine.days ?? [])
-      .filter((day) => (day.exercises?.length ?? 0) > 0)
-      .map((day) => ({ routine, day })),
-  )
+  const noRoutines = !routines.isLoading && activeRoutines.length === 0
 
   return (
-    <div className="space-y-5">
-      {/* Hoy toca */}
+    <div className="mx-auto max-w-2xl space-y-6">
       <section aria-label="Hoy" className="space-y-3">
-        {calendarQuery.isLoading ? (
-          <div className="panel h-48 animate-pulse" aria-label="Cargando" />
+        {calendarQuery.isLoading || routines.isLoading ? (
+          <div className="h-72 animate-pulse rounded-3xl bg-evo-surface" aria-label="Cargando" />
+        ) : noRoutines ? (
+          <GetStartedCard />
         ) : todaySessions.length > 0 ? (
           todaySessions.map((session) => <TodayCard key={session.id} session={session} />)
         ) : (
-          <div className="panel space-y-4 p-5">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-evo-muted">
-                Hoy
-              </p>
-              <h2 className="mt-1 font-display text-2xl font-bold">Día de descanso</h2>
-              <p className="mt-1 text-sm text-evo-muted">
-                {nextSession
-                  ? `Próxima sesión: ${nextSession.day?.name ?? 'Entrenamiento'} · ${formatDayLabel(nextSession.scheduled_date)}`
-                  : 'No hay nada planificado. Recuperar también es entrenar.'}
-              </p>
-            </div>
-            {pickableDays.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">¿Te apetece entrenar igualmente?</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {pickableDays.map(({ routine, day }) => (
-                    <button
-                      key={day.id}
-                      type="button"
-                      disabled={trainAnyway.isPending}
-                      onClick={() => trainAnyway.mutate({ routineId: routine.id, dayId: day.id })}
-                      className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 text-left transition hover:border-evo-accent disabled:opacity-50"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-bold">{day.name}</span>
-                        <span className="block truncate text-xs text-evo-muted">
-                          {day.exercises?.length ?? 0} ejercicios
-                          {activeRoutines.length > 1 ? ` · ${routine.name}` : ''}
-                        </span>
-                      </span>
-                      <span className="shrink-0 font-bold text-evo-accent" aria-hidden>
-                        Empezar →
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : activeRoutines.length === 0 && !routinesQuery.isLoading ? (
-              <ButtonLink to="/routines/new">Crear mi primera rutina</ButtonLink>
-            ) : null}
-          </div>
+          <RestDayCard nextSession={nextSession ?? null} routines={activeRoutines} />
         )}
       </section>
 
-      {/* Racha · semana · récord */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Tu progreso">
-        <div className="panel p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Racha</p>
-          <p className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl" aria-hidden>
-              {highlights && highlights.streak.weeks > 0 ? '🔥' : '🌱'}
-            </span>
-            <span className="font-display text-3xl font-bold tabular-nums sm:text-4xl">{highlights?.streak.weeks ?? '—'}</span>
-            <span className="text-sm font-semibold text-evo-muted">
-              {highlights?.streak.weeks === 1 ? 'semana' : 'semanas'}
-            </span>
-          </p>
-          <p className="mt-1 text-sm text-evo-muted">
-            {!highlights
-              ? 'Semanas seguidas entrenando'
-              : highlights.streak.weeks === 0
-                ? 'Entrena esta semana para empezarla.'
-                : highlights.streak.this_week === 0
-                  ? '¡No la pierdas! Entrena esta semana.'
-                  : highlights.streak.best > highlights.streak.weeks
-                    ? `Tu mejor racha: ${highlights.streak.best} semanas`
-                    : 'Es tu mejor racha. Sigue así.'}
-          </p>
-        </div>
+      {!noRoutines ? (
+        <WeekCard
+          weekStart={weekStart}
+          todayKey={todayKey}
+          sessions={weekSessions}
+          planned={Math.max(activeRoutines.reduce((sum, r) => sum + (r.sessions_per_week || 0), 0), weekSessions.length)}
+          highlights={highlightsQuery.data}
+        />
+      ) : null}
 
-        <div className="panel order-last col-span-2 p-4 sm:order-none sm:col-span-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Esta semana</p>
-          <p className="mt-1 flex items-baseline gap-1.5">
-            <span className="font-display text-4xl font-bold tabular-nums text-evo-accent">{completed}</span>
-            <span className="font-display text-xl font-bold text-evo-muted">/{planned || 0}</span>
-            <span className="ml-1 text-sm font-semibold text-evo-muted">sesiones</span>
-          </p>
-          <ol className="mt-2.5 grid grid-cols-7 gap-1" aria-label="Días de la semana">
-            {WEEK_LETTERS.map((letter, index) => {
-              const key = localDateKey(addDays(weekStart, index))
-              const sessions = weekSessions.filter((s) => s.scheduled_date === key)
-              const done = sessions.some((s) => s.completed_at)
-              const pending = !done && sessions.length > 0
-              const isToday = key === todayKey
-              return (
-                <li
-                  key={key}
-                  className="flex flex-col items-center gap-1"
-                  aria-label={`${letter}: ${done ? 'hecha' : pending ? (key < todayKey ? 'sin hacer' : 'pendiente') : 'descanso'}`}
-                >
-                  <span className={['text-[0.7rem] font-bold', isToday ? 'text-evo-text' : 'text-evo-muted'].join(' ')}>
-                    {letter}
-                  </span>
-                  <span
-                    className={[
-                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                      done
-                        ? 'bg-evo-lime text-[#102000]'
-                        : pending
-                          ? key < todayKey
-                            ? 'border-2 border-dashed border-evo-border'
-                            : 'border-2 border-evo-accent'
-                          : 'bg-evo-surface-2',
-                      isToday ? 'ring-2 ring-evo-accent/50 ring-offset-2 ring-offset-evo-surface' : '',
-                    ].join(' ')}
-                    aria-hidden
-                  >
-                    {done ? '✓' : ''}
-                  </span>
-                </li>
-              )
-            })}
-          </ol>
-        </div>
-
-        <div className="panel p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Último récord</p>
-          {highlights?.last_record ? (
-            <Link
-              to={`/exercise-history/${highlights.last_record.routine_exercise_id}`}
-              className="group mt-1 block rounded-xl"
-            >
-              <p className="truncate font-display text-base font-bold group-hover:text-evo-accent sm:text-lg">
-                🏆 {highlights.last_record.exercise}
-              </p>
-              <p className="font-display text-xl font-bold tabular-nums sm:text-2xl">
-                {kg(highlights.last_record.weight_kg)}
-                {highlights.last_record.reps ? (
-                  <span className="text-lg text-evo-muted"> × {highlights.last_record.reps}</span>
-                ) : null}
-              </p>
-              <p className="text-sm text-evo-muted">
-                <span className="font-semibold text-evo-lime">
-                  +{kg(Math.round((highlights.last_record.weight_kg - highlights.last_record.previous_kg) * 100) / 100)}
-                </span>{' '}
-                · {relativeDayLabel(highlights.last_record.date)}
-              </p>
-            </Link>
-          ) : (
-            <p className="mt-2 text-sm text-evo-muted">
-              Cuando superes el peso máximo de un ejercicio lo verás aquí.
-            </p>
-          )}
-        </div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="panel flex flex-col justify-between gap-3 p-5 lg:order-2">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Pulso semanal</p>
-            <p
-              className={[
-                'mt-1 font-display text-2xl font-bold',
-                mood === 'green' ? 'text-evo-lime' : mood === 'red' ? 'text-evo-danger' : 'text-evo-warn',
-              ].join(' ')}
-            >
-              {mood === 'green' ? 'Subiendo' : mood === 'red' ? 'Ajustar' : 'Estable'}
-            </p>
-            <p className="mt-1 text-sm text-evo-muted">
-              {insightsQuery.data?.summary.label ?? 'Registra kilos para ver tu tendencia.'}
-            </p>
-          </div>
-          <ButtonLink to="/progress" variant="secondary">
-            Ver progreso
-          </ButtonLink>
-        </section>
-
-        <section className="space-y-3 lg:order-1 lg:col-span-2">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-display text-xl font-bold">Tus rutinas</h2>
-            <ButtonLink to="/routines/new" variant="secondary">
-              + Nueva
-            </ButtonLink>
-          </div>
-          {routinesQuery.isLoading ? (
-            <p className="text-sm text-evo-muted">Cargando rutinas…</p>
-          ) : activeRoutines.length === 0 ? (
-            <div className="panel border-dashed p-5 text-center">
-              <p className="font-semibold">No hay rutinas activas</p>
-              <ButtonLink to="/routines/new" className="mt-3">
-                Crear rutina
-              </ButtonLink>
-            </div>
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {activeRoutines.slice(0, 4).map((routine) => (
-                <li key={routine.id}>
-                  <Link to={`/routines/${routine.id}`} className="panel block px-4 py-4 transition hover:border-evo-accent">
-                    <p className="font-display text-lg font-bold">{routine.name}</p>
-                    <p className="mt-1 text-sm text-evo-muted">
-                      {routine.days_count ?? routine.days?.length ?? 0} días · {routine.exercises_count ?? 0} ejercicios
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      {!noRoutines ? <ProgressTiles highlights={highlightsQuery.data} insight={insightsQuery.data} /> : null}
     </div>
   )
 }
 
+/** El entreno de hoy, en grande: es lo primero que se viene a hacer a la app. */
 function TodayCard({ session }: { session: WorkoutSession }) {
   const navigate = useNavigate()
-  const exercises = session.day?.exercises ?? []
+  const exercises = session.exercises ?? session.day?.exercises ?? []
   const totalSets = exercises.reduce((sum, e) => sum + (e.default_sets || 1), 0)
   const loggedSets = (session.set_logs ?? []).filter(
     (log) => log.completed && (log.weight_kg != null || log.reps != null || log.duration_seconds != null),
@@ -333,79 +113,346 @@ function TodayCard({ session }: { session: WorkoutSession }) {
   const done = Boolean(session.completed_at)
   const started = !done && loggedSets > 0
   const progress = totalSets > 0 ? Math.min(1, loggedSets / totalSets) : 0
+  const thumbs = exercises.filter((e) => e.image_urls).slice(0, 4)
 
   return (
     <article
       className={[
-        'panel overflow-hidden border-2 p-0',
-        done ? 'border-evo-lime/50' : 'border-evo-accent/60',
+        'relative overflow-hidden rounded-3xl p-5 text-[#1a120c] shadow-[0_18px_40px_rgba(255,138,76,0.18)]',
+        done ? 'bg-gradient-to-br from-[#d9fb8f] via-[#b6f36a] to-[#7fd94a]' : 'bg-gradient-to-br from-[#ffb347] via-[#ff8a4c] to-[#f0623c]',
       ].join(' ')}
     >
-      <div className="space-y-4 p-5">
+      <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15" aria-hidden />
+      <div className="relative space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p
-              className={['text-xs font-bold uppercase tracking-[0.14em]', done ? 'text-evo-lime' : 'text-evo-accent'].join(' ')}
-            >
-              {done ? 'Hoy · completada' : started ? 'Hoy · a medias' : 'Hoy toca'}
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] opacity-70">
+              {done ? '¡Hecho por hoy!' : started ? 'A medias · sigue' : 'Hoy toca'}
             </p>
-            <h2 className="mt-1 font-display text-3xl font-bold leading-tight">{session.day?.name ?? 'Entrenamiento'}</h2>
-            <p className="mt-0.5 text-sm text-evo-muted">{session.routine?.name}</p>
+            <h2 className="mt-1 font-display text-4xl font-bold leading-none [text-wrap:balance]">{session.day?.name ?? 'Entrenamiento'}</h2>
+            {session.routine?.name && session.routine.name !== session.day?.name ? (
+              <p className="mt-1.5 text-sm font-semibold opacity-75">{session.routine.name}</p>
+            ) : null}
           </div>
           {done ? (
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-evo-lime text-2xl font-bold text-[#102000]" aria-hidden>
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#102000]/90 text-2xl font-bold text-evo-lime" aria-hidden>
               ✓
             </span>
           ) : null}
         </div>
 
-        <dl className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-2xl bg-evo-surface-2 px-2 py-2.5">
-            <dt className="text-[0.7rem] font-bold uppercase tracking-wide text-evo-muted">Ejercicios</dt>
-            <dd className="font-display text-xl font-bold tabular-nums">{exercises.length}</dd>
-          </div>
-          <div className="rounded-2xl bg-evo-surface-2 px-2 py-2.5">
-            <dt className="text-[0.7rem] font-bold uppercase tracking-wide text-evo-muted">Series</dt>
-            <dd className="font-display text-xl font-bold tabular-nums">
-              {started || done ? `${loggedSets}/${totalSets}` : totalSets}
-            </dd>
-          </div>
-          <div className="rounded-2xl bg-evo-surface-2 px-2 py-2.5">
-            <dt className="text-[0.7rem] font-bold uppercase tracking-wide text-evo-muted">Duración</dt>
-            <dd className="font-display text-xl font-bold tabular-nums">~{estimateMinutes(exercises)}′</dd>
-          </div>
-        </dl>
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
+          <span>{exercises.length} ejercicios</span>
+          <span>{started || done ? `${loggedSets}/${totalSets}` : totalSets} series</span>
+          {!done ? <span>~{estimateMinutes(exercises)} min</span> : null}
+        </p>
 
-        {exercises.length > 0 ? (
-          <ul className="flex flex-wrap gap-1.5" aria-label="Ejercicios de hoy">
-            {exercises.slice(0, 6).map((exercise) => (
-              <li key={exercise.id} className="rounded-full bg-evo-bg/50 px-3 py-1 text-xs font-semibold text-evo-muted">
-                {exercise.name}
-              </li>
-            ))}
-            {exercises.length > 6 ? (
-              <li className="rounded-full px-2 py-1 text-xs font-semibold text-evo-muted">+{exercises.length - 6}</li>
-            ) : null}
-          </ul>
+        {thumbs.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <span className="flex shrink-0" aria-hidden>
+              {thumbs.map((exercise, index) => (
+                <img
+                  key={exercise.id}
+                  src={exercise.image_urls![0]}
+                  alt=""
+                  className={['h-11 w-11 rounded-full bg-white object-cover ring-[3px] ring-white/80', index > 0 ? '-ml-3' : ''].join(' ')}
+                />
+              ))}
+            </span>
+            <span className="min-w-0 truncate text-sm font-semibold opacity-80">
+              {exercises
+                .slice(0, 2)
+                .map((e) => e.name)
+                .join(', ')}
+              {exercises.length > 2 ? ` y ${exercises.length - 2} más` : ''}
+            </span>
+          </div>
         ) : null}
 
         {started ? (
-          <div className="h-2 overflow-hidden rounded-full bg-evo-surface-2" aria-hidden>
-            <div className="h-full rounded-full bg-evo-lime" style={{ width: `${progress * 100}%` }} />
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#1a120c]/15" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del entreno">
+            <div className="h-full rounded-full bg-[#1a120c]" style={{ width: `${progress * 100}%` }} />
           </div>
         ) : null}
 
-        <Button
-          size="lg"
-          fullWidth
-          variant={done ? 'secondary' : 'primary'}
-          className="!min-h-16 text-lg"
+        <button
+          type="button"
           onClick={() => navigate(`/workout/${session.id}`)}
+          className={[
+            'flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl text-lg font-bold transition active:scale-[0.98]',
+            done ? 'bg-[#102000]/90 text-evo-lime' : 'bg-[#1a120c] text-white',
+          ].join(' ')}
         >
-          {done ? 'Ver entrenamiento' : started ? 'Continuar entrenamiento →' : 'Empezar entrenamiento →'}
-        </Button>
+          {done ? 'Ver entrenamiento' : started ? 'Continuar entrenamiento' : 'Empezar entrenamiento'}
+          <span aria-hidden>→</span>
+        </button>
       </div>
     </article>
+  )
+}
+
+/** Día sin entreno: tranquilo, con la próxima sesión y la opción de entrenar igualmente. */
+function RestDayCard({ nextSession, routines }: { nextSession: WorkoutSession | null; routines: Routine[] }) {
+  const navigate = useNavigate()
+  const { notify } = useUiFeedback()
+  const [open, setOpen] = useState(false)
+  const todayKey = localDateKey()
+  const pickable = routines.flatMap((routine) =>
+    (routine.days ?? []).filter((day) => (day.exercises?.length ?? 0) > 0).map((day) => ({ routine, day })),
+  )
+
+  const trainAnyway = useMutation({
+    mutationFn: async (payload: { routineId: number; dayId: number }) =>
+      (
+        await api.post<{ session: WorkoutSession }>('/workout-sessions', {
+          routine_id: payload.routineId,
+          routine_day_id: payload.dayId,
+          scheduled_date: todayKey,
+        })
+      ).data.session,
+    onSuccess: (session) => {
+      void invalidateTraining()
+      navigate(`/workout/${session.id}`)
+    },
+    onError: () => notify('No se pudo empezar la sesión. Revisa la conexión.', 'error'),
+  })
+
+  return (
+    <article className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
+      <div className="flex items-center gap-4 p-5">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-evo-surface-2 text-4xl" aria-hidden>
+          😴
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-evo-muted">Hoy</p>
+          <h2 className="font-display text-2xl font-bold leading-tight">Toca descansar</h2>
+          <p className="mt-0.5 text-sm text-evo-muted">
+            {nextSession
+              ? `Próximo: ${nextSession.day?.name ?? 'entreno'}, ${upcomingDayLabel(nextSession.scheduled_date)}`
+              : 'El descanso también construye músculo.'}
+          </p>
+        </div>
+      </div>
+
+      {pickable.length > 0 ? (
+        <div className="border-t border-evo-border/50">
+          <button
+            type="button"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className="flex min-h-14 w-full items-center justify-between gap-3 px-5 text-left font-bold"
+          >
+            ¿Te apetece entrenar igualmente?
+            <Icon name="chevron" className={['h-4 w-4 text-evo-muted transition', open ? 'rotate-90' : ''].join(' ')} />
+          </button>
+          {open ? (
+            <ul className="space-y-2 px-4 pb-4">
+              {pickable.map(({ routine, day }) => (
+                <li key={day.id}>
+                  <button
+                    type="button"
+                    disabled={trainAnyway.isPending}
+                    onClick={() => trainAnyway.mutate({ routineId: routine.id, dayId: day.id })}
+                    className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl bg-evo-surface-2 px-4 text-left transition active:scale-[0.99] disabled:opacity-50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-bold">{day.name}</span>
+                      <span className="block truncate text-xs text-evo-muted">
+                        {day.exercises?.length ?? 0} ejercicios{routines.length > 1 ? ` · ${routine.name}` : ''}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-bold text-evo-accent">Empezar</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
+/** Primera vez: tres pasos claros en lugar de pantallas vacías. */
+function GetStartedCard() {
+  const steps = [
+    { icon: '🗓️', title: 'Crea tu rutina', text: 'Elige tus días y ejercicios de la biblioteca.' },
+    { icon: '🏋️', title: 'Entrena y apunta', text: 'Kilos y repeticiones, con descansos y récords.' },
+    { icon: '📈', title: 'Mira cómo mejoras', text: 'Tu progreso semana a semana.' },
+  ]
+  return (
+    <article className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#ffb347] via-[#ff8a4c] to-[#f0623c] p-5 text-[#1a120c]">
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] opacity-70">Bienvenido a EvoFit</p>
+      <h2 className="mt-1 font-display text-3xl font-bold leading-tight">Empieza en 1 minuto</h2>
+      <ol className="mt-4 space-y-2.5">
+        {steps.map((step, index) => (
+          <li key={step.title} className="flex items-center gap-3 rounded-2xl bg-white/25 px-3 py-2.5">
+            <span className="text-2xl" aria-hidden>
+              {step.icon}
+            </span>
+            <span className="min-w-0">
+              <span className="block font-bold">
+                {index + 1}. {step.title}
+              </span>
+              <span className="block text-sm opacity-80">{step.text}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <Link to="/routines/new" className="mt-4 flex min-h-14 w-full items-center justify-center rounded-2xl bg-[#1a120c] text-lg font-bold text-white">
+        Crear mi primera rutina →
+      </Link>
+    </article>
+  )
+}
+
+/** La semana de un vistazo y la racha, en un solo bloque. */
+function WeekCard({
+  weekStart,
+  todayKey,
+  sessions,
+  planned,
+  highlights,
+}: {
+  weekStart: Date
+  todayKey: string
+  sessions: WorkoutSession[]
+  planned: number
+  highlights: TrainingHighlights | undefined
+}) {
+  const completed = sessions.filter((s) => s.completed_at).length
+  const streak = highlights?.streak
+  const streakText = !streak
+    ? ''
+    : streak.weeks === 0
+      ? 'Entrena esta semana para empezar tu racha'
+      : streak.this_week === 0
+        ? '¡Entrena esta semana para no perder la racha!'
+        : streak.best > streak.weeks
+          ? `Tu mejor racha: ${streak.best} semanas`
+          : '¡Es tu mejor racha!'
+
+  return (
+    <section aria-label="Tu semana" className="space-y-2">
+      <SectionTitle
+        action={
+          <Link to="/calendar" className="text-sm font-bold text-evo-accent">
+            Agenda
+          </Link>
+        }
+      >
+        Tu semana
+      </SectionTitle>
+      <div className="rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex items-baseline gap-1.5">
+            <span className="font-display text-4xl font-bold tabular-nums">{completed}</span>
+            <span className="font-display text-xl font-bold text-evo-muted">/ {planned || 0}</span>
+            <span className="ml-1 text-sm font-semibold text-evo-muted">entrenos</span>
+          </p>
+          {streak ? (
+            <span
+              className={[
+                'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold',
+                streak.weeks > 0 ? 'bg-evo-accent/15 text-evo-accent' : 'bg-evo-surface-2 text-evo-muted',
+              ].join(' ')}
+            >
+              <span aria-hidden>{streak.weeks > 0 ? '🔥' : '🌱'}</span>
+              {streak.weeks} {streak.weeks === 1 ? 'semana' : 'semanas'}
+            </span>
+          ) : null}
+        </div>
+
+        <ol className="mt-4 grid grid-cols-7 gap-1.5" aria-label="Días de la semana">
+          {WEEK_LETTERS.map((letter, index) => {
+            const key = localDateKey(addDays(weekStart, index))
+            const day = sessions.filter((s) => s.scheduled_date === key)
+            const done = day.some((s) => s.completed_at)
+            const pending = !done && day.length > 0
+            const missed = pending && key < todayKey
+            const isToday = key === todayKey
+            const state = done ? 'hecho' : missed ? 'sin hacer' : pending ? 'planificado' : 'descanso'
+            return (
+              <li key={key} className="flex flex-col items-center gap-1.5" aria-label={`${letter}${isToday ? ' (hoy)' : ''}: ${state}`}>
+                <span className={['text-xs font-bold', isToday ? 'text-evo-accent' : 'text-evo-muted'].join(' ')}>{letter}</span>
+                <span
+                  aria-hidden
+                  className={[
+                    'flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition',
+                    done
+                      ? 'bg-evo-lime text-[#102000]'
+                      : missed
+                        ? 'border-2 border-dashed border-evo-border text-evo-muted'
+                        : pending
+                          ? 'border-2 border-evo-accent text-evo-accent'
+                          : 'bg-evo-surface-2',
+                    isToday && !done ? 'ring-2 ring-evo-accent/40 ring-offset-2 ring-offset-evo-surface' : '',
+                  ].join(' ')}
+                >
+                  {done ? '✓' : pending && !missed ? '•' : ''}
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+        {streakText ? <p className="mt-3 text-center text-sm text-evo-muted">{streakText}</p> : null}
+      </div>
+    </section>
+  )
+}
+
+/** Último récord y tendencia: dos fichas que llevan a Progreso. */
+function ProgressTiles({ highlights, insight }: { highlights: TrainingHighlights | undefined; insight: ProgressInsight | undefined }) {
+  const record = highlights?.last_record
+  const mood = insight?.summary.mood
+  const trend =
+    mood === 'green'
+      ? { icon: '📈', label: 'Subiendo', tone: 'text-evo-lime' }
+      : mood === 'red'
+        ? { icon: '📉', label: 'A ajustar', tone: 'text-evo-danger' }
+        : { icon: '➡️', label: 'Estable', tone: 'text-evo-warn' }
+
+  return (
+    <section aria-label="Tu progreso" className="space-y-2">
+      <SectionTitle
+        action={
+          <Link to="/progress" className="text-sm font-bold text-evo-accent">
+            Ver todo
+          </Link>
+        }
+      >
+        Tu progreso
+      </SectionTitle>
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          to={record ? `/exercise-history/${record.routine_exercise_id}` : '/progress'}
+          className="flex min-h-36 flex-col justify-between rounded-3xl border border-evo-border/60 bg-evo-surface p-4 transition active:scale-[0.98]"
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Último récord</p>
+          {record ? (
+            <div className="min-w-0">
+              <p className="truncate font-bold">🏆 {record.exercise}</p>
+              <p className="font-display text-2xl font-bold tabular-nums">{kg(record.weight_kg)}</p>
+              <p className="text-xs text-evo-muted">
+                <span className="font-bold text-evo-lime">+{kg(Math.round((record.weight_kg - record.previous_kg) * 100) / 100)}</span> ·{' '}
+                {relativeDayLabel(record.date)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-evo-muted">Supera un peso y lo celebrarás aquí.</p>
+          )}
+        </Link>
+        <Link to="/progress" className="flex min-h-36 flex-col justify-between rounded-3xl border border-evo-border/60 bg-evo-surface p-4 transition active:scale-[0.98]">
+          <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Tendencia</p>
+          <div>
+            <p className={['font-display text-2xl font-bold', trend.tone].join(' ')}>
+              <span aria-hidden>{trend.icon}</span> {trend.label}
+            </p>
+            <p className="line-clamp-2 text-xs text-evo-muted">{insight?.summary.label ?? 'Apunta kilos para ver tu tendencia.'}</p>
+          </div>
+        </Link>
+      </div>
+    </section>
   )
 }
 

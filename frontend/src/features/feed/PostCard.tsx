@@ -155,12 +155,18 @@ export function PostCard({ post, detailed = false }: Props) {
             onClick={() => setSheet('exercises')}
             className="ml-auto mr-1.5 flex items-center gap-1.5 rounded-full bg-evo-surface-2 py-1 pl-1 pr-3 text-xs font-bold text-evo-text"
           >
-            <span className="flex -space-x-2" aria-hidden>
-              {summary.exercises.slice(0, 3).map((exercise, index) =>
-                exercise.image_url ? (
-                  <img key={index} src={exercise.image_url} alt="" className="h-7 w-7 rounded-full bg-white object-cover ring-2 ring-evo-surface-2" />
-                ) : null,
-              )}
+            <span className="flex shrink-0" aria-hidden>
+              {summary.exercises
+                .filter((exercise) => exercise.image_url)
+                .slice(0, 3)
+                .map((exercise, index) => (
+                  <img
+                    key={index}
+                    src={exercise.image_url!}
+                    alt=""
+                    className={['h-7 w-7 rounded-full bg-white object-cover ring-2 ring-evo-surface-2', index > 0 ? '-ml-2' : ''].join(' ')}
+                  />
+                ))}
             </span>
             {summary.exercises.length} {summary.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}
           </button>

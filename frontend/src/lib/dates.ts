@@ -64,3 +64,12 @@ export function relativeDayLabel(iso: string): string {
   if (n < 60) return `hace ${Math.floor(n / 7)} semanas`
   return formatShortDate(iso)
 }
+
+/** Para fechas próximas: "hoy", "mañana", "el jueves" (esta semana) o la fecha. */
+export function upcomingDayLabel(iso: string): string {
+  const n = -daysAgo(iso)
+  if (n <= 0) return 'hoy'
+  if (n === 1) return 'mañana'
+  if (n < 7) return `el ${parseDateKey(iso).toLocaleDateString('es-ES', { weekday: 'long' })}`
+  return formatShortDate(iso)
+}
