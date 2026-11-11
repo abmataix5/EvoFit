@@ -6,13 +6,12 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useAuth } from '../features/auth/AuthContext'
 import { Avatar } from '../features/profile/Avatar'
-import { EXPERIENCE_LEVELS, TRAINING_GOALS, VISIBILITY_OPTIONS } from '../features/profile/profileOptions'
+import { EXPERIENCE_LEVELS, TRAINING_GOALS } from '../features/profile/profileOptions'
 import {
   api,
   apiErrorMessage,
   validationErrors,
   type ExperienceLevel,
-  type ProfileVisibility,
   type TrainingGoal,
   type User,
 } from '../lib/api'
@@ -28,8 +27,6 @@ type Form = {
   gym_name: string
   experience_level: ExperienceLevel | ''
   training_goal: TrainingGoal | ''
-  profile_visibility: ProfileVisibility
-  show_age: boolean
 }
 
 const BIO_MAX = 280
@@ -45,8 +42,6 @@ function formFromUser(user: User): Form {
     gym_name: user.gym_name ?? '',
     experience_level: user.experience_level ?? '',
     training_goal: user.training_goal ?? '',
-    profile_visibility: user.profile_visibility,
-    show_age: user.show_age,
   }
 }
 
@@ -188,72 +183,6 @@ function AvatarEditor({ user }: { user: User }) {
         )}
       </div>
     </div>
-  )
-}
-
-function PasswordSection() {
-  const { notify } = useUiFeedback()
-  const [values, setValues] = useState({ current_password: '', password: '', password_confirmation: '' })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const save = useMutation({
-    mutationFn: async () => api.put('/profile/password', values),
-    onSuccess: () => {
-      setValues({ current_password: '', password: '', password_confirmation: '' })
-      setErrors({})
-      notify('Contraseña cambiada. Se ha cerrado la sesión en tus otros dispositivos.', 'success')
-    },
-    onError: (error) => {
-      const fieldErrors = validationErrors(error)
-      setErrors(fieldErrors)
-      if (Object.keys(fieldErrors).length === 0) notify(apiErrorMessage(error, 'No se ha podido cambiar.'), 'error')
-    },
-  })
-
-  function set(field: keyof typeof values, value: string) {
-    setValues((current) => ({ ...current, [field]: value }))
-  }
-
-  return (
-    <form
-      className="space-y-3"
-      onSubmit={(event) => {
-        event.preventDefault()
-        save.mutate()
-      }}
-    >
-      <Input
-        label="Contraseña actual"
-        type="password"
-        autoComplete="current-password"
-        value={values.current_password}
-        onChange={(e) => set('current_password', e.target.value)}
-        error={errors.current_password}
-        required
-      />
-      <Input
-        label="Nueva contraseña"
-        type="password"
-        autoComplete="new-password"
-        minLength={8}
-        value={values.password}
-        onChange={(e) => set('password', e.target.value)}
-        error={errors.password}
-        hint="Mínimo 8 caracteres."
-        required
-      />
-      <Input
-        label="Repite la nueva contraseña"
-        type="password"
-        autoComplete="new-password"
-        value={values.password_confirmation}
-        onChange={(e) => set('password_confirmation', e.target.value)}
-        required
-      />
-      <Button type="submit" variant="secondary" fullWidth disabled={save.isPending}>
-        {save.isPending ? 'Guardando…' : 'Cambiar contraseña'}
-      </Button>
-    </form>
   )
 }
 
@@ -430,49 +359,6 @@ export function EditProfilePage() {
           />
         </Section>
 
-        <Section title="Privacidad" id="privacidad">
-          <fieldset className="space-y-2">
-            <legend className="mb-1.5 text-sm font-semibold">Quién puede ver tus entrenos</legend>
-            {VISIBILITY_OPTIONS.map((option) => {
-              const active = form.profile_visibility === option.id
-              return (
-                <label
-                  key={option.id}
-                  className={[
-                    'flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-3 transition',
-                    active ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border bg-evo-surface-2',
-                  ].join(' ')}
-                >
-                  <input
-                    type="radio"
-                    name="profile_visibility"
-                    value={option.id}
-                    checked={active}
-                    onChange={() => set('profile_visibility', option.id)}
-                    className="mt-1 h-4 w-4 accent-evo-accent"
-                  />
-                  <span>
-                    <span className="block font-bold">{option.label}</span>
-                    <span className="block text-sm text-evo-muted">{option.hint}</span>
-                  </span>
-                </label>
-              )
-            })}
-          </fieldset>
-          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-evo-surface-2 p-3">
-            <span>
-              <span className="block font-bold">Mostrar mi edad</span>
-              <span className="block text-sm text-evo-muted">En tu perfil público.</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={form.show_age}
-              onChange={(e) => set('show_age', e.target.checked)}
-              className="h-6 w-6 shrink-0 accent-evo-accent"
-            />
-          </label>
-        </Section>
-
         <div className="safe-bottom sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-evo-border/40 bg-evo-bg/95 px-4 pt-3 pb-3 backdrop-blur-xl lg:mx-0 lg:rounded-3xl lg:border lg:px-3">
           <Button type="button" variant="secondary" size="lg" onClick={() => navigate('/profile')}>
             Cancelar
@@ -483,13 +369,6 @@ export function EditProfilePage() {
         </div>
       </form>
 
-      <Section title="Cuenta" id="cuenta">
-        <div className="rounded-2xl bg-evo-surface-2 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-evo-muted">Email</p>
-          <p className="truncate font-semibold">{user.email}</p>
-        </div>
-        <PasswordSection />
-      </Section>
     </div>
   )
 }

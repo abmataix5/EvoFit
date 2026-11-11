@@ -144,7 +144,8 @@ class SocialTest extends TestCase
         $this->befriend($viewer, $owner);
         // Las estadísticas son las del dueño aunque las pida otro usuario (otro tenant).
         $this->actingAs($viewer)->getJson("/api/v1/people/{$owner->id}")
-            ->assertJsonPath('data.relation', 'friends')->assertJsonPath('data.stats.total_workouts', 1)->assertJsonPath('data.friends_count', 1);
+            ->assertJsonPath('data.relation', 'friends')->assertJsonPath('data.stats.total_workouts', 1)->assertJsonPath('data.friends_count', 1)
+            ->assertJsonPath('data.posts_count', 0);
 
         $owner->update(['profile_visibility' => 'private']);
         $this->actingAs($viewer)->getJson("/api/v1/people/{$owner->id}")->assertJsonPath('data.stats', null);

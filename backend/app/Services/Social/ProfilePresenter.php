@@ -2,6 +2,7 @@
 
 namespace App\Services\Social;
 
+use App\Models\Post;
 use App\Models\User;
 use App\Services\TrainingHighlightsService;
 
@@ -60,6 +61,8 @@ class ProfilePresenter
             'can_view_activity' => $canView,
             'blocked_by_me' => ! $isSelf && $this->graph->hasBlocked($viewer, $user),
             'stats' => $canView ? $this->highlights->profileStats($user) : null,
+            'posts_count' => $canView ? Post::query()->where('user_id', $user->id)->count() : null,
+            'height_cm' => $canView ? $user->height_cm : null,
         ];
     }
 }

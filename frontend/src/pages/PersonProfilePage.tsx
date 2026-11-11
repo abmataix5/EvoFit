@@ -7,15 +7,14 @@ import { Icon } from '../components/icons/Icon'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import { Avatar } from '../features/profile/Avatar'
-import { goalOption, levelLabel } from '../features/profile/profileOptions'
-import { ProfilePosts } from '../features/feed/ProfilePosts'
+import { ProfileView } from '../features/profile/ProfileView'
+import { PersonRow } from '../features/social/PersonRow'
 import { FriendButton } from '../features/social/FriendButton'
 import { api, apiErrorMessage } from '../lib/api'
 import { queryClient } from '../lib/queryClient'
-import { personQuery, refreshSocial, type PersonProfile } from '../lib/social'
+import { personQuery, refreshSocial, type PersonCard, type PersonProfile } from '../lib/social'
 import { openConversation } from '../lib/messages'
 import { storiesQuery } from '../lib/stories'
-import { StoryRing } from '../features/stories/StoriesBar'
 import { StoryViewer } from '../features/stories/StoryViewer'
 
 const REPORT_REASONS = [
@@ -26,15 +25,6 @@ const REPORT_REASONS = [
   { id: 'other', label: 'Otro motivo' },
 ] as const
 
-function StatTile({ value, label }: { value: string | number; label: string }) {
-  return (
-    <div className="rounded-2xl bg-evo-surface-2 px-3 py-3 text-center">
-      <p className="font-display text-2xl font-bold tabular-nums">{value}</p>
-      <p className="mt-0.5 text-xs font-semibold text-evo-muted">{label}</p>
-    </div>
-  )
-}
-
 export function PersonProfilePage() {
   const id = Number(useParams().id)
   const { notify, confirm } = useUiFeedback()
@@ -42,6 +32,7 @@ export function PersonProfilePage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [reporting, setReporting] = useState(false)
   const [viewingStory, setViewingStory] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
   const navigate = useNavigate()
   const storyGroup = useQuery({ ...storiesQuery, select: (groups) => groups.find((g) => g.user.id === id) }).data
   const message = useMutation({
@@ -106,67 +97,17 @@ export function PersonProfilePage() {
     )
   }
 
-  const goal = goalOption(person.training_goal)
-  const level = levelLabel(person.experience_level)
-  const facts = [
-    person.location ? `📍 ${person.location}` : null,
-    person.age != null ? `🎂 ${person.age} años` : null,
-    person.gym_name ? `🏟️ ${person.gym_name}` : null,
-  ].filter(Boolean) as string[]
-
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
-      <section className="rounded-3xl border border-evo-border/60 bg-evo-surface p-5">
-        <div className="flex items-start gap-4">
-          {storyGroup ? (
-            <button type="button" className="flex shrink-0" onClick={() => setViewingStory(true)} aria-label={`Ver la historia de ${person.name}`}>
-              <StoryRing group={storyGroup}>
-                <Avatar name={person.name} url={person.avatar_url} size="lg" />
-              </StoryRing>
-            </button>
-          ) : (
-            <Avatar name={person.name} url={person.avatar_url} size="lg" />
-          )}
-          <div className="min-w-0 flex-1 pt-1">
-            <h1 className="truncate font-display text-2xl font-bold tracking-tight">{person.name}</h1>
-            {person.username ? <p className="truncate text-sm font-semibold text-evo-accent">@{person.username}</p> : null}
-            <p className="mt-1 text-sm text-evo-muted">
-              <span className="font-bold text-evo-text tabular-nums">{person.friends_count}</span> {person.friends_count === 1 ? 'amigo' : 'amigos'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Más opciones"
-            className="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-evo-muted hover:bg-evo-surface-2"
-          >
-            <Icon name="menu" className="h-5 w-5" />
-          </button>
-        </div>
-
-        {person.bio ? <p className="mt-4 whitespace-pre-line text-[0.95rem] leading-relaxed">{person.bio}</p> : null}
-
-        {facts.length > 0 ? (
-          <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-evo-muted">
-            {facts.map((fact) => (
-              <li key={fact}>{fact}</li>
-            ))}
-          </ul>
-        ) : null}
-
-        {goal || level ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {goal ? (
-              <span className="rounded-full bg-evo-accent/15 px-3 py-1.5 text-sm font-bold text-evo-accent">
-                {goal.emoji} {goal.label}
-              </span>
-            ) : null}
-            {level ? <span className="rounded-full bg-evo-lime/15 px-3 py-1.5 text-sm font-bold text-evo-lime">{level}</span> : null}
-          </div>
-        ) : null}
-
-        <div className="mt-5">
-          {person.relation === 'friends' ? (
+    <div>
+      <ProfileView
+        person={person}
+        isSelf={false}
+        onMenu={() => setMenuOpen(true)}
+        storyGroup={storyGroup}
+        onOpenStory={() => setViewingStory(true)}
+        onFriends={person.can_view_activity ? () => setFriendsOpen(true) : undefined}
+        actions={
+          person.relation === 'friends' ? (
             <div className="grid grid-cols-2 gap-2">
               <FriendButton person={person} size="full" />
               <button
@@ -180,38 +121,9 @@ export function PersonProfilePage() {
             </div>
           ) : (
             <FriendButton person={person} size="full" />
-          )}
-        </div>
-      </section>
-
-      {person.can_view_activity && person.stats ? (
-        <section aria-label="Estadísticas" className="rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
-          <h2 className="mb-3 px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">Sus números</h2>
-          <div className="grid grid-cols-3 gap-2">
-            <StatTile value={person.stats.total_workouts} label="Entrenos" />
-            <StatTile value={person.stats.month_workouts} label="Este mes" />
-            <StatTile value={`${person.stats.streak_weeks} sem`} label="Racha" />
-          </div>
-        </section>
-      ) : (
-        <section className="flex items-center gap-3 rounded-3xl border-2 border-dashed border-evo-border p-5">
-          <span className="text-2xl" aria-hidden>
-            🔒
-          </span>
-          <div>
-            <p className="font-bold">{person.profile_visibility === 'private' ? 'Perfil privado' : 'Solo para amigos'}</p>
-            <p className="text-sm text-evo-muted">
-              {person.profile_visibility === 'private'
-                ? `${person.name} no comparte sus entrenos.`
-                : `Cuando seáis amigos verás los entrenos y estadísticas de ${person.name}.`}
-            </p>
-          </div>
-        </section>
-      )}
-
-      {person.can_view_activity ? (
-        <ProfilePosts userId={person.id} emptyText={`${person.name} aún no ha compartido ningún entreno.`} />
-      ) : null}
+          )
+        }
+      />
 
       {menuOpen ? (
         <Sheet title={person.name} onClose={() => setMenuOpen(false)}>
@@ -234,6 +146,7 @@ export function PersonProfilePage() {
       ) : null}
 
       {reporting ? <ReportSheet person={person} onClose={() => setReporting(false)} /> : null}
+      {friendsOpen ? <FriendsOfSheet person={person} onClose={() => setFriendsOpen(false)} /> : null}
       {viewingStory && storyGroup ? <StoryViewer groups={[storyGroup]} startGroup={0} onClose={() => setViewingStory(false)} /> : null}
     </div>
   )
@@ -287,6 +200,30 @@ function ReportSheet({ person, onClose }: { person: PersonProfile; onClose: () =
           className="w-full resize-none rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 py-3 text-base text-evo-text focus:border-evo-accent focus:outline-none"
         />
       </label>
+    </Sheet>
+  )
+}
+
+/** Amigos de otra persona (si su privacidad deja verlos). */
+function FriendsOfSheet({ person, onClose }: { person: PersonProfile; onClose: () => void }) {
+  const friends = useQuery({
+    queryKey: ['person-friends', person.id],
+    queryFn: async () => (await api.get<{ data: PersonCard[] }>(`/people/${person.id}/friends`)).data.data,
+  })
+
+  return (
+    <Sheet title={`Amigos de ${person.username ?? person.name}`} onClose={onClose}>
+      {friends.isLoading ? (
+        <p className="py-6 text-center text-sm text-evo-muted">Cargando…</p>
+      ) : (friends.data ?? []).length === 0 ? (
+        <p className="py-6 text-center text-sm text-evo-muted">Aún no tiene amigos en EvoFit.</p>
+      ) : (
+        <ul className="-mx-3">
+          {friends.data!.map((friend) => (
+            <PersonRow key={friend.id} person={friend} />
+          ))}
+        </ul>
+      )}
     </Sheet>
   )
 }

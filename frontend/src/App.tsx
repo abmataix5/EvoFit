@@ -40,6 +40,7 @@ const PersonProfilePage = page(() => import('./pages/PersonProfilePage'), 'Perso
 const PostDetailPage = page(() => import('./pages/PostDetailPage'), 'PostDetailPage')
 const MessagesPage = page(() => import('./pages/MessagesPage'), 'MessagesPage')
 const ChatPage = page(() => import('./pages/ChatPage'), 'ChatPage')
+const SettingsPage = page(() => import('./pages/SettingsPage'), 'SettingsPage')
 const NotificationsPage = page(() => import('./pages/NotificationsPage'), 'NotificationsPage')
 const SearchPage = page(() => import('./pages/SearchPage'), 'SearchPage')
 const ProgressPage = page(() => import('./pages/ProgressPage'), 'ProgressPage')
@@ -99,6 +100,7 @@ export default function App() {
                 <Route path="progress" element={<ProgressPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="profile/edit" element={<EditProfilePage />} />
+                <Route path="settings" element={<SettingsPage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="friends" element={<FriendsPage />} />

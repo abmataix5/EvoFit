@@ -27,6 +27,8 @@ export type PersonProfile = PersonCard & {
   can_view_activity: boolean
   blocked_by_me: boolean
   stats: ProfileStats | null
+  posts_count: number | null
+  height_cm: number | null
 }
 
 export type FriendRequest = { id: number; created_at: string; user: PersonCard }
