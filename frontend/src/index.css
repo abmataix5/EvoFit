@@ -14,6 +14,12 @@
   --color-evo-lime: #b6f36a;
   --color-evo-danger: #ff8b9a;
   --color-evo-warn: #ffd166;
+  /* Series de gráficas (validadas: banda de luminosidad, daltonismo y contraste sobre la superficie). */
+  --color-evo-chart-1: #e0702f;
+  --color-evo-chart-2: #4a8ff0;
+  /* Tendencia: verde = mejora, rojo = empeora; siempre con flecha y texto, nunca solo color. */
+  --color-evo-up: #7fd94a;
+  --color-evo-down: #ff8b9a;
   --font-evo: 'Manrope', system-ui, sans-serif;
   --font-display: 'Outfit', system-ui, sans-serif;
 }
@@ -36,6 +42,10 @@
   --color-evo-lime: #9be04a;
   --color-evo-danger: #d33a50;
   --color-evo-warn: #f5b82e;
+  --color-evo-chart-1: #d2601f;
+  --color-evo-chart-2: #2f6fd6;
+  --color-evo-up: #2d7414;
+  --color-evo-down: #b42339;
 }
 
 @layer base {

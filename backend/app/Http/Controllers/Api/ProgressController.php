@@ -10,11 +10,13 @@ use App\Http\Resources\ProgressPhotoResource;
 use App\Models\BodyWeightEntry;
 use App\Models\ProgressPhoto;
 use App\Services\ProgressInsightService;
+use App\Services\ProgressOverviewService;
 use App\Services\TrainingHighlightsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProgressController extends Controller
@@ -125,6 +127,13 @@ class ProgressController extends Controller
     public function highlights(Request $request, TrainingHighlightsService $service): JsonResponse
     {
         return response()->json($service->highlights($request->user()));
+    }
+
+    public function overview(Request $request, ProgressOverviewService $service): JsonResponse
+    {
+        $validated = $request->validate(['weeks' => ['nullable', 'integer', Rule::in(ProgressOverviewService::RANGES)]]);
+
+        return response()->json($service->overview($request->user(), (int) ($validated['weeks'] ?? 12)));
     }
 
     public function muscles(Request $request, TrainingHighlightsService $service): JsonResponse
