@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button, ButtonLink } from '../components/ui/Button'
-import { useAuth } from '../features/auth/AuthContext'
 import {
   api,
   type ProgressInsight,
@@ -13,7 +12,6 @@ import {
   type WorkoutSession,
 } from '../lib/api'
 import { addDays, formatDayLabel, localDateKey, relativeDayLabel, startOfWeek } from '../lib/dates'
-import { firstName, getDayMotivation, helloLine } from '../lib/motivation'
 import { invalidateTraining } from '../lib/queryClient'
 import { PostList } from '../features/feed/PostList'
 import { feedQuery } from '../lib/feed'
@@ -38,9 +36,6 @@ function kg(value: number) {
 
 /** Lo de siempre: entreno de hoy, racha, semana y último récord. */
 function MyDayView() {
-  const { user } = useAuth()
-  const motivation = getDayMotivation()
-  const name = firstName(user?.name)
   const navigate = useNavigate()
   const { notify } = useUiFeedback()
   const weekStart = startOfWeek()
@@ -117,18 +112,6 @@ function MyDayView() {
 
   return (
     <div className="space-y-5">
-      <section className="panel overflow-hidden p-0">
-        <div className="bg-gradient-to-br from-[#ff8a4c] via-[#ff9d68] to-[#ffd0a8] px-5 py-4 text-[#1a120c]">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1a120c]/70">
-            {helloLine(user?.name)} · {motivation.label}
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">{motivation.headline}</h2>
-          <p className="mt-1 max-w-xl text-sm font-semibold leading-snug text-[#1a120c]/85 sm:text-base">
-            {name === 'atleta' ? motivation.line : `${name}, ${motivation.line.charAt(0).toLowerCase()}${motivation.line.slice(1)}`}
-          </p>
-        </div>
-      </section>
-
       {/* Hoy toca */}
       <section aria-label="Hoy" className="space-y-3">
         {calendarQuery.isLoading ? (

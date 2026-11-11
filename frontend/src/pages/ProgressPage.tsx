@@ -7,7 +7,7 @@ import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { useAuth } from '../features/auth/AuthContext'
 import { PhotoCheckIn } from '../components/progress/PhotoCheckIn'
 import { MuscleBalance } from '../features/progress/MuscleBalance'
-import { formatShortDate } from '../lib/dates'
+import { formatShortDate, localDateKey } from '../lib/dates'
 import {
   api,
   type BodyWeightEntry,
@@ -15,7 +15,7 @@ import {
   type ProgressInsight,
   type ProgressPhoto,
 } from '../lib/api'
-import { localDateKey, helloLine } from '../lib/motivation'
+import { helloLine } from '../lib/motivation'
 import { formatDuration } from '../lib/tracking'
 import { prepareProgressPhoto } from '../lib/preparePhoto'
 import axios from 'axios'
