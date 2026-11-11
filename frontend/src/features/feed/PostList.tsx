@@ -48,7 +48,7 @@ export function PostList({ query, empty }: { query: UseInfiniteQueryResult<Infin
   if (posts.length === 0) return <>{empty}</>
 
   return (
-    <div className="space-y-4">
+    <div className="sm:space-y-4">
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}

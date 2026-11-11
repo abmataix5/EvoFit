@@ -37,7 +37,7 @@ export type Post = {
   comments_count: number
   liked_by_me: boolean
   /** Última persona (que no seas tú) que dio "me gusta": "Le gusta a Ana y 11 más". */
-  liked_by_name: string | null
+  liked_by: PostAuthor | null
   edited: boolean
   comments_preview: PostComment[]
   mine: boolean

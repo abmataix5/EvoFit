@@ -19,6 +19,7 @@ class AuthTest extends TestCase
     {
         $this->withHeaders($this->spa)->postJson('/api/v1/auth/register', [
             'name' => 'Abel',
+            'username' => '@Abel.Fit',
             'email' => 'abel@example.com',
             'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
@@ -27,7 +28,8 @@ class AuthTest extends TestCase
         // (201 en test porque el guard reutiliza el modelo recién creado.)
         $this->withHeaders($this->spa)->getJson('/api/v1/auth/me')
             ->assertSuccessful()
-            ->assertJsonPath('data.email', 'abel@example.com');
+            ->assertJsonPath('data.email', 'abel@example.com')
+            ->assertJsonPath('data.username', 'abel.fit');
     }
 
     public function test_login_rejects_bad_credentials(): void

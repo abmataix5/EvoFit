@@ -17,6 +17,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>
   register: (payload: {
     name: string
+    username: string
     email: string
     password: string
     password_confirmation: string
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (payload: {
       name: string
+      username: string
       email: string
       password: string
       password_confirmation: string

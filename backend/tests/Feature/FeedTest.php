@@ -254,9 +254,9 @@ class FeedTest extends TestCase
 
         $this->actingAs($ana)->getJson("/api/v1/posts/{$post->id}/likes")
             ->assertOk()->assertJsonPath('data.0.name', 'Marta')->assertJsonPath('data.1.name', 'Luis');
-        $this->actingAs($ana)->getJson('/api/v1/feed')->assertJsonPath('data.0.liked_by_name', 'Marta');
+        $this->actingAs($ana)->getJson('/api/v1/feed')->assertJsonPath('data.0.liked_by.name', 'Marta');
         // A Marta se le muestra otra persona, no ella misma.
-        $this->actingAs($marta)->getJson("/api/v1/posts/{$post->id}")->assertJsonPath('data.liked_by_name', 'Luis');
+        $this->actingAs($marta)->getJson("/api/v1/posts/{$post->id}")->assertJsonPath('data.liked_by.name', 'Luis');
     }
 
     public function test_route_limits_do_not_count_other_requests(): void

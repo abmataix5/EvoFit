@@ -118,3 +118,8 @@ export function timeAgo(iso: string): string {
   if (days < 7) return `${days} d`
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
+
+/** Cómo se nombra a alguien en lo social (feed, comentarios, avisos): su alias o, si no tiene, su nombre. */
+export function handle(person: { username: string | null; name: string } | null | undefined): string {
+  return person?.username || person?.name || ''
+}

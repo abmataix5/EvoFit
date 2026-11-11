@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
@@ -35,6 +36,33 @@ class User extends Authenticatable
         static::deleting(function (User $user): void {
             $user->deleteAvatarFile();
         });
+    }
+
+    /**
+     * Reglas del alias: 3-30 caracteres en minúscula, números, puntos y guiones bajos,
+     * sin empezar ni acabar en símbolo, y único.
+     *
+     * @return list<mixed>
+     */
+    public static function usernameRules(?int $ignoreId = null): array
+    {
+        return [
+            'string', 'min:3', 'max:30',
+            'regex:/^[a-z0-9](?:[a-z0-9._]*[a-z0-9])?$/',
+            Rule::unique('users', 'username')->ignore($ignoreId),
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function usernameMessages(): array
+    {
+        return [
+            'username.required' => 'Elige un nombre de usuario.',
+            'username.min' => 'El usuario necesita al menos 3 caracteres.',
+            'username.max' => 'El usuario puede tener como mucho 30 caracteres.',
+            'username.regex' => 'Usa solo letras minúsculas, números, puntos y guiones bajos (sin empezar ni acabar en símbolo).',
+            'username.unique' => 'Ese nombre de usuario ya está cogido.',
+        ];
     }
 
     public function tenant(): BelongsTo

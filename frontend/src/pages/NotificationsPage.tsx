@@ -7,7 +7,7 @@ import { Avatar } from '../features/profile/Avatar'
 import { FriendButton } from '../features/social/FriendButton'
 import { api } from '../lib/api'
 import { queryClient } from '../lib/queryClient'
-import { notificationsQuery, timeAgo, type AppNotification } from '../lib/social'
+import { handle, notificationsQuery, timeAgo, type AppNotification } from '../lib/social'
 
 function describe(notification: AppNotification): string {
   switch (notification.kind) {
@@ -76,7 +76,7 @@ export function NotificationsPage() {
             <div className="min-w-0 flex-1">
               <p className="text-[0.95rem] leading-snug">
                 <Link to={`/u/${notification.actor.id}`} className="font-bold">
-                  {notification.actor.name}
+                  {handle(notification.actor)}
                 </Link>{' '}
                 {describe(notification)}
                 <span className="ml-1.5 whitespace-nowrap text-sm text-evo-muted">{timeAgo(notification.created_at)}</span>

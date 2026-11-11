@@ -5,6 +5,7 @@ namespace App\Http\Requests\Profile;
 use App\Enums\ExperienceLevel;
 use App\Enums\ProfileVisibility;
 use App\Enums\TrainingGoal;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -37,11 +38,8 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:120'],
-            'username' => [
-                'sometimes', 'nullable', 'string', 'min:3', 'max:30',
-                'regex:/^[a-z0-9](?:[a-z0-9._]*[a-z0-9])?$/',
-                Rule::unique('users', 'username')->ignore($this->user()->id),
-            ],
+            // Obligatorio: se puede cambiar, pero no dejar vacío.
+            'username' => ['sometimes', 'required', ...User::usernameRules($this->user()->id)],
             'bio' => ['sometimes', 'nullable', 'string', 'max:280'],
             'location' => ['sometimes', 'nullable', 'string', 'max:80'],
             'birth_date' => ['sometimes', 'nullable', 'date', 'before_or_equal:'.now()->subYears(13)->toDateString(), 'after:1900-01-01'],
@@ -59,10 +57,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name.required' => 'Tu nombre no puede quedar vacío.',
-            'username.min' => 'El usuario necesita al menos 3 caracteres.',
-            'username.max' => 'El usuario puede tener como mucho 30 caracteres.',
-            'username.regex' => 'Usa solo letras minúsculas, números, puntos y guiones bajos (sin empezar ni acabar en símbolo).',
-            'username.unique' => 'Ese nombre de usuario ya está cogido.',
+            ...User::usernameMessages(),
             'bio.max' => 'La bio puede tener como mucho 280 caracteres.',
             'birth_date.before_or_equal' => 'Tienes que tener al menos 13 años.',
             'birth_date.after' => 'Revisa la fecha de nacimiento.',

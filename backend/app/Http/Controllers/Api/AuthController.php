@@ -30,6 +30,7 @@ class AuthController extends Controller
             return User::query()->create([
                 'tenant_id' => $tenant->id,
                 'name' => $payload['name'],
+                'username' => $payload['username'],
                 'email' => $payload['email'],
                 'password' => $payload['password'],
                 'role' => 'owner',

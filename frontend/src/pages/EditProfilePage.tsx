@@ -342,7 +342,8 @@ export function EditProfilePage() {
             value={form.username}
             onChange={(e) => set('username', e.target.value.toLowerCase().replace(/\s+/g, ''))}
             error={errors.username}
-            hint="Así te encontrarán tus amigos. Letras, números, puntos y guiones bajos."
+            hint="Obligatorio. Así te ven y te encuentran tus amigos. Letras, números, puntos y guiones bajos."
+            required
           />
           <label className="block space-y-1.5" htmlFor={bioId}>
             <span className="flex items-baseline justify-between text-sm font-semibold">

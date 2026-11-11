@@ -62,7 +62,7 @@ class PostPresenter
             'comments_count' => $post->comments_count,
             'liked_by_me' => $likedByMe,
             // "Le gusta a Ana y 11 más": la última persona (que no seas tú) que dio "me gusta".
-            'liked_by_name' => $liker?->name,
+            'liked_by' => self::author($liker),
             'edited' => $post->edited_at !== null,
             'comments_preview' => $post->relationLoaded('comments')
                 ? $post->comments->sortBy('id')->map(fn (PostComment $c) => $this->comment($c, $viewer, $post))->values()->all()

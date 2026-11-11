@@ -7,6 +7,7 @@ import { BrandLogo } from '../BrandLogo'
 import { Icon, type IconName } from '../icons/Icon'
 import { isTabActive, routeMeta, TABS, type Tab, type TabId } from './navigation'
 import { unreadCountQuery } from '../../lib/social'
+import { queryClient } from '../../lib/queryClient'
 
 const TAB_ICONS: Record<Exclude<TabId, 'profile'>, IconName> = {
   home: 'home',
@@ -94,8 +95,11 @@ function TabLink({ tab, pathname, variant }: { tab: Tab; pathname: string; varia
   const active = isTabActive(tab, pathname)
 
   function handleClick() {
-    // Tocar la pestaña en la que ya estás sube al principio, como en las apps nativas.
-    if (pathname === tab.to) window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Tocar la pestaña en la que ya estás sube al principio (y en Hoy, refresca el feed), como en Instagram.
+    if (pathname === tab.to) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (tab.id === 'home') void queryClient.invalidateQueries({ queryKey: ['feed'] })
+    }
   }
 
   if (variant === 'side') {

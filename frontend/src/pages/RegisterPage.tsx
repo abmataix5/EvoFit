@@ -23,10 +23,23 @@ function extractErrorMessage(error: unknown): string {
   return 'No pudimos crear tu cuenta. Revisa los datos e inténtalo de nuevo.'
 }
 
+/** "Abel Mataix" → "abelmataix": una propuesta de alias a partir del nombre. */
+function suggestUsername(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 20)
+}
+
 export function RegisterPage() {
   const { user, loading, register } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
+  // Mientras no lo toque, el alias se propone a partir del nombre.
+  const [usernameTouched, setUsernameTouched] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
@@ -51,6 +64,7 @@ export function RegisterPage() {
     try {
       await register({
         name,
+        username,
         email,
         password,
         password_confirmation: passwordConfirmation,
@@ -71,7 +85,31 @@ export function RegisterPage() {
         <p className="mt-1 text-center text-base text-evo-muted">Empieza a registrar entrenos.</p>
 
       <form onSubmit={onSubmit} className="panel mt-6 w-full space-y-4 p-5">
-        <Input label="Nombre" value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input
+          label="Nombre"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (!usernameTouched) setUsername(suggestUsername(e.target.value))
+          }}
+          required
+        />
+        <Input
+          label="Nombre de usuario"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={30}
+          placeholder="tu.alias"
+          value={username}
+          onChange={(e) => {
+            setUsernameTouched(true)
+            setUsername(e.target.value.toLowerCase().replace(/\s+/g, '').replace(/^@/, ''))
+          }}
+          hint="Así te verán y te encontrarán tus amigos. Letras, números, puntos y guiones bajos."
+          required
+        />
         <Input
           label="Email"
           type="email"

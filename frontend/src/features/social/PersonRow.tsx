@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { PersonCard } from '../../lib/social'
+import { handle, type PersonCard } from '../../lib/social'
 import { Avatar } from '../profile/Avatar'
 import { FriendButton } from './FriendButton'
 
@@ -10,9 +10,9 @@ export function PersonRow({ person, subtitle, showAction = true }: { person: Per
       <Link to={`/u/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar name={person.name} url={person.avatar_url} />
         <span className="min-w-0">
-          <span className="block truncate font-bold">{person.name}</span>
+          <span className="block truncate font-bold">{handle(person)}</span>
           <span className="block truncate text-sm text-evo-muted">
-            {subtitle ?? [person.username ? `@${person.username}` : null, person.location].filter(Boolean).join(' · ')}
+            {subtitle ?? [person.username ? person.name : null, person.location].filter(Boolean).join(' · ')}
           </span>
         </span>
       </Link>

@@ -212,4 +212,18 @@ class ProfileTest extends TestCase
 
         Storage::disk('local')->assertMissing('avatars/'.$user->id.'/a.jpg');
     }
+
+    public function test_username_is_required(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user)->patchJson('/api/v1/profile', ['username' => ''])->assertJsonValidationErrors('username');
+
+        $this->withHeaders(['Referer' => 'http://localhost/', 'Accept' => 'application/json'])
+            ->postJson('/api/v1/auth/register', [
+                'name' => 'Sin alias',
+                'email' => 'sin@example.com',
+                'password' => 'secret-password',
+                'password_confirmation' => 'secret-password',
+            ])->assertJsonValidationErrors('username');
+    }
 }
