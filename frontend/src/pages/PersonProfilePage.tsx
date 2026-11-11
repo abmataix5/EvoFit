@@ -119,7 +119,7 @@ export function PersonProfilePage() {
       <section className="rounded-3xl border border-evo-border/60 bg-evo-surface p-5">
         <div className="flex items-start gap-4">
           {storyGroup ? (
-            <button type="button" onClick={() => setViewingStory(true)} aria-label={`Ver la historia de ${person.name}`}>
+            <button type="button" className="flex shrink-0" onClick={() => setViewingStory(true)} aria-label={`Ver la historia de ${person.name}`}>
               <StoryRing group={storyGroup}>
                 <Avatar name={person.name} url={person.avatar_url} size="lg" />
               </StoryRing>

@@ -14,12 +14,13 @@ export function StoryRing({ group, children, size = 'lg' }: { group: StoryGroup 
   return (
     <span
       className={[
-        'inline-block rounded-full',
+        // inline-flex (no inline-block): sin el hueco de línea de texto que alargaba el aro por abajo.
+        'inline-flex shrink-0 rounded-full',
         size === 'lg' ? 'p-[3px]' : 'p-[2px]',
         group.has_unseen ? 'bg-gradient-to-tr from-[#ffd166] via-evo-accent to-[#b6f36a]' : 'bg-evo-border/70',
       ].join(' ')}
     >
-      <span className={['block rounded-full bg-evo-bg', size === 'lg' ? 'p-[3px]' : 'p-[2px]'].join(' ')}>{children}</span>
+      <span className={['flex rounded-full bg-evo-bg', size === 'lg' ? 'p-[3px]' : 'p-[2px]'].join(' ')}>{children}</span>
     </span>
   )
 }
@@ -45,8 +46,8 @@ export function StoriesBar() {
     <>
       <div className="-mx-4 flex gap-3.5 overflow-x-auto px-4 pb-1 pt-1 [scrollbar-width:none]" aria-label="Historias">
         <div className="flex w-[4.6rem] shrink-0 flex-col items-center gap-1">
-          <span className="relative">
-            <button type="button" onClick={() => (mine ? open(mine) : setComposing(true))} aria-label={mine ? 'Ver tu historia' : 'Crear historia'}>
+          <span className="relative flex">
+            <button type="button" className="flex" onClick={() => (mine ? open(mine) : setComposing(true))} aria-label={mine ? 'Ver tu historia' : 'Crear historia'}>
               <StoryRing group={mine}>
                 <Avatar name={user?.name} url={user?.avatar_url} size="md" className="!h-16 !w-16" />
               </StoryRing>

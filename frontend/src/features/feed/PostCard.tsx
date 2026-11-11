@@ -80,7 +80,7 @@ export function PostCard({ post, detailed = false }: Props) {
     <article className="-mx-4 border-b border-evo-border/50 bg-evo-bg sm:mx-0 sm:overflow-hidden sm:rounded-3xl sm:border sm:bg-evo-surface">
       <header className="flex items-center gap-3 px-3 py-2.5">
         {storyGroup ? (
-          <button type="button" onClick={() => setSheet('story')} aria-label={`Ver la historia de ${author}`} className="shrink-0">
+          <button type="button" onClick={() => setSheet('story')} aria-label={`Ver la historia de ${author}`} className="flex shrink-0">
             <StoryRing group={storyGroup} size="sm">
               <Avatar name={post.author.name} url={post.author.avatar_url} size="sm" />
             </StoryRing>
