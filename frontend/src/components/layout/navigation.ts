@@ -51,6 +51,8 @@ const ROUTES: Array<{ pattern: string; meta: (params: Record<string, string | un
   { pattern: '/friends', meta: () => ({ title: 'Amigos', root: false, parent: '/profile' }) },
   { pattern: '/u/:id', meta: () => ({ title: 'Perfil', root: false, parent: '/search' }) },
   { pattern: '/posts/:id', meta: () => ({ title: 'Entreno', root: false, parent: '/', focus: true }) },
+  { pattern: '/messages', meta: () => ({ title: 'Mensajes', root: false, parent: '/' }) },
+  { pattern: '/messages/:id', meta: () => ({ title: 'Chat', root: false, parent: '/messages', focus: true }) },
 ]
 
 export function routeMeta(pathname: string): RouteMeta {

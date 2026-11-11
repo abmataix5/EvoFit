@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { Button } from '../components/ui/Button'
@@ -13,6 +13,10 @@ import { FriendButton } from '../features/social/FriendButton'
 import { api, apiErrorMessage } from '../lib/api'
 import { queryClient } from '../lib/queryClient'
 import { personQuery, refreshSocial, type PersonProfile } from '../lib/social'
+import { openConversation } from '../lib/messages'
+import { storiesQuery } from '../lib/stories'
+import { StoryRing } from '../features/stories/StoriesBar'
+import { StoryViewer } from '../features/stories/StoryViewer'
 
 const REPORT_REASONS = [
   { id: 'spam', label: 'Spam o publicidad' },
@@ -37,6 +41,14 @@ export function PersonProfilePage() {
   const query = useQuery({ ...personQuery(id), enabled: Number.isFinite(id) })
   const [menuOpen, setMenuOpen] = useState(false)
   const [reporting, setReporting] = useState(false)
+  const [viewingStory, setViewingStory] = useState(false)
+  const navigate = useNavigate()
+  const storyGroup = useQuery({ ...storiesQuery, select: (groups) => groups.find((g) => g.user.id === id) }).data
+  const message = useMutation({
+    mutationFn: () => openConversation(id),
+    onSuccess: (conversationId) => navigate(`/messages/${conversationId}`),
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido abrir la conversación.'), 'error'),
+  })
 
   const setPerson = (person: PersonProfile) => queryClient.setQueryData(['person', id], person)
 
@@ -106,7 +118,15 @@ export function PersonProfilePage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <section className="rounded-3xl border border-evo-border/60 bg-evo-surface p-5">
         <div className="flex items-start gap-4">
-          <Avatar name={person.name} url={person.avatar_url} size="lg" />
+          {storyGroup ? (
+            <button type="button" onClick={() => setViewingStory(true)} aria-label={`Ver la historia de ${person.name}`}>
+              <StoryRing group={storyGroup}>
+                <Avatar name={person.name} url={person.avatar_url} size="lg" />
+              </StoryRing>
+            </button>
+          ) : (
+            <Avatar name={person.name} url={person.avatar_url} size="lg" />
+          )}
           <div className="min-w-0 flex-1 pt-1">
             <h1 className="truncate font-display text-2xl font-bold tracking-tight">{person.name}</h1>
             {person.username ? <p className="truncate text-sm font-semibold text-evo-accent">@{person.username}</p> : null}
@@ -146,7 +166,21 @@ export function PersonProfilePage() {
         ) : null}
 
         <div className="mt-5">
-          <FriendButton person={person} size="full" />
+          {person.relation === 'friends' ? (
+            <div className="grid grid-cols-2 gap-2">
+              <FriendButton person={person} size="full" />
+              <button
+                type="button"
+                disabled={message.isPending}
+                onClick={() => message.mutate()}
+                className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-evo-surface-2 px-4 text-base font-bold transition active:scale-95"
+              >
+                <Icon name="send" className="h-5 w-5" /> Mensaje
+              </button>
+            </div>
+          ) : (
+            <FriendButton person={person} size="full" />
+          )}
         </div>
       </section>
 
@@ -200,6 +234,7 @@ export function PersonProfilePage() {
       ) : null}
 
       {reporting ? <ReportSheet person={person} onClose={() => setReporting(false)} /> : null}
+      {viewingStory && storyGroup ? <StoryViewer groups={[storyGroup]} startGroup={0} onClose={() => setViewingStory(false)} /> : null}
     </div>
   )
 }

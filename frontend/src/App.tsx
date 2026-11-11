@@ -38,6 +38,8 @@ const ProfilePage = page(() => import('./pages/ProfilePage'), 'ProfilePage')
 const FriendsPage = page(() => import('./pages/FriendsPage'), 'FriendsPage')
 const PersonProfilePage = page(() => import('./pages/PersonProfilePage'), 'PersonProfilePage')
 const PostDetailPage = page(() => import('./pages/PostDetailPage'), 'PostDetailPage')
+const MessagesPage = page(() => import('./pages/MessagesPage'), 'MessagesPage')
+const ChatPage = page(() => import('./pages/ChatPage'), 'ChatPage')
 const NotificationsPage = page(() => import('./pages/NotificationsPage'), 'NotificationsPage')
 const SearchPage = page(() => import('./pages/SearchPage'), 'SearchPage')
 const ProgressPage = page(() => import('./pages/ProgressPage'), 'ProgressPage')
@@ -102,6 +104,8 @@ export default function App() {
                 <Route path="friends" element={<FriendsPage />} />
                 <Route path="u/:id" element={<PersonProfilePage />} />
                 <Route path="posts/:id" element={<PostDetailPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages/:id" element={<ChatPage />} />
                 <Route path="workout/:id" element={<WorkoutSessionPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

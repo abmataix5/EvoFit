@@ -7,6 +7,7 @@ import { BrandLogo } from '../BrandLogo'
 import { Icon, type IconName } from '../icons/Icon'
 import { isTabActive, routeMeta, TABS, type Tab, type TabId } from './navigation'
 import { unreadCountQuery } from '../../lib/social'
+import { unreadMessagesQuery } from '../../lib/messages'
 import { queryClient } from '../../lib/queryClient'
 
 const TAB_ICONS: Record<Exclude<TabId, 'profile'>, IconName> = {
@@ -54,6 +55,7 @@ function TopBar() {
   const meta = routeMeta(location.pathname)
   const goBack = useGoBack(meta.parent)
   const unread = useQuery(unreadCountQuery).data ?? 0
+  const unreadMessages = useQuery(unreadMessagesQuery).data ?? 0
 
   return (
     <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg/85 backdrop-blur-xl">
@@ -73,6 +75,18 @@ function TopBar() {
               {unread > 0 ? (
                 <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-evo-accent px-1 text-[0.7rem] font-bold text-[#1a120c] ring-2 ring-evo-bg">
                   {unread > 9 ? '9+' : unread}
+                </span>
+              ) : null}
+            </Link>
+            <Link
+              to="/messages"
+              className={`${iconButton} relative`}
+              aria-label={unreadMessages > 0 ? `Mensajes: ${unreadMessages} sin leer` : 'Mensajes'}
+            >
+              <Icon name="send" className="h-6 w-6" />
+              {unreadMessages > 0 ? (
+                <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff3b5c] px-1 text-[0.7rem] font-bold text-white ring-2 ring-evo-bg">
+                  {unreadMessages > 9 ? '9+' : unreadMessages}
                 </span>
               ) : null}
             </Link>

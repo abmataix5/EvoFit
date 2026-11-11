@@ -17,6 +17,7 @@ import { firstName, getDayMotivation, helloLine } from '../lib/motivation'
 import { invalidateTraining } from '../lib/queryClient'
 import { PostList } from '../features/feed/PostList'
 import { feedQuery } from '../lib/feed'
+import { StoriesBar } from '../features/stories/StoriesBar'
 import { friendsQuery } from '../lib/social'
 
 const WEEK_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -483,7 +484,8 @@ function FriendsFeed({ hasFriends }: { hasFriends: boolean }) {
   const feed = useInfiniteQuery(feedQuery)
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl space-y-3">
+      <StoriesBar />
       <PostList
         query={feed}
         empty={

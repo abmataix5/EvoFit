@@ -11,6 +11,9 @@ import { Avatar } from '../profile/Avatar'
 import { EditPostSheet } from './EditPostSheet'
 import { CommentsSheet } from './PostComments'
 import { WorkoutCover, formatVolume } from './WorkoutCover'
+import { StoryRing } from '../stories/StoriesBar'
+import { StoryViewer } from '../stories/StoryViewer'
+import { storiesQuery } from '../../lib/stories'
 
 type Props = {
   post: Post
@@ -21,7 +24,9 @@ type Props = {
 /** Un entreno compartido, al estilo Instagram: autor, foto (o portada), acciones, "me gusta" y texto. */
 export function PostCard({ post, detailed = false }: Props) {
   const { notify, confirm } = useUiFeedback()
-  const [sheet, setSheet] = useState<'menu' | 'edit' | 'likers' | 'comments' | 'exercises' | null>(null)
+  const [sheet, setSheet] = useState<'menu' | 'edit' | 'likers' | 'comments' | 'exercises' | 'story' | null>(null)
+  // Si el autor tiene historia activa, su avatar lleva el aro y la abre (como en Instagram).
+  const storyGroup = useQuery({ ...storiesQuery, select: (groups) => groups.find((g) => g.user.id === post.author.id) }).data
   const [captionOpen, setCaptionOpen] = useState(detailed)
   const [burst, setBurst] = useState(0)
   const lastTap = useRef(0)
@@ -74,8 +79,15 @@ export function PostCard({ post, detailed = false }: Props) {
   return (
     <article className="-mx-4 border-b border-evo-border/50 bg-evo-bg sm:mx-0 sm:overflow-hidden sm:rounded-3xl sm:border sm:bg-evo-surface">
       <header className="flex items-center gap-3 px-3 py-2.5">
+        {storyGroup ? (
+          <button type="button" onClick={() => setSheet('story')} aria-label={`Ver la historia de ${author}`} className="shrink-0">
+            <StoryRing group={storyGroup} size="sm">
+              <Avatar name={post.author.name} url={post.author.avatar_url} size="sm" />
+            </StoryRing>
+          </button>
+        ) : null}
         <Link to={`/u/${post.author.id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
-          <Avatar name={post.author.name} url={post.author.avatar_url} size="sm" />
+          {!storyGroup ? <Avatar name={post.author.name} url={post.author.avatar_url} size="sm" /> : null}
           <span className="min-w-0 leading-tight">
             <span className="flex min-w-0 items-baseline gap-1.5">
               <span className="truncate text-[0.95rem] font-bold">{author}</span>
@@ -227,6 +239,7 @@ export function PostCard({ post, detailed = false }: Props) {
         </Sheet>
       ) : null}
 
+      {sheet === 'story' && storyGroup ? <StoryViewer groups={[storyGroup]} startGroup={0} onClose={() => setSheet(null)} /> : null}
       {sheet === 'edit' ? <EditPostSheet post={post} onClose={() => setSheet(null)} /> : null}
       {sheet === 'likers' ? <LikersSheet postId={post.id} onClose={() => setSheet(null)} /> : null}
       {sheet === 'comments' ? <CommentsSheet post={post} onClose={() => setSheet(null)} /> : null}

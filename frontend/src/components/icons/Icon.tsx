@@ -18,6 +18,9 @@ export type IconName =
   | 'heart-filled'
   | 'comment'
   | 'more'
+  | 'send'
+  | 'plus'
+  | 'eye'
 
 type Props = {
   name: IconName
@@ -99,6 +102,14 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
           <circle cx="5.5" cy="12" r="1.6" fill="currentColor" />
           <circle cx="12" cy="12" r="1.6" fill="currentColor" />
           <circle cx="18.5" cy="12" r="1.6" fill="currentColor" />
+        </>
+      ) : null}
+      {name === 'send' ? <path {...common} d="M20.5 3.5 10 14M20.5 3.5l-6.5 17-4-6.5-6.5-4 17-6.5Z" /> : null}
+      {name === 'plus' ? <path {...common} d="M12 5v14M5 12h14" /> : null}
+      {name === 'eye' ? (
+        <>
+          <path {...common} d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+          <circle {...common} cx="12" cy="12" r="3" />
         </>
       ) : null}
       {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}

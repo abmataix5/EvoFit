@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogExerciseController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EmailPreferenceController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
 use App\Http\Controllers\Api\ExerciseLibraryController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\PostInteractionController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
+use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\WorkoutReportController;
 use App\Http\Controllers\Api\WorkoutSessionController;
 use App\Http\Controllers\Api\WorkoutSessionExerciseController;
@@ -71,6 +73,25 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/posts/{post}/comments', [PostInteractionController::class, 'comments']);
         Route::post('/posts/{post}/comments', [PostInteractionController::class, 'comment'])->middleware('throttle:30,1,comment');
         Route::delete('/comments/{comment}', [PostInteractionController::class, 'destroyComment']);
+
+        // Historias de 24 h.
+        Route::get('/stories', [StoryController::class, 'index']);
+        Route::get('/stories/stickers', [StoryController::class, 'stickers']);
+        Route::post('/stories', [StoryController::class, 'store'])->middleware('throttle:20,1,story-write');
+        Route::delete('/stories/{story}', [StoryController::class, 'destroy']);
+        Route::post('/stories/{story}/view', [StoryController::class, 'view']);
+        Route::get('/stories/{story}/viewers', [StoryController::class, 'viewers']);
+        Route::post('/stories/{story}/reply', [StoryController::class, 'reply'])->middleware('throttle:60,1,message');
+        Route::get('/stories/{story}/photo', [StoryController::class, 'photo']);
+
+        // Mensajes privados entre amigos.
+        Route::get('/conversations', [ConversationController::class, 'index']);
+        Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount']);
+        Route::post('/conversations', [ConversationController::class, 'open']);
+        Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
+        Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'messages']);
+        Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'send'])->middleware('throttle:60,1,message');
+        Route::post('/conversations/{conversation}/read', [ConversationController::class, 'read']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

@@ -154,6 +154,8 @@ php artisan migrate --force
 # Biblioteca común de ejercicios: se actualiza en cada arranque (idempotente) y enlaza
 # con ella los ejercicios que los usuarios ya tenían.
 php artisan exercises:sync || echo "[entrypoint] Aviso: exercises:sync ha fallado." >&2
+# Historias de más de 24 h (también se limpian al publicar una nueva).
+php artisan stories:prune || echo "[entrypoint] Aviso: stories:prune ha fallado." >&2
 
 # Fotos de progreso: del disco público (antiguo) al privado. Idempotente.
 php artisan photos:make-private || echo "[entrypoint] Aviso: photos:make-private ha fallado." >&2
