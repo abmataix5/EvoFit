@@ -1,123 +1,112 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
-import { ExerciseCatalogPicker } from '../components/exercises/ExerciseCatalogPicker'
+import { ExercisePickerSheet } from '../components/exercises/ExercisePickerSheet'
+import { Icon } from '../components/icons/Icon'
 import { CopyDayPicker } from '../components/routines/CopyDayPicker'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import {
-  TRAINING_TEMPLATES,
-  WEEKDAY_LABELS,
-  api,
-  defaultWeekdays,
-  type CatalogExercise,
-  type Routine,
-} from '../lib/api'
+import { Stepper } from '../components/ui/Stepper'
+import { TRAINING_TEMPLATES, WEEKDAY_LABELS, api, apiErrorMessage, type CatalogExercise, type Routine } from '../lib/api'
 import { invalidateTraining } from '../lib/queryClient'
-import {
-  directionLabel,
-  isTimeMode,
-  joinDuration,
-  modeLabel,
-  splitDuration,
-  type TimeDirection,
-  type TrackingMode,
-} from '../lib/tracking'
+import { formatDuration, isTimeMode, type TimeDirection, type TrackingMode } from '../lib/tracking'
+
+const WEEKDAY_SHORT = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
 type DraftExercise = {
+  /** Clave local estable para la lista (los ejercicios se reordenan). */
+  key: string
   /** Solo al editar: ejercicio ya guardado (conserva su historial). */
   id?: number
   name: string
   catalog_exercise_id: number | null
+  target_muscle: string | null
   tracking_mode: TrackingMode
   time_direction: TimeDirection
   default_sets: number
   default_reps: number
-  duration_minutes: string
-  duration_seconds: string
+  default_duration_seconds: number
   rest_seconds: number
 }
 
 type DraftDay = {
+  key: string
   id?: number
-  day_index: number
   weekday: number
   name: string
   focus: string
   exercises: DraftExercise[]
 }
 
-function emptyExercise(): DraftExercise {
+let keySeq = 0
+const newKey = () => `k${++keySeq}`
+
+function exerciseFromCatalog(item: CatalogExercise): DraftExercise {
   return {
-    name: '',
-    catalog_exercise_id: null,
-    tracking_mode: 'weight_reps',
-    time_direction: 'faster',
-    default_sets: 3,
-    default_reps: 10,
-    duration_minutes: '',
-    duration_seconds: '',
-    rest_seconds: 90,
+    key: newKey(),
+    name: item.name,
+    catalog_exercise_id: item.id,
+    target_muscle: item.target_muscle ?? null,
+    tracking_mode: item.tracking_mode ?? 'weight_reps',
+    time_direction: item.time_direction ?? 'faster',
+    default_sets: item.default_sets || 3,
+    default_reps: item.default_reps || 10,
+    default_duration_seconds: item.default_duration_seconds ?? 60,
+    rest_seconds: item.rest_seconds ?? 90,
   }
 }
 
 function draftsFromRoutine(routine: Routine): DraftDay[] {
   return [...(routine.days ?? [])]
-    .sort((a, b) => a.day_index - b.day_index)
+    .sort((a, b) => (a.weekday ?? a.day_index) - (b.weekday ?? b.day_index))
     .map((day, index) => ({
+      key: newKey(),
       id: day.id,
-      day_index: index + 1,
       weekday: day.weekday ?? index + 1,
       name: day.name,
       focus: day.focus ?? '',
       exercises: [...(day.exercises ?? [])]
         .sort((a, b) => a.sort_order - b.sort_order)
-        .map((exercise) => {
-          const duration = splitDuration(exercise.default_duration_seconds)
-          return {
-            id: exercise.id,
-            name: exercise.name,
-            catalog_exercise_id: exercise.catalog_exercise_id ?? null,
-            tracking_mode: exercise.tracking_mode ?? 'weight_reps',
-            time_direction: exercise.time_direction ?? 'faster',
-            default_sets: exercise.default_sets,
-            default_reps: exercise.default_reps,
-            duration_minutes: duration.minutes,
-            duration_seconds: duration.seconds,
-            rest_seconds: exercise.rest_seconds ?? 90,
-          }
-        }),
+        .map((exercise) => ({
+          key: newKey(),
+          id: exercise.id,
+          name: exercise.name,
+          catalog_exercise_id: exercise.catalog_exercise_id ?? null,
+          target_muscle: exercise.target_muscle ?? null,
+          tracking_mode: exercise.tracking_mode ?? 'weight_reps',
+          time_direction: exercise.time_direction ?? 'faster',
+          default_sets: exercise.default_sets,
+          default_reps: exercise.default_reps,
+          default_duration_seconds: exercise.default_duration_seconds ?? 60,
+          rest_seconds: exercise.rest_seconds ?? 90,
+        })),
     }))
 }
 
-/** Ajusta el número de días sin perder lo ya escrito: se conservan los primeros y se añaden de plantilla. */
-function resizeDays(current: DraftDay[], count: number): DraftDay[] {
-  const fresh = buildDaysFromTemplate(count)
-  const used = new Set(current.slice(0, count).map((day) => day.weekday))
-  const freeWeekdays = [1, 2, 3, 4, 5, 6, 7].filter((w) => !used.has(w))
-  return fresh.map((templateDay, index) => {
-    const existing = current[index]
-    if (existing) return { ...existing, day_index: index + 1 }
-    return { ...templateDay, weekday: freeWeekdays.shift() ?? templateDay.weekday }
-  })
+function templateFor(count: number) {
+  return (TRAINING_TEMPLATES[count] ?? TRAINING_TEMPLATES[3])!
 }
 
-function hasContent(days: DraftDay[]) {
-  return days.some((day) => day.exercises.some((e) => e.name.trim()))
-}
-
-function buildDaysFromTemplate(count: number): DraftDay[] {
-  const template = (TRAINING_TEMPLATES[count] ?? TRAINING_TEMPLATES[3])!
-  const weekdays = defaultWeekdays(count)
-  return template.days.slice(0, count).map((day, index) => ({
-    day_index: index + 1,
-    weekday: weekdays[index] ?? index + 1,
-    name: day.name,
-    focus: day.focus,
-    exercises: [emptyExercise(), emptyExercise(), emptyExercise()],
+/** Nombres y enfoques de la plantilla según el número de días (solo si aún no hay nada escrito). */
+function applyTemplateNames(days: DraftDay[]): DraftDay[] {
+  const template = templateFor(days.length)
+  return days.map((day, index) => ({
+    ...day,
+    name: template.days[index]?.name ?? `Día ${index + 1}`,
+    focus: template.days[index]?.focus ?? '',
   }))
 }
+
+const byWeekday = (a: DraftDay, b: DraftDay) => a.weekday - b.weekday
+
+function defaultDays(): DraftDay[] {
+  return applyTemplateNames(
+    [1, 2, 4, 5].map((weekday) => ({ key: newKey(), weekday, name: '', focus: '', exercises: [] })),
+  )
+}
+
+const hasExercises = (day: DraftDay) => day.exercises.length > 0
 
 export function NewRoutinePage() {
   const { id } = useParams()
@@ -127,25 +116,20 @@ export function NewRoutinePage() {
   const queryClient = useQueryClient()
   const { confirm } = useUiFeedback()
   const loadedRef = useRef(false)
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2>(isEditing ? 2 : 1)
   const [name, setName] = useState('')
-  const [sessionsPerWeek, setSessionsPerWeek] = useState(4)
   const [isActive, setIsActive] = useState(true)
-  const [activeDay, setActiveDay] = useState(0)
-  const [days, setDays] = useState<DraftDay[]>(() => buildDaysFromTemplate(4))
+  const [days, setDays] = useState<DraftDay[]>(defaultDays)
+  const [activeKey, setActiveKey] = useState<string | null>(null)
+  const [picker, setPicker] = useState<{ replaceKey?: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [dates, setDates] = useState<{ starts_on: string | null; ends_on: string | null }>({
-    starts_on: null,
-    ends_on: null,
-  })
+  const [nameError, setNameError] = useState<string | undefined>()
+  const [dates, setDates] = useState<{ starts_on: string | null; ends_on: string | null }>({ starts_on: null, ends_on: null })
 
   const routineQuery = useQuery({
     queryKey: ['routine', editingId],
     enabled: isEditing,
-    queryFn: async () => {
-      const { data } = await api.get<{ data: Routine }>(`/routines/${editingId}`)
-      return data.data
-    },
+    queryFn: async () => (await api.get<{ data: Routine }>(`/routines/${editingId}`)).data.data,
   })
 
   // Al editar, el formulario se rellena una sola vez con la rutina guardada.
@@ -156,46 +140,54 @@ export function NewRoutinePage() {
     const loaded = draftsFromRoutine(routine)
     setName(routine.name)
     setIsActive(routine.is_active)
-    setSessionsPerWeek(Math.max(1, Math.min(7, loaded.length || routine.sessions_per_week)))
-    setDays(loaded.length > 0 ? loaded : buildDaysFromTemplate(routine.sessions_per_week))
+    if (loaded.length > 0) setDays(loaded)
     setDates({ starts_on: routine.starts_on ?? null, ends_on: routine.ends_on ?? null })
   }, [routineQuery.data])
 
-  const { data: catalog = [] } = useQuery({
-    queryKey: ['catalog-exercises'],
-    queryFn: async () => {
-      const { data: response } = await api.get<{ data: CatalogExercise[] }>('/catalog-exercises')
-      return response.data
-    },
-  })
+  const currentDay = days.find((day) => day.key === activeKey) ?? days[0]
+  const template = templateFor(days.length)
+  const anyContent = days.some(hasExercises)
 
-  const template = (TRAINING_TEMPLATES[sessionsPerWeek] ?? TRAINING_TEMPLATES[3])!
-  const currentDay = days[activeDay]
-
-  async function changeSessionsPerWeek(count: number) {
-    if (count === sessionsPerWeek) return
-    if (count < days.length && hasContent(days.slice(count))) {
-      const ok = await confirm({
-        title: `¿Pasar a ${count} días?`,
-        message: `Se quitarán los días ${days
-          .slice(count)
-          .map((d) => d.name)
-          .join(', ')} con sus ejercicios.`,
-        confirmLabel: 'Quitar días',
-        cancelLabel: 'Cancelar',
-        danger: true,
-      })
-      if (!ok) return
+  async function toggleWeekday(weekday: number) {
+    const existing = days.find((day) => day.weekday === weekday)
+    if (existing) {
+      if (days.length === 1) return
+      if (hasExercises(existing)) {
+        const ok = await confirm({
+          title: `¿Quitar el ${WEEKDAY_LABELS[weekday - 1]?.toLowerCase()}?`,
+          message: `«${existing.name}» tiene ${existing.exercises.length} ejercicios y se quitarán de la rutina.`,
+          confirmLabel: 'Quitar día',
+          cancelLabel: 'Cancelar',
+          danger: true,
+        })
+        if (!ok) return
+      }
+      const next = days.filter((day) => day.key !== existing.key)
+      setDays(anyContent || isEditing ? next : applyTemplateNames(next))
+      return
     }
-    setSessionsPerWeek(count)
-    setDays((current) => (hasContent(current) || isEditing ? resizeDays(current, count) : buildDaysFromTemplate(count)))
-    setActiveDay(0)
+    const next = [...days, { key: newKey(), weekday, name: `Día ${days.length + 1}`, focus: '', exercises: [] }].sort(byWeekday)
+    setDays(anyContent || isEditing ? next : applyTemplateNames(next))
   }
 
-  function moveExercise(dayIndex: number, from: number, to: number) {
+  function updateDay(key: string, patch: Partial<DraftDay>) {
+    setDays((current) => current.map((day) => (day.key === key ? { ...day, ...patch } : day)))
+  }
+
+  function updateExercise(dayKey: string, exerciseKey: string, patch: Partial<DraftExercise>) {
     setDays((current) =>
-      current.map((day, i) => {
-        if (i !== dayIndex || to < 0 || to >= day.exercises.length) return day
+      current.map((day) =>
+        day.key !== dayKey
+          ? day
+          : { ...day, exercises: day.exercises.map((e) => (e.key === exerciseKey ? { ...e, ...patch } : e)) },
+      ),
+    )
+  }
+
+  function moveExercise(dayKey: string, from: number, to: number) {
+    setDays((current) =>
+      current.map((day) => {
+        if (day.key !== dayKey || to < 0 || to >= day.exercises.length) return day
         const exercises = [...day.exercises]
         const [moved] = exercises.splice(from, 1)
         if (moved) exercises.splice(to, 0, moved)
@@ -204,11 +196,48 @@ export function NewRoutinePage() {
     )
   }
 
+  function removeExercise(dayKey: string, exerciseKey: string) {
+    setDays((current) =>
+      current.map((day) => (day.key === dayKey ? { ...day, exercises: day.exercises.filter((e) => e.key !== exerciseKey) } : day)),
+    )
+  }
+
+  function handlePicked(picked: CatalogExercise[]) {
+    if (!currentDay) return
+    const replaceKey = picker?.replaceKey
+    if (replaceKey) {
+      const item = picked[0]
+      if (item) {
+        // Cambiar el ejercicio conserva series, reps y descanso si se mide igual.
+        const old = currentDay.exercises.find((e) => e.key === replaceKey)
+        const fresh = exerciseFromCatalog(item)
+        const keepPlan = old && old.tracking_mode === fresh.tracking_mode
+        updateDay(currentDay.key, {
+          exercises: currentDay.exercises.map((e) =>
+            e.key === replaceKey
+              ? {
+                  ...fresh,
+                  key: e.key,
+                  ...(keepPlan
+                    ? { default_sets: e.default_sets, default_reps: e.default_reps, rest_seconds: e.rest_seconds, default_duration_seconds: e.default_duration_seconds }
+                    : {}),
+                }
+              : e,
+          ),
+        })
+      }
+    } else {
+      updateDay(currentDay.key, { exercises: [...currentDay.exercises, ...picked.map(exerciseFromCatalog)] })
+    }
+    setPicker(null)
+    setError(null)
+  }
+
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        name,
-        sessions_per_week: sessionsPerWeek,
+        name: name.trim(),
+        sessions_per_week: days.length,
         is_active: isActive,
         starts_on: dates.starts_on,
         ends_on: dates.ends_on,
@@ -216,25 +245,21 @@ export function NewRoutinePage() {
           ...(day.id ? { id: day.id } : {}),
           day_index: dayPosition + 1,
           weekday: day.weekday,
-          name: day.name,
+          name: day.name.trim() || `Día ${dayPosition + 1}`,
           focus: day.focus || null,
-          exercises: day.exercises
-            .filter((exercise) => exercise.name.trim() || exercise.catalog_exercise_id)
-            .map((exercise, index) => ({
-              ...(exercise.id ? { id: exercise.id } : {}),
-              name: exercise.name.trim(),
-              catalog_exercise_id: exercise.catalog_exercise_id,
-              sort_order: index,
-              tracking_mode: exercise.tracking_mode,
-              time_direction: exercise.time_direction,
-              default_sets: exercise.default_sets,
-              default_reps: exercise.default_reps,
-              default_duration_seconds: isTimeMode(exercise.tracking_mode)
-                ? joinDuration(exercise.duration_minutes, exercise.duration_seconds)
-                : null,
-              rest_seconds: exercise.rest_seconds,
-              target_muscle: null,
-            })),
+          exercises: day.exercises.map((exercise, index) => ({
+            ...(exercise.id ? { id: exercise.id } : {}),
+            name: exercise.name.trim(),
+            catalog_exercise_id: exercise.catalog_exercise_id,
+            sort_order: index,
+            tracking_mode: exercise.tracking_mode,
+            time_direction: exercise.time_direction,
+            default_sets: exercise.default_sets,
+            default_reps: exercise.default_reps,
+            default_duration_seconds: isTimeMode(exercise.tracking_mode) ? exercise.default_duration_seconds : null,
+            rest_seconds: exercise.rest_seconds,
+            target_muscle: exercise.target_muscle,
+          })),
         })),
       }
       if (isEditing) {
@@ -249,399 +274,219 @@ export function NewRoutinePage() {
       await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
       await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
       await invalidateTraining()
-      navigate(`/routines/${routineId}`, { replace: isEditing })
+      navigate(`/routines/${routineId}`, { replace: true })
     },
-    onError: (err: unknown) => {
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(message ?? 'No se pudo guardar. Revisa nombre y ejercicios.')
-    },
+    onError: (err: unknown) => setError(apiErrorMessage(err, 'No se ha podido guardar. Revisa la conexión.')),
   })
-
-  function updateDay(index: number, patch: Partial<DraftDay>) {
-    setDays((current) => current.map((day, i) => (i === index ? { ...day, ...patch } : day)))
-  }
-
-  function updateExercise(dayIndex: number, exerciseIndex: number, patch: Partial<DraftExercise>) {
-    setDays((current) =>
-      current.map((day, i) => {
-        if (i !== dayIndex) return day
-        return {
-          ...day,
-          exercises: day.exercises.map((exercise, j) =>
-            j === exerciseIndex ? { ...exercise, ...patch } : exercise,
-          ),
-        }
-      }),
-    )
-  }
 
   function goToExercises(event: FormEvent) {
     event.preventDefault()
     if (!name.trim()) {
-      setError('Pon un nombre a la rutina.')
+      setNameError('Pon un nombre a la rutina.')
       return
     }
-    setError(null)
+    setNameError(undefined)
     setStep(2)
+    window.scrollTo({ top: 0 })
   }
 
-  function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    const emptyDays = days.filter((day) => !day.exercises.some((e) => e.name.trim()))
-    if (emptyDays.length > 0) {
-      setError(`Faltan ejercicios en: ${emptyDays.map((d) => d.name).join(', ')}.`)
-      const firstEmpty = days.findIndex((day) => !day.exercises.some((e) => e.name.trim()))
-      if (firstEmpty >= 0) setActiveDay(firstEmpty)
+  function save() {
+    if (!name.trim()) {
+      setStep(1)
+      setNameError('Pon un nombre a la rutina.')
+      return
+    }
+    const empty = days.find((day) => !hasExercises(day))
+    if (empty) {
+      setActiveKey(empty.key)
+      setError(`Añade al menos un ejercicio a «${empty.name || WEEKDAY_LABELS[empty.weekday - 1]}».`)
       return
     }
     setError(null)
     mutation.mutate()
   }
 
-  if (isEditing && routineQuery.isLoading) {
-    return <p className="text-sm text-evo-muted">Cargando rutina…</p>
-  }
-
-  if (isEditing && routineQuery.isError) {
-    return <p className="text-sm font-semibold text-evo-danger">No se pudo cargar la rutina.</p>
-  }
-
-  const dayProgress = days.map((day) => day.exercises.some((e) => e.name.trim()))
+  if (isEditing && routineQuery.isLoading) return <p className="text-sm text-evo-muted">Cargando rutina…</p>
+  if (isEditing && routineQuery.isError) return <p className="text-sm font-semibold text-evo-danger">No se ha podido cargar la rutina.</p>
 
   return (
-    <div className="no-x-scroll mx-auto max-w-xl space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-evo-muted">
-            {step === 1 ? 'Paso 1 · Datos básicos' : 'Paso 2 · Ejercicios por día'}
-          </p>
-        </div>
-        <div className="flex gap-1.5 pt-1">
-          <span className={`h-2 w-8 rounded-full ${step >= 1 ? 'bg-evo-accent' : 'bg-evo-border'}`} />
-          <span className={`h-2 w-8 rounded-full ${step >= 2 ? 'bg-evo-accent' : 'bg-evo-border'}`} />
-        </div>
-      </div>
+    <div className="no-x-scroll mx-auto max-w-2xl space-y-4">
+      <ol className="grid grid-cols-2 gap-2" aria-label="Pasos">
+        {[
+          { n: 1 as const, label: 'Lo básico' },
+          { n: 2 as const, label: 'Ejercicios' },
+        ].map((item) => (
+          <li key={item.n}>
+            <button
+              type="button"
+              aria-current={step === item.n ? 'step' : undefined}
+              onClick={() => (item.n === 1 ? setStep(1) : name.trim() ? setStep(2) : setNameError('Pon un nombre a la rutina.'))}
+              className="w-full text-left"
+            >
+              <span className={['block h-1.5 rounded-full', step >= item.n ? 'bg-evo-accent' : 'bg-evo-border/60'].join(' ')} />
+              <span className={['mt-1.5 block text-xs font-bold', step === item.n ? 'text-evo-text' : 'text-evo-muted'].join(' ')}>
+                {item.n}. {item.label}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
 
       {step === 1 ? (
         <form onSubmit={goToExercises} className="space-y-4">
-          <div className="panel space-y-4 p-4">
+          <section className="panel space-y-5 p-4 sm:p-5">
             <Input
-              label="Nombre"
+              label="Nombre de la rutina"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Hipertrofia, Push Pull…"
-              required
+              placeholder="Ej. Torso / Pierna, Hipertrofia…"
+              maxLength={120}
+              error={nameError}
+              autoFocus={!isEditing}
             />
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">¿Cuántos días entrenas?</p>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => void changeSessionsPerWeek(n)}
-                    aria-pressed={sessionsPerWeek === n}
-                    className={[
-                      'min-h-12 rounded-xl border-2 py-3 text-center text-base font-bold transition',
-                      sessionsPerWeek === n
-                      ? 'border-evo-accent bg-evo-accent text-[#111]'
-                      : 'border-evo-border bg-evo-surface-2 text-evo-text',
-                    ].join(' ')}
-                  >
-                    {n}
-                  </button>
-                ))}
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold">¿Qué días entrenas?</legend>
+              <div className="grid grid-cols-7 gap-1.5">
+                {WEEKDAY_SHORT.map((letter, index) => {
+                  const weekday = index + 1
+                  const on = days.some((day) => day.weekday === weekday)
+                  return (
+                    <button
+                      key={letter}
+                      type="button"
+                      aria-pressed={on}
+                      aria-label={WEEKDAY_LABELS[index]}
+                      onClick={() => void toggleWeekday(weekday)}
+                      className={[
+                        'aspect-square min-h-11 rounded-full text-base font-bold transition active:scale-90',
+                        on ? 'bg-evo-accent text-[#1a120c] shadow-[0_6px_18px_rgba(255,138,76,0.3)]' : 'bg-evo-surface-2 text-evo-muted',
+                      ].join(' ')}
+                    >
+                      {letter}
+                    </button>
+                  )
+                })}
               </div>
-              <div className="rounded-xl bg-evo-surface-2 px-3 py-2.5 text-sm">
-                <p className="font-semibold text-evo-accent">{template.label}</p>
-                <p className="mt-0.5 text-xs text-evo-muted">{template.tip}</p>
+              <div className="mt-3 rounded-2xl bg-evo-surface-2 px-4 py-3">
+                <p className="text-sm font-bold">
+                  {days.length} {days.length === 1 ? 'día' : 'días'} por semana
+                  {!anyContent ? <span className="text-evo-accent"> · {template.label}</span> : null}
+                </p>
+                <p className="mt-0.5 text-sm text-evo-muted">
+                  {anyContent ? days.map((day) => day.name).join(' · ') : template.tip}
+                </p>
               </div>
-            </div>
+            </fieldset>
 
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-evo-border bg-evo-surface-2 px-3 py-3">
+            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-evo-surface-2 px-4 py-3">
               <span>
-                <span className="block text-sm font-semibold">Activar ya</span>
-                <span className="block text-xs text-evo-muted">La mete sola en el calendario</span>
+                <span className="block font-bold">Activa en la agenda</span>
+                <span className="block text-sm text-evo-muted">Los entrenos aparecen solos en tu semana.</span>
               </span>
               <input
                 type="checkbox"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="h-5 w-5 accent-evo-accent"
+                className="h-6 w-6 shrink-0 accent-evo-accent"
               />
             </label>
-          </div>
-
-          {error ? <p className="text-sm font-semibold text-evo-danger">{error}</p> : null}
+          </section>
 
           <Button type="submit" size="lg" fullWidth>
-            Continuar → ejercicios
+            Siguiente: ejercicios
           </Button>
         </form>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {days.map((day, index) => (
-              <button
-                key={day.day_index}
-                type="button"
-                onClick={() => setActiveDay(index)}
-                className={[
-                  'min-h-16 rounded-xl border-2 px-2.5 py-2.5 text-left transition',
-                  index === activeDay
-                    ? 'border-evo-accent bg-evo-accent/10'
-                    : 'border-evo-border bg-evo-surface',
-                ].join(' ')}
-              >
-                <span className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold">D{day.day_index}</span>
-                  <span className="text-xs">{dayProgress[index] ? '✓' : '·'}</span>
-                </span>
-                <span className="mt-0.5 block truncate text-sm font-semibold">{day.name}</span>
-                <span className="block text-xs text-evo-muted">
-                  {WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3)}
-                </span>
-              </button>
-            ))}
+        <div className="space-y-4 pb-24">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="tablist" aria-label="Días">
+            {days.map((day) => {
+              const selected = day.key === currentDay?.key
+              const empty = !hasExercises(day)
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActiveKey(day.key)}
+                  className={[
+                    'min-w-[7.5rem] shrink-0 rounded-2xl border-2 px-3 py-2 text-left transition',
+                    selected ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border/70 bg-evo-surface',
+                  ].join(' ')}
+                >
+                  <span className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-evo-muted">
+                    {WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3)}
+                    {empty ? (
+                      <span className="h-2 w-2 rounded-full bg-evo-warn" aria-label="Sin ejercicios" />
+                    ) : (
+                      <span className="tabular-nums">{day.exercises.length}</span>
+                    )}
+                  </span>
+                  <span className="mt-0.5 block max-w-[9rem] truncate text-sm font-bold">{day.name || 'Sin nombre'}</span>
+                </button>
+              )
+            })}
           </div>
 
           {currentDay ? (
-            <div className="panel space-y-3 p-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  label="Nombre del día"
-                  value={currentDay.name}
-                  onChange={(e) => updateDay(activeDay, { name: e.target.value })}
-                  required
-                />
-                <label className="block space-y-1.5">
-                  <span className="text-sm font-semibold text-evo-text">Día de la semana</span>
-                  <select
-                    className="w-full"
-                    value={currentDay.weekday}
-                    onChange={(e) => {
-                      const weekday = Number(e.target.value)
-                      const taken = days.some((day, i) => i !== activeDay && day.weekday === weekday)
-                      if (taken) {
-                        setError('Ese día de la semana ya está pillado por otro entrenamiento.')
-                        return
-                      }
-                      setError(null)
-                      updateDay(activeDay, { weekday })
-                    }}
-                  >
-                    {WEEKDAY_LABELS.map((label, index) => (
-                      <option key={label} value={index + 1}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+            <section className="space-y-3" aria-label={`Ejercicios de ${currentDay.name}`}>
+              <Input
+                label={`Nombre del ${WEEKDAY_LABELS[currentDay.weekday - 1]?.toLowerCase()}`}
+                value={currentDay.name}
+                maxLength={80}
+                onChange={(e) => updateDay(currentDay.key, { name: e.target.value })}
+                placeholder="Torso, Pierna, Empuje…"
+              />
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold">Ejercicios</p>
-                  <Link to="/exercises" className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent">
-                    Gestionar catálogo
-                  </Link>
-                </div>
-                {currentDay.exercises.map((exercise, exerciseIndex) => (
-                  <div
-                    key={exerciseIndex}
-                    className="rounded-xl border border-evo-border bg-evo-surface-2 p-3"
-                  >
-                    <ExerciseCatalogPicker
-                      label={`#${exerciseIndex + 1}`}
-                      name={exercise.name}
-                      catalogId={exercise.catalog_exercise_id}
-                      catalog={catalog}
-                      onChange={(next) =>
-                        updateExercise(activeDay, exerciseIndex, {
-                          name: next.name,
-                          catalog_exercise_id: next.catalog_exercise_id,
-                          ...(next.tracking_mode !== undefined
-                            ? { tracking_mode: next.tracking_mode }
-                            : {}),
-                          ...(next.time_direction !== undefined
-                            ? { time_direction: next.time_direction }
-                            : {}),
-                          ...(next.default_sets !== undefined
-                            ? { default_sets: next.default_sets }
-                            : {}),
-                          ...(next.default_reps !== undefined
-                            ? { default_reps: next.default_reps }
-                            : {}),
-                          ...(next.default_duration_seconds !== undefined
-                            ? splitDuration(next.default_duration_seconds)
-                            : {}),
-                          ...(next.rest_seconds !== undefined
-                            ? { rest_seconds: next.rest_seconds }
-                            : {}),
-                        })
-                      }
-                    />
-                    {exercise.name.trim() ? (
-                      <p className="mt-2 text-sm font-semibold text-evo-accent">
-                        {modeLabel(exercise.tracking_mode)}
-                        {isTimeMode(exercise.tracking_mode)
-                          ? ` · ${directionLabel(exercise.time_direction)}`
-                          : ''}
-                      </p>
-                    ) : null}
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      <Input
-                        label="Series"
-                        type="number"
-                        min={1}
-                        value={exercise.default_sets}
-                        onChange={(e) =>
-                          updateExercise(activeDay, exerciseIndex, {
-                            default_sets: Number(e.target.value),
-                          })
-                        }
-                      />
-                      {isTimeMode(exercise.tracking_mode) ? (
-                        <>
-                          <Input
-                            label="Min"
-                            inputMode="numeric"
-                            value={exercise.duration_minutes}
-                            placeholder="1"
-                            onChange={(e) =>
-                              updateExercise(activeDay, exerciseIndex, {
-                                duration_minutes: e.target.value,
-                              })
-                            }
-                          />
-                          <Input
-                            label="Seg"
-                            inputMode="numeric"
-                            value={exercise.duration_seconds}
-                            placeholder="30"
-                            onChange={(e) =>
-                              updateExercise(activeDay, exerciseIndex, {
-                                duration_seconds: e.target.value,
-                              })
-                            }
-                          />
-                        </>
-                      ) : (
-                        <Input
-                          label="Reps"
-                          type="number"
-                          min={1}
-                          value={exercise.default_reps}
-                          onChange={(e) =>
-                            updateExercise(activeDay, exerciseIndex, {
-                              default_reps: Number(e.target.value),
-                            })
-                          }
-                        />
-                      )}
-                      {!isTimeMode(exercise.tracking_mode) ? (
-                        <Input
-                          label="Descanso (s)"
-                          type="number"
-                          min={0}
-                          step={15}
-                          value={exercise.rest_seconds}
-                          onChange={(e) =>
-                            updateExercise(activeDay, exerciseIndex, {
-                              rest_seconds: Number(e.target.value),
-                            })
-                          }
-                        />
-                      ) : null}
-                    </div>
-                    {isTimeMode(exercise.tracking_mode) ? (
-                      <div className="mt-2">
-                        <Input
-                          label="Descanso (s)"
-                          type="number"
-                          min={0}
-                          step={15}
-                          value={exercise.rest_seconds}
-                          onChange={(e) =>
-                            updateExercise(activeDay, exerciseIndex, {
-                              rest_seconds: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-                    ) : null}
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        type="button"
-                        className="min-h-11 min-w-11 rounded-xl bg-evo-surface px-3 text-base font-bold disabled:opacity-30"
-                        aria-label="Subir ejercicio"
-                        disabled={exerciseIndex === 0}
-                        onClick={() => moveExercise(activeDay, exerciseIndex, exerciseIndex - 1)}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        className="min-h-11 min-w-11 rounded-xl bg-evo-surface px-3 text-base font-bold disabled:opacity-30"
-                        aria-label="Bajar ejercicio"
-                        disabled={exerciseIndex === currentDay.exercises.length - 1}
-                        onClick={() => moveExercise(activeDay, exerciseIndex, exerciseIndex + 1)}
-                      >
-                        ↓
-                      </button>
-                      {currentDay.exercises.length > 1 ? (
-                        <button
-                          type="button"
-                          className="ml-auto min-h-11 rounded-xl px-4 text-sm font-bold text-evo-danger hover:bg-evo-danger/10"
-                          onClick={() =>
-                            updateDay(activeDay, {
-                              exercises: currentDay.exercises.filter((_, i) => i !== exerciseIndex),
-                            })
-                          }
-                        >
-                          Quitar
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-                <Button
+              {currentDay.exercises.length === 0 ? (
+                <button
                   type="button"
-                  variant="secondary"
-                  fullWidth
-                  onClick={() =>
-                    updateDay(activeDay, { exercises: [...currentDay.exercises, emptyExercise()] })
-                  }
+                  onClick={() => setPicker({})}
+                  className="flex w-full flex-col items-center gap-2 rounded-3xl border-2 border-dashed border-evo-border px-4 py-8 text-center transition active:scale-[0.99]"
                 >
-                  + Ejercicio
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-evo-accent/15 text-2xl font-bold text-evo-accent" aria-hidden>
+                    +
+                  </span>
+                  <span className="font-bold">Añade los ejercicios de este día</span>
+                  <span className="text-sm text-evo-muted">De tu catálogo o nuevos, varios a la vez.</span>
+                </button>
+              ) : (
+                <ol className="space-y-2">
+                  {currentDay.exercises.map((exercise, index) => (
+                    <ExerciseRow
+                      key={exercise.key}
+                      exercise={exercise}
+                      index={index}
+                      isLast={index === currentDay.exercises.length - 1}
+                      onChange={(patch) => updateExercise(currentDay.key, exercise.key, patch)}
+                      onMove={(to) => moveExercise(currentDay.key, index, to)}
+                      onRemove={() => removeExercise(currentDay.key, exercise.key)}
+                      onReplace={() => setPicker({ replaceKey: exercise.key })}
+                    />
+                  ))}
+                </ol>
+              )}
+
+              {currentDay.exercises.length > 0 ? (
+                <Button type="button" variant="secondary" fullWidth onClick={() => setPicker({})}>
+                  + Añadir ejercicios
                 </Button>
-              </div>
+              ) : null}
 
               {days.length > 1 ? (
                 <CopyDayPicker
-                  sourceLabel={`D${currentDay.day_index} · ${currentDay.name}`}
-                  disabled={!currentDay.exercises.some((e) => e.name.trim())}
+                  sourceLabel={currentDay.name || WEEKDAY_LABELS[currentDay.weekday - 1] || ''}
+                  disabled={!hasExercises(currentDay)}
                   options={days
-                    .map((day, index) => ({ day, index }))
-                    .filter(({ index }) => index !== activeDay)
-                    .map(({ day, index }) => ({
-                      id: index,
-                      label: `D${day.day_index}`,
-                      sublabel: day.name,
-                    }))}
-                  onCopy={(targetIds) => {
+                    .filter((day) => day.key !== currentDay.key)
+                    .map((day) => ({ id: day.key, label: WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3) ?? '', sublabel: day.name }))}
+                  onCopy={(targetKeys) => {
                     const source = currentDay.exercises
-                      .filter((e) => e.name.trim())
-                      .map((e) => ({ ...e }))
-                    if (source.length === 0) {
-                      setError('Añade al menos un ejercicio antes de copiar.')
-                      return
-                    }
                     setDays((current) =>
-                      current.map((day, index) =>
-                        targetIds.includes(index)
-                          ? { ...day, exercises: source.map((e) => ({ ...e })) }
+                      current.map((day) =>
+                        targetKeys.includes(day.key)
+                          ? { ...day, exercises: source.map((e) => ({ ...e, id: undefined, key: newKey() })) }
                           : day,
                       ),
                     )
@@ -649,33 +494,105 @@ export function NewRoutinePage() {
                   }}
                 />
               ) : null}
-
-              <div className="flex gap-2">
-                {activeDay > 0 ? (
-                  <Button type="button" variant="secondary" fullWidth onClick={() => setActiveDay((d) => d - 1)}>
-                    ← Día ant.
-                  </Button>
-                ) : (
-                  <Button type="button" variant="secondary" fullWidth onClick={() => setStep(1)}>
-                    ← Atrás
-                  </Button>
-                )}
-                {activeDay < days.length - 1 ? (
-                  <Button type="button" fullWidth onClick={() => setActiveDay((d) => d + 1)}>
-                    Sig. día →
-                  </Button>
-                ) : null}
-              </div>
-            </div>
+            </section>
           ) : null}
 
-          {error ? <p className="text-sm font-semibold text-evo-danger">{error}</p> : null}
-
-          <Button type="submit" size="lg" fullWidth disabled={mutation.isPending}>
-            {mutation.isPending ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear rutina'}
-          </Button>
-        </form>
+          <div className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-evo-border/40 bg-evo-bg/95 px-4 pt-3 backdrop-blur-xl lg:left-[260px]">
+            <div className="mx-auto max-w-2xl space-y-2">
+              {error ? (
+                <p role="alert" className="text-center text-sm font-semibold text-evo-danger">
+                  {error}
+                </p>
+              ) : null}
+              <Button type="button" size="lg" fullWidth disabled={mutation.isPending} onClick={save}>
+                {mutation.isPending ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear rutina'}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
+
+      {picker && currentDay ? (
+        <ExercisePickerSheet
+          title={picker.replaceKey ? 'Cambiar ejercicio' : `Añadir a ${currentDay.name || 'este día'}`}
+          mode={picker.replaceKey ? 'single' : 'multiple'}
+          usedIds={currentDay.exercises.map((e) => e.catalog_exercise_id).filter((v): v is number => v != null)}
+          onClose={() => setPicker(null)}
+          onConfirm={handlePicked}
+        />
+      ) : null}
     </div>
+  )
+}
+
+function ExerciseRow({
+  exercise,
+  index,
+  isLast,
+  onChange,
+  onMove,
+  onRemove,
+  onReplace,
+}: {
+  exercise: DraftExercise
+  index: number
+  isLast: boolean
+  onChange: (patch: Partial<DraftExercise>) => void
+  onMove: (to: number) => void
+  onRemove: () => void
+  onReplace: () => void
+}) {
+  const timed = isTimeMode(exercise.tracking_mode)
+  const iconBtn =
+    'flex h-10 w-10 items-center justify-center rounded-full text-evo-muted transition hover:bg-evo-surface-2 active:scale-90 disabled:opacity-25'
+
+  return (
+    <li className="rounded-3xl border border-evo-border/60 bg-evo-surface p-3">
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-evo-accent/15 text-sm font-bold text-evo-accent" aria-hidden>
+          {index + 1}
+        </span>
+        <button type="button" onClick={onReplace} className="min-w-0 flex-1 text-left" aria-label={`Cambiar ${exercise.name}`}>
+          <span className="block truncate font-bold">{exercise.name}</span>
+          <span className="block truncate text-xs text-evo-muted">
+            {exercise.target_muscle ? `${exercise.target_muscle} · ` : ''}Toca para cambiar
+          </span>
+        </button>
+        <button type="button" className={iconBtn} aria-label="Subir" disabled={index === 0} onClick={() => onMove(index - 1)}>
+          <Icon name="back" className="h-5 w-5 rotate-90" />
+        </button>
+        <button type="button" className={iconBtn} aria-label="Bajar" disabled={isLast} onClick={() => onMove(index + 1)}>
+          <Icon name="back" className="h-5 w-5 -rotate-90" />
+        </button>
+        <button type="button" className={`${iconBtn} hover:text-evo-danger`} aria-label={`Quitar ${exercise.name}`} onClick={onRemove}>
+          <Icon name="close" className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <Stepper label="Series" value={exercise.default_sets} min={1} max={10} onChange={(n) => onChange({ default_sets: n })} />
+        {timed ? (
+          <Stepper
+            label="Objetivo"
+            value={exercise.default_duration_seconds}
+            min={5}
+            max={3600}
+            step={exercise.default_duration_seconds >= 120 ? 30 : 5}
+            format={formatDuration}
+            onChange={(n) => onChange({ default_duration_seconds: n })}
+          />
+        ) : (
+          <Stepper label="Reps" value={exercise.default_reps} min={1} max={50} onChange={(n) => onChange({ default_reps: n })} />
+        )}
+        <Stepper
+          label="Descanso"
+          value={exercise.rest_seconds}
+          min={0}
+          max={600}
+          step={15}
+          format={formatDuration}
+          onChange={(n) => onChange({ rest_seconds: n })}
+        />
+      </div>
+    </li>
   )
 }

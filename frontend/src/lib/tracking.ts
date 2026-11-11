@@ -80,9 +80,9 @@ export function exercisePlanLabel(exercise: {
   rest_seconds?: number | null
 }): string {
   const mode = exercise.tracking_mode ?? 'weight_reps'
-  const pause = exercise.rest_seconds ? ` · ${exercise.rest_seconds}s pausa` : ''
+  const pause = exercise.rest_seconds ? ` · ${formatDuration(exercise.rest_seconds)} descanso` : ''
   if (!isTimeMode(mode)) {
-    return `${exercise.default_sets}×${exercise.default_reps}${pause}`
+    return `${exercise.default_sets} × ${exercise.default_reps}${pause}`
   }
   const goal = exercise.default_duration_seconds
     ? ` · objetivo ${formatDuration(exercise.default_duration_seconds)}`

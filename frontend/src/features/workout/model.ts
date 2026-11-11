@@ -43,6 +43,11 @@ export function setLogged(draft: SetDraft, mode: TrackingMode) {
   return draft.weight_kg.trim() !== ''
 }
 
+/** Ejercicios de hoy: los del día con los cambios de esta sesión (versiones antiguas: los del día). */
+export function sessionExercises(session: WorkoutSession): RoutineExercise[] {
+  return session.exercises ?? session.day?.exercises ?? []
+}
+
 export function previousFor(session: WorkoutSession, exerciseId: number): PreviousLift | null {
   return session.previous_lifts?.[String(exerciseId)] ?? null
 }
@@ -89,7 +94,7 @@ function draftFromLog(exercise: RoutineExercise, log: ExerciseSetLog): SetDraft 
 }
 
 export function buildDrafts(session: WorkoutSession): SetDraft[] {
-  const exercises = session.day?.exercises ?? []
+  const exercises = sessionExercises(session)
   const logsByExercise = new Map<number, ExerciseSetLog[]>()
   for (const log of session.set_logs ?? []) {
     const list = logsByExercise.get(log.routine_exercise_id) ?? []
@@ -112,7 +117,7 @@ export function buildDrafts(session: WorkoutSession): SetDraft[] {
 
 /** Si hay copia local, manda ella; se completa con ejercicios nuevos que no estuvieran. */
 export function mergeLocalDrafts(session: WorkoutSession, local: SetDraft[]): SetDraft[] {
-  const exercises = session.day?.exercises ?? []
+  const exercises = sessionExercises(session)
   const fromServer = buildDrafts(session)
   const result: SetDraft[] = []
   for (const exercise of exercises) {

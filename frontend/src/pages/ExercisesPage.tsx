@@ -1,309 +1,241 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { ExerciseForm } from '../components/exercises/ExerciseForm'
+import { Icon } from '../components/icons/Icon'
 import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { TrackingModePicker } from '../components/exercises/TrackingModePicker'
+import { Sheet } from '../components/ui/Sheet'
+import { api, apiErrorMessage, validationErrors, type CatalogExercise } from '../lib/api'
+import { draftFromCatalog, emptyCatalogDraft, saveCatalogExercise, type CatalogDraft } from '../lib/catalog'
+import { muscleLabel, normalizeText } from '../lib/muscles'
 import { catalogExercisesQuery } from '../lib/queries'
-import { api, type CatalogExercise } from '../lib/api'
-import {
-  exercisePlanLabel,
-  isTimeMode,
-  joinDuration,
-  splitDuration,
-  type TimeDirection,
-  type TrackingMode,
-} from '../lib/tracking'
+import { exercisePlanLabel } from '../lib/tracking'
 
-type Draft = {
-  name: string
-  target_muscle: string
-  tracking_mode: TrackingMode
-  time_direction: TimeDirection
-  default_sets: number
-  default_reps: number
-  duration_minutes: string
-  duration_seconds: string
-  rest_seconds: number
-}
-
-const emptyDraft = (): Draft => ({
-  name: '',
-  target_muscle: '',
-  tracking_mode: 'weight_reps',
-  time_direction: 'faster',
-  default_sets: 3,
-  default_reps: 10,
-  duration_minutes: '',
-  duration_seconds: '',
-  rest_seconds: 90,
-})
+type Editing = { id?: number; draft: CatalogDraft }
 
 export function ExercisesPage() {
   const queryClient = useQueryClient()
   const { confirm, notify } = useUiFeedback()
+  const { data = [], isLoading } = useQuery(catalogExercisesQuery)
   const [search, setSearch] = useState('')
-  const [draft, setDraft] = useState<Draft>(emptyDraft)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [formOpen, setFormOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [muscle, setMuscle] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Editing | null>(null)
+  const [nameError, setNameError] = useState<string | undefined>()
 
-  const { data, isLoading } = useQuery(catalogExercisesQuery)
+  const term = normalizeText(search)
+  const muscles = useMemo(
+    () => [...new Set(data.map((item) => muscleLabel(item.target_muscle)))].sort((a, b) => a.localeCompare(b, 'es')),
+    [data],
+  )
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return data ?? []
-    return (data ?? []).filter(
-      (item) =>
-        item.name.toLowerCase().includes(q) ||
-        (item.target_muscle ?? '').toLowerCase().includes(q),
+  const groups = useMemo(() => {
+    const map = new Map<string, CatalogExercise[]>()
+    for (const item of data) {
+      const key = muscleLabel(item.target_muscle)
+      if (muscle && key !== muscle) continue
+      if (term && !normalizeText(`${item.name} ${item.target_muscle ?? ''}`).includes(term)) continue
+      map.set(key, [...(map.get(key) ?? []), item])
+    }
+    return [...map.entries()].sort(([a], [b]) =>
+      a === 'Sin grupo' ? 1 : b === 'Sin grupo' ? -1 : a.localeCompare(b, 'es'),
     )
-  }, [data, search])
+  }, [data, muscle, term])
 
   const save = useMutation({
-    mutationFn: async () => {
-      const timed = isTimeMode(draft.tracking_mode)
-      const payload = {
-        name: draft.name.trim(),
-        target_muscle: draft.target_muscle.trim() || null,
-        tracking_mode: draft.tracking_mode,
-        time_direction: timed ? draft.time_direction : 'faster',
-        default_sets: draft.default_sets,
-        default_reps: draft.default_reps,
-        default_duration_seconds: timed
-          ? joinDuration(draft.duration_minutes, draft.duration_seconds)
-          : null,
-        rest_seconds: draft.rest_seconds,
-      }
-      if (editingId) {
-        const { data: response } = await api.patch<{ data?: CatalogExercise; exercise?: CatalogExercise }>(
-          `/catalog-exercises/${editingId}`,
-          payload,
-        )
-        return response.exercise ?? response.data
-      }
-      const { data: response } = await api.post<{ exercise: CatalogExercise }>('/catalog-exercises', payload)
-      return response.exercise
+    mutationFn: ({ id, draft }: Editing) => saveCatalogExercise(draft, id),
+    onSuccess: (_, { id }) => {
+      notify(id ? 'Ejercicio actualizado' : 'Ejercicio añadido al catálogo', 'success')
+      void queryClient.invalidateQueries({ queryKey: ['progress-insights'] })
+      setEditing(null)
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
-      await queryClient.invalidateQueries({ queryKey: ['progress-insights'] })
-      notify(editingId ? 'Ejercicio actualizado' : 'Ejercicio añadido al catálogo', 'success')
-      setDraft(emptyDraft())
-      setEditingId(null)
-      setFormOpen(false)
-      setError(null)
-    },
-    onError: (err: unknown) => {
-      const message =
-        (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } })
-          ?.response?.data?.errors?.name?.[0] ??
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'No se pudo guardar el ejercicio'
-      setError(message)
+    onError: (error) => {
+      const message = validationErrors(error).name
+      setNameError(message)
+      if (!message) notify(apiErrorMessage(error, 'No se ha podido guardar el ejercicio.'), 'error')
     },
   })
 
   const remove = useMutation({
-    mutationFn: async (id: number) => {
-      await api.delete(`/catalog-exercises/${id}`)
-    },
+    mutationFn: async (id: number) => api.delete(`/catalog-exercises/${id}`),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
       notify('Ejercicio eliminado del catálogo', 'success')
+      setEditing(null)
     },
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido eliminar.'), 'error'),
   })
 
-  function startEdit(item: CatalogExercise) {
-    setEditingId(item.id)
-    const duration = splitDuration(item.default_duration_seconds)
-    setDraft({
-      name: item.name,
-      target_muscle: item.target_muscle ?? '',
-      tracking_mode: item.tracking_mode ?? 'weight_reps',
-      time_direction: item.time_direction ?? 'faster',
-      default_sets: item.default_sets,
-      default_reps: item.default_reps,
-      duration_minutes: duration.minutes,
-      duration_seconds: duration.seconds,
-      rest_seconds: item.rest_seconds,
-    })
-    setError(null)
-    setFormOpen(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  function open(next: Editing) {
+    setNameError(undefined)
+    setEditing(next)
   }
 
-  function closeForm() {
-    setEditingId(null)
-    setDraft(emptyDraft())
-    setError(null)
-    setFormOpen(false)
+  function submit() {
+    if (!editing) return
+    if (!editing.draft.name.trim()) {
+      setNameError('Pon un nombre al ejercicio.')
+      return
+    }
+    save.mutate(editing)
   }
 
-  async function confirmDelete(item: CatalogExercise) {
+  async function confirmDelete(id: number, name: string) {
     const ok = await confirm({
-      title: `¿Quitar "${item.name}"?`,
-      message:
-        'Se elimina del catálogo. Las rutinas y series ya registradas se mantienen; el progreso puede pasar a agruparse por nombre.',
+      title: `¿Eliminar «${name}»?`,
+      message: 'Sale de tu catálogo. Las rutinas y las series que ya apuntaste se conservan.',
       confirmLabel: 'Eliminar',
       cancelLabel: 'Cancelar',
       danger: true,
     })
-    if (ok) remove.mutate(item.id)
+    if (ok) remove.mutate(id)
   }
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!draft.name.trim()) {
-      setError('Pon un nombre al ejercicio')
-      return
-    }
-    save.mutate()
-  }
-
-  const catalogEmpty = !isLoading && !data?.length
-  const showForm = catalogEmpty || formOpen || editingId !== null
+  const empty = !isLoading && data.length === 0
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-1">
-        <h1 className="sr-only">Catálogo de ejercicios</h1>
-        <p className="text-base text-evo-muted">
-          {data?.length
-            ? `${data.length} ${data.length === 1 ? 'ejercicio' : 'ejercicios'} para tus rutinas.`
-            : 'Los ejercicios que guardes aquí se reutilizan en cada rutina.'}
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-4">
+      <h1 className="sr-only">Catálogo de ejercicios</h1>
 
-      {showForm ? (
-        <form onSubmit={onSubmit} className="panel space-y-4 p-5">
-          <p className="font-display text-2xl font-bold">
-            {editingId ? 'Editar ejercicio' : 'Nuevo ejercicio'}
-          </p>
-          <Input
-            label="Nombre"
-            value={draft.name}
-            onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-            placeholder="Press banca, dominadas…"
-            error={error ?? undefined}
-          />
-          <Input
-            label="Músculo"
-            value={draft.target_muscle}
-            onChange={(e) => setDraft((d) => ({ ...d, target_muscle: e.target.value }))}
-            placeholder="Pecho, espalda, pierna…"
-          />
-          <TrackingModePicker
-            mode={draft.tracking_mode}
-            direction={draft.time_direction}
-            onMode={(tracking_mode) => setDraft((d) => ({ ...d, tracking_mode }))}
-            onDirection={(time_direction) => setDraft((d) => ({ ...d, time_direction }))}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Series"
-              type="number"
-              min={1}
-              value={draft.default_sets}
-              onChange={(e) => setDraft((d) => ({ ...d, default_sets: Number(e.target.value) }))}
-            />
-            {isTimeMode(draft.tracking_mode) ? (
-              <>
-                <Input
-                  label="Objetivo min"
-                  inputMode="numeric"
-                  value={draft.duration_minutes}
-                  placeholder="1"
-                  onChange={(e) => setDraft((d) => ({ ...d, duration_minutes: e.target.value }))}
-                />
-                <Input
-                  label="Objetivo seg"
-                  inputMode="numeric"
-                  value={draft.duration_seconds}
-                  placeholder="30"
-                  onChange={(e) => setDraft((d) => ({ ...d, duration_seconds: e.target.value }))}
-                />
-              </>
-            ) : (
-              <Input
-                label="Reps"
-                type="number"
-                min={1}
-                value={draft.default_reps}
-                onChange={(e) => setDraft((d) => ({ ...d, default_reps: Number(e.target.value) }))}
-              />
-            )}
-            <Input
-              label="Pausa (seg)"
-              type="number"
-              min={0}
-              value={draft.rest_seconds}
-              onChange={(e) => setDraft((d) => ({ ...d, rest_seconds: Number(e.target.value) }))}
-            />
+      {empty ? (
+        <section className="panel space-y-4 p-6 text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-evo-accent/15 text-evo-accent">
+            <Icon name="catalog" className="h-7 w-7" />
+          </span>
+          <div className="space-y-1.5">
+            <h2 className="font-display text-2xl font-bold">Tu catálogo de ejercicios</h2>
+            <p className="text-evo-muted">
+              Guarda aquí tus ejercicios una vez y reutilízalos en todas tus rutinas. Así tu progreso se mide siempre igual.
+            </p>
           </div>
-          <Button type="submit" size="lg" fullWidth disabled={save.isPending}>
-            {editingId ? 'Guardar cambios' : 'Añadir al catálogo'}
+          <Button size="lg" fullWidth onClick={() => open({ draft: emptyCatalogDraft() })}>
+            Crear mi primer ejercicio
           </Button>
-          {!catalogEmpty ? (
-            <Button type="button" variant="secondary" fullWidth onClick={closeForm}>
-              Cancelar
+          <p className="text-xs text-evo-muted">También se añaden solos al crear una rutina.</p>
+        </section>
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-evo-muted">
+              {isLoading ? 'Cargando…' : `${data.length} ${data.length === 1 ? 'ejercicio' : 'ejercicios'}`}
+            </p>
+            <Button className="!min-h-11" onClick={() => open({ draft: emptyCatalogDraft() })}>
+              + Nuevo
             </Button>
-          ) : null}
-        </form>
-      ) : (
-        <Button type="button" size="lg" fullWidth onClick={() => setFormOpen(true)}>
-          Añadir ejercicio
-        </Button>
+          </div>
+
+          <div className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-20 -mx-4 space-y-2 bg-evo-bg/90 px-4 pb-2 pt-1 backdrop-blur-xl lg:top-16">
+            <label className="relative block">
+              <span className="sr-only">Buscar en el catálogo</span>
+              <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-evo-muted" />
+              <input
+                type="search"
+                enterKeyHint="search"
+                autoComplete="off"
+                placeholder="Buscar por nombre o músculo"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="box-border w-full rounded-full border-2 border-evo-border bg-evo-surface-2 py-3 pl-11 pr-4 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none"
+              />
+            </label>
+            {muscles.length > 1 ? (
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+                {[null, ...muscles].map((m) => (
+                  <button
+                    key={m ?? 'all'}
+                    type="button"
+                    aria-pressed={muscle === m}
+                    onClick={() => setMuscle(m)}
+                    className={[
+                      'min-h-9 shrink-0 rounded-full px-3.5 text-sm font-bold transition',
+                      muscle === m ? 'bg-evo-text text-evo-bg' : 'bg-evo-surface-2 text-evo-muted',
+                    ].join(' ')}
+                  >
+                    {m ?? 'Todos'}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {groups.length === 0 && !isLoading ? (
+            <div className="space-y-3 rounded-3xl bg-evo-surface px-4 py-6 text-center">
+              <p className="text-evo-muted">Nada coincide con «{search.trim()}».</p>
+              {search.trim() ? (
+                <Button variant="secondary" onClick={() => open({ draft: emptyCatalogDraft(search.trim()) })}>
+                  Crear «{search.trim()}»
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {groups.map(([label, items]) => (
+                <section key={label}>
+                  <h2 className="mb-1.5 flex items-baseline justify-between px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">
+                    {label}
+                    <span className="tabular-nums">{items.length}</span>
+                  </h2>
+                  <ul className="overflow-hidden rounded-2xl border border-evo-border/60 bg-evo-surface">
+                    {items.map((item) => (
+                      <li key={item.id} className="border-b border-evo-border/40 last:border-b-0">
+                        <button
+                          type="button"
+                          onClick={() => open({ id: item.id, draft: draftFromCatalog(item) })}
+                          className="flex min-h-15 w-full items-center gap-3 px-4 py-3 text-left transition active:bg-evo-surface-2"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-bold">{item.name}</span>
+                            <span className="block truncate text-sm text-evo-muted">
+                              {exercisePlanLabel(item)}
+                            </span>
+                          </span>
+                          <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {!catalogEmpty ? (
-        <Input
-          label="Buscar"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Nombre o músculo"
-        />
-      ) : null}
-
-      {isLoading ? (
-        <p className="text-base text-evo-muted">Cargando catálogo…</p>
-      ) : catalogEmpty ? null : !filtered.length ? (
-        <p className="rounded-3xl bg-evo-surface px-4 py-6 text-center text-base text-evo-muted">
-          Ningún ejercicio coincide con esa búsqueda.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {filtered.map((item) => (
-            <li key={item.id} className="panel space-y-3 p-4">
-              <div>
-                <p className="font-display text-xl font-bold">{item.name}</p>
-                <p className="mt-1 text-base text-evo-muted">
-                  {item.target_muscle ? `${item.target_muscle} · ` : ''}
-                  {exercisePlanLabel(item)}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="secondary" onClick={() => startEdit(item)}>
-                  Editar
-                </Button>
+      {editing ? (
+        <Sheet
+          title={editing.id ? 'Editar ejercicio' : 'Nuevo ejercicio'}
+          onClose={() => setEditing(null)}
+          footer={
+            <div className="flex gap-2">
+              {editing.id ? (
                 <Button
-                  type="button"
                   variant="danger"
-                  onClick={() => void confirmDelete(item)}
+                  size="lg"
                   disabled={remove.isPending}
+                  onClick={() => void confirmDelete(editing.id!, editing.draft.name)}
+                  aria-label="Eliminar ejercicio"
                 >
-                  Borrar
+                  Eliminar
                 </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Link to="/routines/new" className="block text-center text-base font-bold text-evo-accent">
-        Usar en una rutina nueva
-      </Link>
+              ) : null}
+              <Button size="lg" fullWidth disabled={save.isPending} onClick={submit}>
+                {save.isPending ? 'Guardando…' : editing.id ? 'Guardar cambios' : 'Añadir al catálogo'}
+              </Button>
+            </div>
+          }
+        >
+          <ExerciseForm
+            value={editing.draft}
+            onChange={(draft) => setEditing((current) => (current ? { ...current, draft } : current))}
+            nameError={nameError}
+            autoFocusName={!editing.id}
+          />
+          {editing.id ? (
+            <p className="mt-4 text-xs text-evo-muted">
+              El nombre, el músculo y cómo se mide se actualizan también en las rutinas que lo usan.
+            </p>
+          ) : null}
+        </Sheet>
+      ) : null}
     </div>
   )
 }

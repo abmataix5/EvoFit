@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 
 class WorkoutSessionController extends Controller
 {
-    private const DETAIL_RELATIONS = ['routine', 'day.exercises', 'setLogs.routineExercise'];
+    public const DETAIL_RELATIONS = ['routine', 'day.exercises', 'extraExercises', 'setLogs.routineExercise'];
 
     public function calendar(CalendarRequest $request, TrainingCalendarPlanner $planner): AnonymousResourceCollection
     {
@@ -119,6 +119,10 @@ class WorkoutSessionController extends Controller
                 }
                 $conflict->delete();
             }
+
+            // Los cambios "solo para hoy" eran sobre el otro día: se quitan los que no tienen series.
+            $workoutSession->extraExercises()->whereDoesntHave('setLogs')->delete();
+            $workoutSession->extraExercises()->update(['replaces_routine_exercise_id' => null]);
 
             $workoutSession->update([
                 'routine_day_id' => $day->id,

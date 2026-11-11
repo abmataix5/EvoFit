@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
-import { Button, ButtonLink } from '../components/ui/Button'
+import { WeekStrip } from '../components/routines/WeekStrip'
+import { ButtonLink } from '../components/ui/Button'
 import { routinesQuery } from '../lib/queries'
 import { api, type Routine } from '../lib/api'
 import { formatShortDate } from '../lib/dates'
@@ -57,20 +58,13 @@ export function RoutinesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-base text-evo-muted">Solo las activas salen en la agenda.</p>
-          <Link
-            to="/exercises"
-            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-2xl bg-evo-surface-2 px-3 text-sm font-bold"
-          >
-            Catálogo
-            <Icon name="chevron" className="h-4 w-4" />
-          </Link>
-        </div>
-        <ButtonLink to="/routines/new" size="lg" fullWidth>
-          Nueva rutina
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <ButtonLink to="/routines/new" size="lg">
+          + Nueva rutina
+        </ButtonLink>
+        <ButtonLink to="/exercises" size="lg" variant="secondary">
+          Catálogo
         </ButtonLink>
       </div>
 
@@ -79,19 +73,22 @@ export function RoutinesPage() {
       ) : (
         <>
           <RoutineGroup
-            title={`Activas (${active.length})`}
-            empty="No hay rutinas activas."
+            title="Activas"
+            hint="Salen en tu agenda."
+            empty="Ninguna activa: actívala para que salga en la agenda."
             routines={active}
             onToggle={(routine) => toggleActive.mutate({ id: routine.id, is_active: false })}
             busy={busy}
           />
-          <RoutineGroup
-            title={`Pausadas (${inactive.length})`}
-            empty="No hay rutinas pausadas."
-            routines={inactive}
-            onToggle={(routine) => toggleActive.mutate({ id: routine.id, is_active: true })}
-            busy={busy}
-          />
+          {inactive.length > 0 ? (
+            <RoutineGroup
+              title="En pausa"
+              empty=""
+              routines={inactive}
+              onToggle={(routine) => toggleActive.mutate({ id: routine.id, is_active: true })}
+              busy={busy}
+            />
+          ) : null}
         </>
       )}
     </div>
@@ -100,62 +97,68 @@ export function RoutinesPage() {
 
 function RoutineGroup({
   title,
+  hint,
   empty,
   routines,
   onToggle,
   busy,
 }: {
   title: string
+  hint?: string
   empty: string
   routines: Routine[]
   onToggle: (routine: Routine) => void
   busy: boolean
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="font-display text-xl font-bold">{title}</h2>
+    <section className="space-y-2">
+      <div className="flex items-baseline justify-between gap-2 px-1">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-evo-muted">
+          {title} · {routines.length}
+        </h2>
+        {hint ? <p className="text-xs text-evo-muted">{hint}</p> : null}
+      </div>
       {routines.length === 0 ? (
-        <p className="text-sm text-evo-muted">{empty}</p>
+        <p className="rounded-3xl border-2 border-dashed border-evo-border/70 px-4 py-5 text-center text-sm text-evo-muted">{empty}</p>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
-          {routines.map((routine) => (
-            <li key={routine.id} className="panel overflow-hidden">
-              <Link to={`/routines/${routine.id}`} className="block px-4 py-4 hover:bg-evo-surface-2/50">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-display text-xl font-bold">{routine.name}</p>
-                    <p className="mt-1 text-sm text-evo-muted">
-                      {routine.days_count ?? routine.days?.length ?? 0} días ·{' '}
-                      {routine.exercises_count ?? 0} ejercicios · {formatRange(routine)}
-                    </p>
+        <ul className="space-y-3">
+          {routines.map((routine) => {
+            const days = [...(routine.days ?? [])].sort((a, b) => (a.weekday ?? 9) - (b.weekday ?? 9))
+            const exercises = days.reduce((sum, day) => sum + (day.exercises?.length ?? 0), 0)
+            return (
+              <li key={routine.id} className={['panel overflow-hidden', routine.is_active ? '' : 'opacity-80'].join(' ')}>
+                <Link to={`/routines/${routine.id}`} className="block space-y-3 p-4 transition active:bg-evo-surface-2/50">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-display text-xl font-bold">{routine.name}</p>
+                      <p className="mt-0.5 truncate text-sm text-evo-muted">
+                        {days.length} {days.length === 1 ? 'día' : 'días'} · {exercises} ejercicios
+                        {routine.starts_on || routine.ends_on ? ` · ${formatRange(routine)}` : ''}
+                      </p>
+                    </div>
+                    <Icon name="chevron" className="mt-1.5 h-4 w-4 shrink-0 text-evo-muted" />
                   </div>
-                  <span
-                    className={[
-                      'chip',
-                      routine.is_active
-                        ? 'bg-evo-lime text-[#102000]'
-                        : 'bg-evo-surface-2 text-evo-muted',
-                    ].join(' ')}
-                  >
-                    {routine.is_active ? 'Activa' : 'Pausa'}
+                  <WeekStrip weekdays={days.map((day) => day.weekday)} size="sm" />
+                  {days.length > 0 ? (
+                    <p className="truncate text-sm font-semibold">{days.map((day) => day.name).join(' · ')}</p>
+                  ) : null}
+                </Link>
+                <div className="flex items-center justify-between gap-2 border-t border-evo-border/50 px-4 py-2">
+                  <span className={['text-xs font-bold', routine.is_active ? 'text-evo-lime' : 'text-evo-muted'].join(' ')}>
+                    {routine.is_active ? '● Activa' : 'En pausa'}
                   </span>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onToggle(routine)}
+                    className="min-h-10 rounded-xl px-3 text-sm font-bold text-evo-muted transition hover:bg-evo-surface-2 hover:text-evo-text disabled:opacity-40"
+                  >
+                    {routine.is_active ? 'Pausar' : 'Activar'}
+                  </button>
                 </div>
-              </Link>
-              <div className="flex flex-wrap gap-2 border-t border-evo-border px-4 py-3">
-                <Button
-                  variant="secondary"
-                  className="!min-h-11 flex-1"
-                  disabled={busy}
-                  onClick={() => onToggle(routine)}
-                >
-                  {routine.is_active ? 'Pausar' : 'Activar'}
-                </Button>
-                <ButtonLink to={`/routines/${routine.id}/edit`} variant="secondary" className="!min-h-11 flex-1">
-                  Editar
-                </ButtonLink>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>

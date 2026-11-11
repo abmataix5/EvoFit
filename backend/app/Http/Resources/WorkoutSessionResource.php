@@ -23,6 +23,11 @@ class WorkoutSessionResource extends JsonResource
             'was_swapped' => $this->was_swapped,
             'routine' => new RoutineResource($this->whenLoaded('routine')),
             'day' => new RoutineDayResource($this->whenLoaded('day')),
+            // Lo que toca hoy, con los cambios de esta sesión ya aplicados.
+            'exercises' => $this->when(
+                $this->relationLoaded('day') && $this->relationLoaded('extraExercises'),
+                fn () => RoutineExerciseResource::collection($this->resource->exercisesForToday()),
+            ),
             'set_logs' => ExerciseSetLogResource::collection($this->whenLoaded('setLogs')),
             // Objeto {routine_exercise_id: …}: como array con claves numéricas el
             // JsonResource lo reindexaría como lista y se perderían los ids.

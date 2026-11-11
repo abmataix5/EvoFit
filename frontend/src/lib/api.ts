@@ -96,6 +96,9 @@ export type RoutineExercise = {
   rest_seconds?: number | null
   target_muscle?: string | null
   notes?: string | null
+  /** Cambio o añadido solo para una sesión (no es parte de la rutina). */
+  session_only?: boolean
+  replaces_routine_exercise_id?: number | null
 }
 
 export type CatalogExercise = {
@@ -201,6 +204,8 @@ export type WorkoutSession = {
   was_swapped?: boolean
   routine?: Routine
   day?: RoutineDay
+  /** Lo que toca hoy: ejercicios del día con los cambios de esta sesión aplicados. */
+  exercises?: RoutineExercise[]
   set_logs?: ExerciseSetLog[]
   previous_lifts?: Record<string, PreviousLift>
 }

@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class WorkoutSession extends Model
 {
@@ -69,6 +70,34 @@ class WorkoutSession extends Model
     public function day(): BelongsTo
     {
         return $this->belongsTo(RoutineDay::class, 'routine_day_id');
+    }
+
+    /** Ejercicios cambiados o añadidos solo para esta sesión. */
+    public function extraExercises(): HasMany
+    {
+        return $this->hasMany(RoutineExercise::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * Lo que toca hoy: los ejercicios del día con los cambios de esta sesión aplicados
+     * (cada sustituto ocupa el sitio del original) y los añadidos al final.
+     *
+     * @return Collection<int, RoutineExercise>
+     */
+    public function exercisesForToday(): Collection
+    {
+        $this->loadMissing(['day.exercises', 'extraExercises']);
+
+        $planned = $this->day?->exercises ?? collect();
+        $extras = $this->extraExercises;
+        $replacements = $extras->whereNotNull('replaces_routine_exercise_id')->keyBy('replaces_routine_exercise_id');
+
+        $today = $planned->map(fn (RoutineExercise $exercise) => $replacements->get($exercise->id) ?? $exercise);
+        $placed = $today->pluck('id')->all();
+
+        return $today
+            ->concat($extras->reject(fn (RoutineExercise $extra) => in_array($extra->id, $placed, true)))
+            ->values();
     }
 
     public function setLogs(): HasMany

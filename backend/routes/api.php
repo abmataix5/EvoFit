@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\WorkoutReportController;
 use App\Http\Controllers\Api\WorkoutSessionController;
+use App\Http\Controllers\Api\WorkoutSessionExerciseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -41,6 +42,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/workout-sessions/{workoutSession}', [WorkoutSessionController::class, 'show']);
         Route::patch('/workout-sessions/{workoutSession}', [WorkoutSessionController::class, 'update']);
         Route::put('/workout-sessions/{workoutSession}/logs', [WorkoutSessionController::class, 'syncLogs']);
+        Route::post('/workout-sessions/{workoutSession}/exercises', [WorkoutSessionExerciseController::class, 'store']);
+        Route::delete('/workout-sessions/{workoutSession}/exercises/{routineExercise}', [WorkoutSessionExerciseController::class, 'destroy']);
 
         Route::get('/progress/body-weight', [ProgressController::class, 'bodyWeights']);
         Route::post('/progress/body-weight', [ProgressController::class, 'storeBodyWeight']);

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type WorkoutSession } from '../../lib/api'
 import { invalidateTraining, queryClient } from '../../lib/queryClient'
 import { clearWorkoutDraft, loadWorkoutDraft, saveWorkoutDraft } from '../../lib/workoutDrafts'
-import { buildDrafts, mergeLocalDrafts, toPayloadSet, type SetDraft } from './model'
+import { buildDrafts, mergeLocalDrafts, sessionExercises, toPayloadSet, type SetDraft } from './model'
 
 export type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'offline' | 'error'
 
@@ -245,6 +245,21 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
     [commit],
   )
 
+  /**
+   * Tras cambiar o añadir un ejercicio en el servidor: se añaden sus series vacías y se
+   * olvidan las del que ya no está (si no, el siguiente guardado las mandaría y fallaría).
+   */
+  const syncExercises = useCallback(
+    (next: WorkoutSession) => {
+      const ids = new Set(sessionExercises(next).map((exercise) => exercise.id))
+      draftsRef.current = mergeLocalDrafts(next, draftsRef.current)
+      removedRef.current = removedRef.current.filter((item) => ids.has(item.routine_exercise_id))
+      setDraftsState(draftsRef.current)
+      persistLocal()
+    },
+    [persistLocal],
+  )
+
   /** Guarda y marca la sesión como completada. Devuelve false si no se pudo. */
   const complete = useCallback(async () => {
     clearTimers()
@@ -262,6 +277,9 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
     addSet,
     removeSet,
     complete,
+    syncExercises,
+    /** Envía ya lo pendiente; false si no se pudo (sin conexión…). */
+    flushNow: () => flushRef.current(),
     retryNow: () => {
       attempt.current = 0
       void flushRef.current()

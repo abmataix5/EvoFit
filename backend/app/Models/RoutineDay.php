@@ -39,15 +39,21 @@ class RoutineDay extends Model
      */
     public function exercises(): HasMany
     {
-        return $this->hasMany(RoutineExercise::class)->whereNull('routine_exercises.archived_at')->orderBy('sort_order');
+        return $this->hasMany(RoutineExercise::class)
+            ->whereNull('routine_exercises.archived_at')
+            ->whereNull('routine_exercises.workout_session_id')
+            ->orderBy('sort_order');
     }
 
     /**
-     * Todos los ejercicios del día, incluidos los archivados.
+     * Todos los ejercicios de la rutina en este día, incluidos los archivados
+     * (no los "solo para hoy" de una sesión).
      */
     public function allExercises(): HasMany
     {
-        return $this->hasMany(RoutineExercise::class)->orderBy('sort_order');
+        return $this->hasMany(RoutineExercise::class)
+            ->whereNull('routine_exercises.workout_session_id')
+            ->orderBy('sort_order');
     }
 
     public function workoutSessions(): HasMany

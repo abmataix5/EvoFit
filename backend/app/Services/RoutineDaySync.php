@@ -136,7 +136,8 @@ class RoutineDaySync
             ->where('routine_day_id', $day->id)
             ->where(fn ($query) => $query->whereNotNull('completed_at')->orWhereHas('setLogs'))
             ->exists()
-            || $day->allExercises()->whereHas('setLogs')->exists();
+            // Incluye los ejercicios "solo para hoy": borrar el día los borraría en cascada.
+            || RoutineExercise::query()->where('routine_day_id', $day->id)->whereHas('setLogs')->exists();
 
         if ($hasHistory) {
             foreach ($day->allExercises()->whereNull('archived_at')->get() as $exercise) {

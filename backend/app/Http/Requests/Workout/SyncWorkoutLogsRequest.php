@@ -39,14 +39,20 @@ class SyncWorkoutLogsRequest extends FormRequest
             /** @var WorkoutSession $session */
             $session = $this->route('workoutSession');
 
-            // Solo ejercicios del día de esta sesión (incluidos los archivados, que conservan sus series).
-            $allowed = $session->routine_day_id === null
-                ? []
-                : RoutineExercise::query()
-                    ->where('routine_day_id', $session->routine_day_id)
-                    ->pluck('id')
-                    ->map(fn ($id) => (int) $id)
-                    ->all();
+            // Ejercicios del día de esta sesión (incluidos los archivados, que conservan sus series)
+            // y los cambiados o añadidos solo para esta sesión.
+            $allowed = RoutineExercise::query()
+                ->where(function ($query) use ($session) {
+                    $query->where('workout_session_id', $session->id);
+                    if ($session->routine_day_id !== null) {
+                        $query->orWhere(fn ($q) => $q
+                            ->where('routine_day_id', $session->routine_day_id)
+                            ->whereNull('workout_session_id'));
+                    }
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
             foreach (['sets', 'remove_sets'] as $key) {
                 foreach ((array) $this->input($key, []) as $i => $item) {

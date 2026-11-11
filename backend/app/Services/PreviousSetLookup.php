@@ -29,8 +29,7 @@ class PreviousSetLookup
      */
     public function forSession(WorkoutSession $session): array
     {
-        $session->loadMissing('day.exercises');
-        $exercises = $session->day?->exercises ?? collect();
+        $exercises = $session->exercisesForToday();
         if ($exercises->isEmpty()) {
             return [];
         }

@@ -27,6 +27,10 @@ type Props = {
   onSetDone: (group: ExerciseGroup) => void
   /** La serie recién marcada supera el récord de siempre. */
   onRecord?: (group: ExerciseGroup, draft: SetDraft) => void
+  /** Cambiar este ejercicio por otro solo para hoy. */
+  onReplace?: (group: ExerciseGroup) => void
+  /** Quitar un ejercicio cambiado o añadido hoy (vuelve el original si lo había). */
+  onRemoveExtra?: (group: ExerciseGroup) => void
 }
 
 const cellInput =
@@ -80,6 +84,8 @@ export function ExerciseCard({
   removeSet,
   onSetDone,
   onRecord,
+  onReplace,
+  onRemoveExtra,
 }: Props) {
   const [detailsFor, setDetailsFor] = useState<number | null>(null)
   const doneSets = group.sets.filter((set) => set.done && setLogged(set, group.mode)).length
@@ -175,7 +181,14 @@ export function ExerciseCard({
           {allDone ? '✓' : index + 1}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-lg font-bold">{group.name}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-display text-lg font-bold">{group.name}</span>
+            {group.exercise.session_only ? (
+              <span className="shrink-0 rounded-full bg-evo-warn/15 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-evo-warn">
+                {group.exercise.replaces_routine_exercise_id ? 'Cambio' : 'Extra'}
+              </span>
+            ) : null}
+          </span>
           {last ? (
             <span className="mt-0.5 block text-sm font-semibold text-evo-accent">Última {last}</span>
           ) : (
@@ -193,6 +206,21 @@ export function ExerciseCard({
 
       {open ? (
         <div id={`exercise-body-${group.id}`} className="space-y-3 border-t border-evo-border bg-evo-bg/30 px-3 py-3">
+          {onReplace || (group.exercise.session_only && onRemoveExtra) ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {onReplace ? (
+                <button type="button" onClick={() => onReplace(group)} className={smallAction}>
+                  ⇄ Cambiar
+                </button>
+              ) : null}
+              {group.exercise.session_only && onRemoveExtra ? (
+                <button type="button" onClick={() => onRemoveExtra(group)} className={smallAction}>
+                  {group.exercise.replaces_routine_exercise_id ? '↺ Deshacer cambio' : '✕ Quitar de hoy'}
+                </button>
+              ) : null}
+              <span className="ml-auto text-xs text-evo-muted">Solo para hoy</span>
+            </div>
+          ) : null}
           {timed ? (
             <p className="px-1 text-sm text-evo-muted">
               {group.direction === 'longer' ? 'Más tiempo es mejor.' : 'Menos tiempo es mejor.'}
@@ -477,6 +505,9 @@ export function ExerciseCard({
     </li>
   )
 }
+
+const smallAction =
+  'min-h-10 rounded-full border border-evo-border bg-evo-surface px-3.5 text-sm font-bold text-evo-text transition active:scale-95'
 
 function ActionChip({ children, onClick, highlight }: { children: ReactNode; onClick: () => void; highlight?: boolean }) {
   return (

@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
-import { CopyDayPicker } from '../components/routines/CopyDayPicker'
+import { Icon } from '../components/icons/Icon'
+import { WeekStrip } from '../components/routines/WeekStrip'
 import { Button, ButtonLink } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import {
@@ -112,20 +113,6 @@ export function RoutineDetailPage() {
     },
   })
 
-  const copyDay = useMutation({
-    mutationFn: async (payload: { fromId: number; targetIds: number[] }) => {
-      await api.post(`/routines/${routineId}/days/${payload.fromId}/copy`, {
-        target_day_ids: payload.targetIds,
-        replace: true,
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
-      notify('Ejercicios copiados', 'success')
-    },
-    onError: () => notify('No se pudo copiar el día', 'error'),
-  })
-
   if (routineQuery.isLoading) {
     return <p className="text-sm text-evo-muted">Cargando rutina…</p>
   }
@@ -134,124 +121,117 @@ export function RoutineDetailPage() {
     return <p className="text-sm text-evo-danger">No encontramos esta rutina.</p>
   }
 
+  const totalExercises = days.reduce((sum, day) => sum + (day.exercises?.length ?? 0), 0)
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-3xl font-bold">{routine.name}</h2>
-          <p className="text-sm text-evo-muted">
-            {routine.sessions_per_week} días/semana · {routine.exercises_count ?? 0} ejercicios
-          </p>
+    <div className="mx-auto max-w-2xl space-y-5">
+      <section className="panel space-y-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-3xl font-bold leading-tight tracking-tight">{routine.name}</h1>
+            <p className="mt-1 text-sm text-evo-muted">
+              {days.length} {days.length === 1 ? 'día' : 'días'} por semana · {totalExercises} ejercicios
+            </p>
+          </div>
+          <span className={['chip shrink-0', routine.is_active ? 'bg-evo-lime/20 text-evo-lime' : 'bg-evo-surface-2 text-evo-muted'].join(' ')}>
+            {routine.is_active ? 'Activa' : 'En pausa'}
+          </span>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <WeekStrip weekdays={days.map((day) => day.weekday)} />
+        <div className="grid grid-cols-2 gap-2">
           <ButtonLink to={`/routines/${routine.id}/edit`} variant="secondary">
-            Editar
+            Editar rutina
           </ButtonLink>
           <Button
-            variant={routine.is_active ? 'secondary' : 'lime'}
+            variant="secondary"
             disabled={toggleActive.isPending || deleteRoutine.isPending}
             onClick={() => toggleActive.mutate(!routine.is_active)}
           >
             {routine.is_active ? 'Pausar' : 'Activar'}
           </Button>
         </div>
-      </div>
-
-      <section className="panel grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
-        <Input label="Inicio" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
-        <Input label="Fin" type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
-        <div className="flex items-end">
-          <Button fullWidth variant="secondary" disabled={saveDates.isPending} onClick={() => saveDates.mutate()}>
-            Guardar fechas
-          </Button>
-        </div>
-        <p className="text-xs text-evo-muted sm:col-span-2 lg:col-span-3">
-          Vacío = indefinida. Varias rutinas activas pueden convivir en el mismo calendario.
-        </p>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {days.map((day) => {
-          const selected = (activeDay?.id ?? null) === day.id
-          return (
-            <button
-              key={day.id}
-              type="button"
-              onClick={() => setSelectedDayId(day.id)}
-              className={[
-                'min-h-16 rounded-2xl border-2 px-3 py-2.5 text-left text-sm',
-                selected
-                  ? 'border-evo-accent bg-evo-accent/10 text-evo-accent'
-                  : 'border-evo-border bg-evo-surface text-evo-muted',
-              ].join(' ')}
-            >
-              <span className="block font-semibold">D{day.day_index}</span>
-              <span className="block truncate">{day.name}</span>
-              <span className="mt-1 block text-xs">
-                {day.weekday ? WEEKDAY_LABELS[day.weekday - 1] : 'Sin día'}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {days.length > 1 ? (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="tablist" aria-label="Días">
+          {days.map((day) => {
+            const selected = (activeDay?.id ?? null) === day.id
+            return (
+              <button
+                key={day.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setSelectedDayId(day.id)}
+                className={[
+                  'min-w-[7.5rem] shrink-0 rounded-2xl border-2 px-3 py-2 text-left transition',
+                  selected ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border/70 bg-evo-surface',
+                ].join(' ')}
+              >
+                <span className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-evo-muted">
+                  {day.weekday ? WEEKDAY_LABELS[day.weekday - 1]?.slice(0, 3) : `D${day.day_index}`}
+                  <span className="tabular-nums">{day.exercises?.length ?? 0}</span>
+                </span>
+                <span className="mt-0.5 block max-w-[9rem] truncate text-sm font-bold">{day.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
 
       {activeDay ? (
-        <section className="panel space-y-3 p-4 lg:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <h3 className="font-display text-xl font-semibold">{activeDay.name}</h3>
-              <p className="text-xs text-evo-muted">
-                {FOCUS_LABELS[activeDay.focus ?? ''] ?? 'Sin enfoque'}
-                {activeDay.weekday ? ` · ${WEEKDAY_LABELS[activeDay.weekday - 1]}` : ''}
+        <section className="space-y-3" aria-label={activeDay.name}>
+          <div className="flex items-end justify-between gap-3 px-1">
+            <div className="min-w-0">
+              <h2 className="truncate font-display text-xl font-bold">{activeDay.name}</h2>
+              <p className="text-sm text-evo-muted">
+                {activeDay.weekday ? WEEKDAY_LABELS[activeDay.weekday - 1] : 'Sin día fijo'}
+                {FOCUS_LABELS[activeDay.focus ?? ''] ? ` · ${FOCUS_LABELS[activeDay.focus ?? '']}` : ''}
               </p>
             </div>
-            <Button
-              onClick={() => startSession.mutate(activeDay.id)}
-              disabled={startSession.isPending || !(activeDay.exercises?.length)}
-            >
-              Entrenar hoy
-            </Button>
           </div>
-          <ul className="space-y-2">
-            {(activeDay.exercises ?? []).map((exercise) => (
-              <li key={exercise.id}>
-                <Link
-                  to={`/exercise-history/${exercise.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-evo-border bg-evo-surface-2 px-4 py-3 text-sm hover:border-evo-accent"
-                >
-                  <span className="min-w-0">
-                    <span className="block font-medium">{exercise.name}</span>
-                    <span className="block text-evo-muted">
-                      {exercisePlanLabel(exercise)}
-                      {exercise.target_muscle ? ` · ${exercise.target_muscle}` : ''}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-xs font-bold text-evo-accent">Historial →</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
 
-          {days.length > 1 ? (
-            <CopyDayPicker
-              sourceLabel={`D${activeDay.day_index} · ${activeDay.name}`}
-              disabled={!(activeDay.exercises?.length)}
-              busy={copyDay.isPending}
-              options={days
-                .filter((day) => day.id !== activeDay.id)
-                .map((day) => ({
-                  id: day.id,
-                  label: `D${day.day_index}`,
-                  sublabel: day.name,
-                }))}
-              onCopy={(targetIds) =>
-                copyDay.mutateAsync({
-                  fromId: activeDay.id,
-                  targetIds: targetIds.map(Number),
-                })
-              }
-            />
-          ) : null}
+          {(activeDay.exercises ?? []).length === 0 ? (
+            <div className="rounded-3xl border-2 border-dashed border-evo-border p-5 text-center text-sm text-evo-muted">
+              Este día no tiene ejercicios.{' '}
+              <Link to={`/routines/${routine.id}/edit`} className="font-bold text-evo-accent">
+                Añádelos
+              </Link>
+            </div>
+          ) : (
+            <ol className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
+              {(activeDay.exercises ?? []).map((exercise, index) => (
+                <li key={exercise.id} className="border-b border-evo-border/40 last:border-b-0">
+                  <Link
+                    to={`/exercise-history/${exercise.id}`}
+                    className="flex min-h-16 items-center gap-3 px-4 py-3 transition active:bg-evo-surface-2"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-evo-accent/15 text-sm font-bold text-evo-accent" aria-hidden>
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-bold">{exercise.name}</span>
+                      <span className="block truncate text-sm text-evo-muted">
+                        {exercisePlanLabel(exercise)}
+                        {exercise.target_muscle ? ` · ${exercise.target_muscle}` : ''}
+                      </span>
+                    </span>
+                    <span className="sr-only">Ver historial</span>
+                    <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          <Button
+            size="lg"
+            fullWidth
+            onClick={() => startSession.mutate(activeDay.id)}
+            disabled={startSession.isPending || !activeDay.exercises?.length}
+          >
+            {startSession.isPending ? 'Empezando…' : `Entrenar ${activeDay.name} hoy`}
+          </Button>
         </section>
       ) : null}
 
@@ -262,29 +242,55 @@ export function RoutineDetailPage() {
         setExpandedSession={setExpandedSession}
       />
 
-      <section className="rounded-2xl border-2 border-evo-danger/30 p-4">
-        <h3 className="font-display text-lg font-bold">Borrar rutina</h3>
-        <p className="mt-1 text-sm text-evo-muted">Se eliminan sus días y sesiones. No se puede deshacer.</p>
-        <Button
-          className="mt-3"
-          variant="danger"
-          disabled={toggleActive.isPending || deleteRoutine.isPending}
-          onClick={() => {
-            void (async () => {
-              const ok = await confirm({
-                title: `¿Borrar "${routine.name}"?`,
-                message: 'Se eliminarán días y sesiones asociadas. Esta acción no se puede deshacer.',
-                confirmLabel: 'Borrar',
-                cancelLabel: 'Cancelar',
-                danger: true,
-              })
-              if (ok) deleteRoutine.mutate()
-            })()
-          }}
-        >
-          Borrar rutina
-        </Button>
-      </section>
+      <details className="group rounded-3xl border border-evo-border/60 bg-evo-surface">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 font-bold">
+          Ajustes de la rutina
+          <Icon name="chevron" className="h-4 w-4 text-evo-muted transition group-open:rotate-90" />
+        </summary>
+        <div className="space-y-5 border-t border-evo-border/40 p-4">
+          <div className="space-y-3">
+            <div>
+              <p className="font-bold">Fechas</p>
+              <p className="text-sm text-evo-muted">Vacío = sin fecha. Útil para bloques de 8-12 semanas.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Empieza" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
+              <Input label="Termina" type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
+            </div>
+            <Button
+              fullWidth
+              variant="secondary"
+              disabled={saveDates.isPending || (startsOn === (routine.starts_on ?? '') && endsOn === (routine.ends_on ?? ''))}
+              onClick={() => saveDates.mutate()}
+            >
+              Guardar fechas
+            </Button>
+          </div>
+          <div className="space-y-2 border-t border-evo-border/40 pt-4">
+            <p className="font-bold">Borrar rutina</p>
+            <p className="text-sm text-evo-muted">Se eliminan sus días y sesiones. No se puede deshacer.</p>
+            <Button
+              variant="danger"
+              fullWidth
+              disabled={toggleActive.isPending || deleteRoutine.isPending}
+              onClick={() => {
+                void (async () => {
+                  const ok = await confirm({
+                    title: `¿Borrar «${routine.name}»?`,
+                    message: 'Se eliminarán sus días y sesiones. Esta acción no se puede deshacer.',
+                    confirmLabel: 'Borrar',
+                    cancelLabel: 'Cancelar',
+                    danger: true,
+                  })
+                  if (ok) deleteRoutine.mutate()
+                })()
+              }}
+            >
+              Borrar rutina
+            </Button>
+          </div>
+        </div>
+      </details>
     </div>
   )
 }

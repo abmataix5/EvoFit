@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { ExercisePickerSheet } from '../components/exercises/ExercisePickerSheet'
 import { Button } from '../components/ui/Button'
 import { ExerciseCard } from '../features/workout/ExerciseCard'
 import { SessionReportButton } from '../features/reports/SessionReportButton'
@@ -17,14 +18,16 @@ import {
   parseDecimal,
   parseInteger,
   previousFor,
+  sessionExercises,
   sessionStats,
+  setLogged,
   type ExerciseGroup,
   type SetDraft,
 } from '../features/workout/model'
 import { formatDuration, isTimeMode, joinDuration } from '../lib/tracking'
 import { useWakeLock } from '../features/workout/useWakeLock'
 import { useWorkoutAutosave, type SaveState } from '../features/workout/useWorkoutAutosave'
-import { api, type WorkoutSession } from '../lib/api'
+import { api, apiErrorMessage, validationErrors, type CatalogExercise, type WorkoutSession } from '../lib/api'
 import { formatDayLabel } from '../lib/dates'
 import { queryClient } from '../lib/queryClient'
 
@@ -65,6 +68,9 @@ export function WorkoutSessionPage() {
   const [completing, setCompleting] = useState(false)
   const [recordEvent, setRecordEvent] = useState<RecordEvent | null>(null)
   const clearRecord = useCallback(() => setRecordEvent(null), [])
+  /** Selector de ejercicio abierto: para cambiar uno (replace) o añadir al final. */
+  const [picker, setPicker] = useState<{ replace?: ExerciseGroup } | null>(null)
+  const [changingExercises, setChangingExercises] = useState(false)
 
   // Mejores marcas ya celebradas por ejercicio en esta visita: igualarlas no vuelve a saltar.
   const celebrated = useRef(new Map<number, { weight: number; e1rm: number; time: number }>())
@@ -116,8 +122,7 @@ export function WorkoutSessionPage() {
 
   const groups = useMemo<ExerciseGroup[]>(() => {
     if (!session) return []
-    const exercises = session.day?.exercises ?? []
-    return exercises.map((exercise) => ({
+    return sessionExercises(session).map((exercise) => ({
       exercise,
       id: exercise.id,
       name: exercise.name,
@@ -164,6 +169,83 @@ export function WorkoutSessionPage() {
     },
     onError: () => notify('No se pudo guardar la nota.', 'error'),
   })
+
+  /** Aplica en pantalla la sesión que devuelve el servidor tras cambiar sus ejercicios. */
+  function applyExercises(updated: WorkoutSession) {
+    queryClient.setQueryData(['workout-session', sessionId], updated)
+    autosave.syncExercises(updated)
+  }
+
+  async function changeExercises(request: () => Promise<WorkoutSession>, done: string): Promise<WorkoutSession | null> {
+    setChangingExercises(true)
+    try {
+      // Primero se guarda lo pendiente: el servidor tiene que ver las series antes del cambio.
+      if (!(await autosave.flushNow())) {
+        notify('Sin conexión: para cambiar ejercicios hace falta internet.', 'error')
+        return null
+      }
+      const updated = await request()
+      applyExercises(updated)
+      notify(done, 'success')
+      return updated
+    } catch (error) {
+      const errors = validationErrors(error)
+      notify(Object.values(errors)[0] ?? apiErrorMessage(error, 'No se ha podido cambiar el ejercicio.'), 'error')
+      return null
+    } finally {
+      setChangingExercises(false)
+    }
+  }
+
+  async function handlePicked([choice]: CatalogExercise[]) {
+    if (!choice) return
+    const replace = picker?.replace
+    const position = replace ? groups.findIndex((group) => group.id === replace.id) : groups.length
+    const updated = await changeExercises(
+      async () =>
+        (
+          await api.post<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}/exercises`, {
+            catalog_exercise_id: choice.id,
+            replaces_routine_exercise_id: replace?.id ?? null,
+          })
+        ).data.data,
+      replace ? `Hoy: ${choice.name} en lugar de ${replace.name}` : `${choice.name} añadido al entreno de hoy`,
+    )
+    if (!updated) return
+    setPicker(null)
+    const next = sessionExercises(updated)[position]
+    if (next) openExercise(next.id)
+  }
+
+  function requestReplace(group: ExerciseGroup) {
+    if (group.sets.some((set) => setLogged(set, group.mode) || set.reps.trim() !== '')) {
+      notify('Ya has apuntado series de este ejercicio. Si hoy haces otro, añádelo con «Añadir ejercicio».', 'info')
+      return
+    }
+    setPicker({ replace: group })
+  }
+
+  async function removeExtra(group: ExerciseGroup) {
+    const logged = group.sets.filter((set) => setLogged(set, group.mode)).length
+    const restoring = Boolean(group.exercise.replaces_routine_exercise_id)
+    const ok = await confirm({
+      title: restoring ? '¿Volver al ejercicio de la rutina?' : `¿Quitar ${group.name} de hoy?`,
+      message:
+        logged > 0
+          ? `Se borrarán las ${logged} series que has apuntado de ${group.name}.`
+          : restoring
+            ? 'Vuelve el ejercicio que tenía la rutina para hoy.'
+            : 'Solo se quita de este entreno.',
+      confirmLabel: restoring ? 'Volver' : 'Quitar',
+      cancelLabel: 'Cancelar',
+      danger: logged > 0,
+    })
+    if (!ok) return
+    await changeExercises(
+      async () => (await api.delete<{ data: WorkoutSession }>(`/workout-sessions/${sessionId}/exercises/${group.id}`)).data.data,
+      restoring ? 'Vuelve el ejercicio de la rutina' : `${group.name} quitado de hoy`,
+    )
+  }
 
   async function completeSession() {
     const stats = sessionStats(groups)
@@ -294,10 +376,35 @@ export function WorkoutSessionPage() {
               removeSet={autosave.removeSet}
               onSetDone={startRest}
               onRecord={celebrate}
+              onReplace={requestReplace}
+              onRemoveExtra={(g) => void removeExtra(g)}
             />
           ))}
         </ul>
       )}
+
+      <button
+        type="button"
+        disabled={changingExercises}
+        onClick={() => setPicker({})}
+        className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-evo-border text-base font-bold text-evo-text transition active:scale-[0.99] disabled:opacity-50"
+      >
+        <span className="text-xl text-evo-accent" aria-hidden>
+          +
+        </span>
+        Añadir ejercicio
+      </button>
+
+      {picker ? (
+        <ExercisePickerSheet
+          title={picker.replace ? `Cambiar ${picker.replace.name}` : 'Añadir ejercicio a hoy'}
+          mode="single"
+          busy={changingExercises}
+          usedIds={groups.map((group) => group.exercise.catalog_exercise_id).filter((v): v is number => v != null)}
+          onClose={() => setPicker(null)}
+          onConfirm={handlePicked}
+        />
+      ) : null}
 
       <SessionNotes
         key={session.id}
