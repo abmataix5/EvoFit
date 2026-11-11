@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import { Avatar } from '../features/profile/Avatar'
 import { goalOption, levelLabel } from '../features/profile/profileOptions'
+import { ProfilePosts } from '../features/feed/ProfilePosts'
 import { FriendButton } from '../features/social/FriendButton'
 import { api, apiErrorMessage } from '../lib/api'
 import { queryClient } from '../lib/queryClient'
@@ -173,6 +174,10 @@ export function PersonProfilePage() {
           </div>
         </section>
       )}
+
+      {person.can_view_activity ? (
+        <ProfilePosts userId={person.id} emptyText={`${person.name} aún no ha compartido ningún entreno.`} />
+      ) : null}
 
       {menuOpen ? (
         <Sheet title={person.name} onClose={() => setMenuOpen(false)}>

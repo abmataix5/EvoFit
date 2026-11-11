@@ -14,6 +14,10 @@ export type IconName =
   | 'back'
   | 'chevron'
   | 'logout'
+  | 'heart'
+  | 'heart-filled'
+  | 'comment'
+  | 'more'
 
 type Props = {
   name: IconName
@@ -80,6 +84,21 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
         <>
           <path {...common} d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" />
           <path {...common} d="M10.5 12H20m0 0-3.5-3.5M20 12l-3.5 3.5" />
+        </>
+      ) : null}
+      {name === 'heart' || name === 'heart-filled' ? (
+        <path
+          {...common}
+          fill={name === 'heart-filled' ? 'currentColor' : 'none'}
+          d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z"
+        />
+      ) : null}
+      {name === 'comment' ? <path {...common} d="M5 18.5V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8.5L5 18.5Z" /> : null}
+      {name === 'more' ? (
+        <>
+          <circle cx="5.5" cy="12" r="1.6" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+          <circle cx="18.5" cy="12" r="1.6" fill="currentColor" />
         </>
       ) : null}
       {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}

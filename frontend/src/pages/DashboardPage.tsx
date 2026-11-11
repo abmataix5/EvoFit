@@ -1,4 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button, ButtonLink } from '../components/ui/Button'
@@ -14,6 +15,9 @@ import {
 import { addDays, formatDayLabel, localDateKey, relativeDayLabel, startOfWeek } from '../lib/dates'
 import { firstName, getDayMotivation, helloLine } from '../lib/motivation'
 import { invalidateTraining } from '../lib/queryClient'
+import { PostList } from '../features/feed/PostList'
+import { feedQuery } from '../lib/feed'
+import { friendsQuery } from '../lib/social'
 
 const WEEK_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
@@ -31,7 +35,8 @@ function kg(value: number) {
   return `${value.toLocaleString('es-ES', { maximumFractionDigits: 2 })} kg`
 }
 
-export function DashboardPage() {
+/** Lo de siempre: entreno de hoy, racha, semana y último récord. */
+function MyDayView() {
   const { user } = useAuth()
   const motivation = getDayMotivation()
   const name = firstName(user?.name)
@@ -417,5 +422,89 @@ function TodayCard({ session }: { session: WorkoutSession }) {
         </Button>
       </div>
     </article>
+  )
+}
+
+type HomeView = 'friends' | 'day'
+const VIEW_KEY = 'evofit:home-view'
+
+function readView(): HomeView | null {
+  try {
+    const value = localStorage.getItem(VIEW_KEY)
+    return value === 'friends' || value === 'day' ? value : null
+  } catch {
+    return null
+  }
+}
+
+/** Inicio: el feed de amigos y "Mi día", en dos vistas. Recuerda la última elegida. */
+export function DashboardPage() {
+  const friends = useQuery(friendsQuery)
+  const [chosen, setChosen] = useState<HomeView | null>(readView)
+  // Sin elegir aún: el feed si ya tienes amigos; si no, tu día.
+  const view: HomeView = chosen ?? ((friends.data?.length ?? 0) > 0 ? 'friends' : 'day')
+
+  function choose(next: HomeView) {
+    setChosen(next)
+    try {
+      localStorage.setItem(VIEW_KEY, next)
+    } catch {
+      // Sin almacenamiento (modo privado): solo dura esta visita.
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div role="tablist" aria-label="Inicio" className="mx-auto grid max-w-2xl grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
+        {(
+          [
+            { id: 'friends', label: 'Amigos' },
+            { id: 'day', label: 'Mi día' },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={view === item.id}
+            onClick={() => choose(item.id)}
+            className={['min-h-11 rounded-xl text-sm font-bold transition', view === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted'].join(' ')}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {view === 'friends' ? <FriendsFeed hasFriends={(friends.data?.length ?? 0) > 0} /> : <MyDayView />}
+    </div>
+  )
+}
+
+function FriendsFeed({ hasFriends }: { hasFriends: boolean }) {
+  const feed = useInfiniteQuery(feedQuery)
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <PostList
+        query={feed}
+        empty={
+          <div className="space-y-3 rounded-3xl border-2 border-dashed border-evo-border p-6 text-center">
+            <p className="text-3xl" aria-hidden>
+              {hasFriends ? '🏋️' : '👋'}
+            </p>
+            <p className="font-display text-xl font-bold">{hasFriends ? 'Aún no hay entrenos' : 'Entrena con tus amigos'}</p>
+            <p className="text-sm text-evo-muted">
+              {hasFriends
+                ? 'Cuando tú o tus amigos terminéis un entreno y lo compartáis, aparecerá aquí.'
+                : 'Añade a tus amigos para ver sus entrenos, darles «me gusta» y comentar. Tus entrenos compartidos también salen aquí.'}
+            </p>
+            {!hasFriends ? (
+              <ButtonLink to="/search" className="mt-1">
+                Buscar amigos
+              </ButtonLink>
+            ) : null}
+          </div>
+        }
+      />
+    </div>
   )
 }

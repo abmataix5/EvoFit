@@ -39,6 +39,8 @@ export type AppNotification = {
   actor: PersonCard
   friendship_id: number | null
   pending: boolean
+  post_id: number | null
+  excerpt: string | null
 }
 
 export const personQuery = (id: number) =>

@@ -50,6 +50,7 @@ const ROUTES: Array<{ pattern: string; meta: (params: Record<string, string | un
   { pattern: '/notifications', meta: () => ({ title: 'Notificaciones', root: false, parent: '/' }) },
   { pattern: '/friends', meta: () => ({ title: 'Amigos', root: false, parent: '/profile' }) },
   { pattern: '/u/:id', meta: () => ({ title: 'Perfil', root: false, parent: '/search' }) },
+  { pattern: '/posts/:id', meta: () => ({ title: 'Entreno', root: false, parent: '/', focus: true }) },
 ]
 
 export function routeMeta(pathname: string): RouteMeta {

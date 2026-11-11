@@ -15,6 +15,10 @@ function describe(notification: AppNotification): string {
       return notification.pending ? 'quiere ser tu amigo' : 'te envió una solicitud de amistad'
     case 'friend_accepted':
       return 'ha aceptado tu solicitud. ¡Ya sois amigos!'
+    case 'post_like':
+      return 'le ha dado «me gusta» a tu entreno'
+    case 'post_comment':
+      return notification.excerpt ? `ha comentado: «${notification.excerpt}»` : 'ha comentado tu entreno'
     default:
       return 'tiene novedades para ti'
   }
@@ -49,7 +53,7 @@ export function NotificationsPage() {
         </span>
         <div className="space-y-1.5">
           <h2 className="font-display text-2xl font-bold">Todo tranquilo por aquí</h2>
-          <p className="text-evo-muted">Aquí verás las solicitudes de amistad y, pronto, los «me gusta» y comentarios de tus entrenos.</p>
+          <p className="text-evo-muted">Aquí verás las solicitudes de amistad y los «me gusta» y comentarios de tus entrenos.</p>
         </div>
         <Link to="/search" className={buttonClasses({ variant: 'secondary' })}>
           Buscar amigos
@@ -77,6 +81,11 @@ export function NotificationsPage() {
                 {describe(notification)}
                 <span className="ml-1.5 whitespace-nowrap text-sm text-evo-muted">{timeAgo(notification.created_at)}</span>
               </p>
+              {notification.post_id ? (
+                <Link to={`/posts/${notification.post_id}`} className="mt-1 inline-block text-sm font-bold text-evo-accent">
+                  Ver entreno →
+                </Link>
+              ) : null}
               {notification.kind === 'friend_request' && notification.pending ? (
                 <div className="mt-2">
                   <FriendButton person={notification.actor} />

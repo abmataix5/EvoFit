@@ -9,6 +9,7 @@ import { Avatar } from '../features/profile/Avatar'
 import { goalOption, levelLabel, profileCompletion, visibilityOption } from '../features/profile/profileOptions'
 import { api, apiErrorMessage, type ProfileStats, type User } from '../lib/api'
 import { friendRequestsQuery, friendsQuery } from '../lib/social'
+import { ProfilePosts } from '../features/feed/ProfilePosts'
 
 function formatMonthYear(iso: string | null) {
   if (!iso) return null
@@ -172,6 +173,8 @@ export function ProfilePage() {
           </div>
         )}
       </section>
+
+      <ProfilePosts userId={user.id} emptyText="Cuando termines un entreno, compártelo con tus amigos y aparecerá aquí." />
 
       <section className="rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
         <div className="flex items-center justify-between gap-3">

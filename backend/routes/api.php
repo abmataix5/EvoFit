@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\ExerciseLibraryController;
 use App\Http\Controllers\Api\FriendController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PeopleController;
+use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PostInteractionController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
@@ -52,6 +54,19 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/friend-requests', [FriendController::class, 'store'])->middleware('throttle:30,1');
         Route::post('/friend-requests/{friendship}/accept', [FriendController::class, 'accept']);
         Route::delete('/friend-requests/{friendship}', [FriendController::class, 'dismiss']);
+
+        // Feed: entrenos compartidos, "me gusta" y comentarios.
+        Route::get('/feed', [PostController::class, 'feed']);
+        Route::get('/people/{user}/posts', [PostController::class, 'ofUser']);
+        Route::post('/workout-sessions/{workoutSession}/share', [PostController::class, 'share'])->middleware('throttle:20,1');
+        Route::get('/posts/{post}', [PostController::class, 'show']);
+        Route::delete('/posts/{post}', [PostController::class, 'destroy']);
+        Route::get('/posts/{post}/photo', [PostController::class, 'photo']);
+        Route::post('/posts/{post}/like', [PostInteractionController::class, 'like']);
+        Route::delete('/posts/{post}/like', [PostInteractionController::class, 'unlike']);
+        Route::get('/posts/{post}/comments', [PostInteractionController::class, 'comments']);
+        Route::post('/posts/{post}/comments', [PostInteractionController::class, 'comment'])->middleware('throttle:30,1');
+        Route::delete('/comments/{comment}', [PostInteractionController::class, 'destroyComment']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Friendship;
+use App\Models\Post;
 use App\Models\User;
 use App\Services\Social\ProfilePresenter;
 use Illuminate\Http\JsonResponse;
@@ -27,11 +28,17 @@ class NotificationController extends Controller
             ->where('status', Friendship::PENDING)
             ->pluck('id')
             ->all();
+        // Avisos de publicaciones ya borradas: se omiten.
+        $postIds = Post::query()
+            ->whereIn('id', $notifications->pluck('data.post_id')->filter()->unique())
+            ->pluck('id')
+            ->flip();
 
         $data = $notifications
-            ->map(function (DatabaseNotification $n) use ($actors, $pendingIds, $presenter, $user) {
+            ->map(function (DatabaseNotification $n) use ($actors, $pendingIds, $postIds, $presenter, $user) {
                 $actor = $actors->get($n->data['actor_id'] ?? null);
-                if ($actor === null) {
+                $postId = $n->data['post_id'] ?? null;
+                if ($actor === null || ($postId !== null && ! isset($postIds[$postId]))) {
                     return null;
                 }
 
@@ -44,6 +51,8 @@ class NotificationController extends Controller
                     'friendship_id' => $n->data['friendship_id'] ?? null,
                     // Una solicitud ya aceptada o rechazada deja de mostrar botones.
                     'pending' => in_array($n->data['friendship_id'] ?? null, $pendingIds, true),
+                    'post_id' => $postId,
+                    'excerpt' => $n->data['excerpt'] ?? null,
                 ];
             })
             ->filter()
