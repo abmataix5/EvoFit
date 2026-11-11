@@ -1,4 +1,19 @@
-type IconName = 'home' | 'routines' | 'catalog' | 'calendar' | 'progress' | 'user' | 'menu' | 'close' | 'download' | 'file'
+export type IconName =
+  | 'home'
+  | 'routines'
+  | 'catalog'
+  | 'calendar'
+  | 'progress'
+  | 'user'
+  | 'menu'
+  | 'close'
+  | 'download'
+  | 'file'
+  | 'search'
+  | 'bell'
+  | 'back'
+  | 'chevron'
+  | 'logout'
 
 type Props = {
   name: IconName
@@ -47,6 +62,26 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
         </>
       ) : null}
       {name === 'menu' ? <path {...common} d="M4 7h16M4 12h16M4 17h16" /> : null}
+      {name === 'search' ? (
+        <>
+          <circle {...common} cx="10.5" cy="10.5" r="6" />
+          <path {...common} d="m15 15 5 5" />
+        </>
+      ) : null}
+      {name === 'bell' ? (
+        <>
+          <path {...common} d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15l1.5-2Z" />
+          <path {...common} d="M10 20.5a2 2 0 0 0 4 0" />
+        </>
+      ) : null}
+      {name === 'back' ? <path {...common} d="M15 5 8 12l7 7" /> : null}
+      {name === 'chevron' ? <path {...common} d="m9 5 7 7-7 7" /> : null}
+      {name === 'logout' ? (
+        <>
+          <path {...common} d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" />
+          <path {...common} d="M10.5 12H20m0 0-3.5-3.5M20 12l-3.5 3.5" />
+        </>
+      ) : null}
       {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}
       {name === 'download' ? <path {...common} d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" /> : null}
       {name === 'file' ? (

@@ -5,6 +5,7 @@ import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { TrackingModePicker } from '../components/exercises/TrackingModePicker'
+import { catalogExercisesQuery } from '../lib/queries'
 import { api, type CatalogExercise } from '../lib/api'
 import {
   exercisePlanLabel,
@@ -48,13 +49,7 @@ export function ExercisesPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['catalog-exercises'],
-    queryFn: async () => {
-      const { data: response } = await api.get<{ data: CatalogExercise[] }>('/catalog-exercises')
-      return response.data
-    },
-  })
+  const { data, isLoading } = useQuery(catalogExercisesQuery)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -173,7 +168,7 @@ export function ExercisesPage() {
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h1 className="font-display text-3xl font-bold tracking-tight">Catálogo</h1>
+        <h1 className="sr-only">Catálogo de ejercicios</h1>
         <p className="text-base text-evo-muted">
           {data?.length
             ? `${data.length} ${data.length === 1 ? 'ejercicio' : 'ejercicios'} para tus rutinas.`

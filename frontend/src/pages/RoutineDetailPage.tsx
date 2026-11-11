@@ -138,10 +138,7 @@ export function RoutineDetailPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/routines" className="text-sm font-semibold text-evo-accent hover:text-evo-accent-soft">
-            ← Volver a rutinas
-          </Link>
-          <h2 className="mt-2 font-display text-3xl font-bold">{routine.name}</h2>
+          <h2 className="font-display text-3xl font-bold">{routine.name}</h2>
           <p className="text-sm text-evo-muted">
             {routine.sessions_per_week} días/semana · {routine.exercises_count ?? 0} ejercicios
           </p>

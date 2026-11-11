@@ -1,281 +1,176 @@
-import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
-import { BrandLogo } from '../BrandLogo'
-import { useUiFeedback } from '../feedback/UiFeedback'
-import { Icon } from '../icons/Icon'
-import { ThemeSwitch } from './ThemeSwitch'
 import { Avatar } from '../../features/profile/Avatar'
-import { Button } from '../ui/Button'
-import { formatHeaderDay, helloLine } from '../../lib/motivation'
+import { BrandLogo } from '../BrandLogo'
+import { Icon, type IconName } from '../icons/Icon'
+import { isTabActive, routeMeta, TABS, type Tab, type TabId } from './navigation'
 
-const navItems = [
-  { to: '/', label: 'Hoy', icon: 'home' as const, end: true },
-  { to: '/calendar', label: 'Agenda', icon: 'calendar' as const, end: false },
-  { to: '/routines', label: 'Rutinas', icon: 'routines' as const, end: false },
-  { to: '/exercises', label: 'Catálogo', icon: 'catalog' as const, end: false },
-  { to: '/progress', label: 'Progreso', icon: 'progress' as const, end: false },
-]
-
-const pageTitles: Record<string, string> = {
-  '/': 'Hoy',
-  '/routines': 'Rutinas',
-  '/routines/new': 'Nueva',
-  '/exercises': 'Catálogo',
-  '/calendar': 'Agenda',
-  '/progress': 'Progreso',
-  '/profile': 'Mi perfil',
-  '/profile/edit': 'Editar perfil',
+const TAB_ICONS: Record<Exclude<TabId, 'profile'>, IconName> = {
+  home: 'home',
+  calendar: 'calendar',
+  routines: 'routines',
+  progress: 'progress',
 }
 
-function resolveTitle(pathname: string) {
-  if (pathname.startsWith('/routines/') && pathname !== '/routines/new' && !pathname.endsWith('/edit')) {
-    return 'Detalle'
+const iconButton =
+  'flex h-11 w-11 items-center justify-center rounded-full text-evo-text transition hover:bg-evo-surface-2 active:scale-95 active:bg-evo-surface-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-evo-accent/40'
+
+function TabIcon({ tab, active }: { tab: Tab; active: boolean }) {
+  const { user } = useAuth()
+
+  if (tab.id === 'profile') {
+    return (
+      <Avatar
+        name={user?.name}
+        url={user?.avatar_url}
+        size="xs"
+        className={[
+          'ring-2 ring-offset-2 ring-offset-evo-bg transition',
+          active ? 'ring-evo-accent' : 'ring-transparent',
+        ].join(' ')}
+      />
+    )
   }
-  if (pathname.startsWith('/exercise-history/')) {
-    return 'Historial'
-  }
-  if (pathname.endsWith('/edit') && pathname.startsWith('/routines/')) {
-    return 'Editar'
-  }
-  if (pathname.startsWith('/workout/')) {
-    return 'Sesión'
-  }
-  return pageTitles[pathname] ?? 'EvoFit'
+
+  return <Icon name={TAB_ICONS[tab.id]} className="h-6 w-6" />
 }
 
-export function AppShell() {
-  const { user, logout } = useAuth()
-  const { confirm } = useUiFeedback()
+/** Volver atrás dentro de la app; si se entró por un enlace directo, a la pantalla padre. */
+function useGoBack(parent: string | undefined) {
+  const navigate = useNavigate()
+  return () => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (idx > 0) navigate(-1)
+    else navigate(parent ?? '/', { replace: true })
+  }
+}
+
+function TopBar() {
   const location = useLocation()
-  const title = resolveTitle(location.pathname)
-  const headerDay = formatHeaderDay()
-  const [menuOpen, setMenuOpen] = useState(false)
-  // En plena sesión no hay pestañas: la pantalla es para apuntar series.
-  const hideTabs = location.pathname.startsWith('/workout/')
+  const meta = routeMeta(location.pathname)
+  const goBack = useGoBack(meta.parent)
 
-  useEffect(() => {
-    setMenuOpen(false)
-  }, [location.pathname])
+  return (
+    <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg/85 backdrop-blur-xl">
+      {meta.root ? (
+        <div className="flex h-14 items-center gap-2 px-4 lg:h-16 lg:px-8">
+          <h1 className="min-w-0 flex-1 truncate font-display text-[1.7rem] font-bold tracking-tight">{meta.title}</h1>
+          <nav aria-label="Acciones" className="-mr-2 flex items-center">
+            <Link to="/search" className={iconButton} aria-label="Buscar">
+              <Icon name="search" className="h-6 w-6" />
+            </Link>
+            <Link to="/notifications" className={iconButton} aria-label="Notificaciones">
+              <Icon name="bell" className="h-6 w-6" />
+            </Link>
+          </nav>
+        </div>
+      ) : (
+        <div className="grid h-14 grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-2 lg:h-16 lg:px-6">
+          <button type="button" className={iconButton} aria-label="Volver" onClick={goBack}>
+            <Icon name="back" className="h-6 w-6" />
+          </button>
+          <p className="truncate text-center text-base font-bold">{meta.title}</p>
+          <span aria-hidden />
+        </div>
+      )}
+    </header>
+  )
+}
 
-  useEffect(() => {
-    if (!menuOpen) return
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') setMenuOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = previous
-    }
-  }, [menuOpen])
+function TabLink({ tab, pathname, variant }: { tab: Tab; pathname: string; variant: 'bottom' | 'side' }) {
+  const active = isTabActive(tab, pathname)
 
-  async function handleLogout() {
-    const ok = await confirm({
-      title: 'Cerrar sesión',
-      message: '¿Quieres salir de EvoFit?',
-      confirmLabel: 'Salir',
-      cancelLabel: 'Cancelar',
-      danger: true,
-    })
-    if (ok) await logout()
+  function handleClick() {
+    // Tocar la pestaña en la que ya estás sube al principio, como en las apps nativas.
+    if (pathname === tab.to) window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  if (variant === 'side') {
+    return (
+      <Link
+        to={tab.to}
+        onClick={handleClick}
+        aria-current={active ? 'page' : undefined}
+        className={[
+          'flex min-h-13 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
+          active ? 'bg-evo-accent/15 text-evo-accent' : 'text-evo-text hover:bg-evo-surface-2',
+        ].join(' ')}
+      >
+        <TabIcon tab={tab} active={active} />
+        {tab.id === 'profile' ? 'Tu perfil' : tab.label}
+      </Link>
+    )
   }
 
   return (
-    <div className="no-x-scroll min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="hidden border-r border-evo-border bg-evo-surface lg:flex lg:flex-col lg:px-5 lg:py-6">
-        <div className="mb-8 flex items-center gap-3 rounded-2xl bg-evo-surface-2 p-3">
-          <Link to="/" aria-label="Ir al inicio">
-            <BrandLogo size="nav" />
-          </Link>
-          <div>
-            <p className="font-display text-xl font-bold">EvoFit</p>
-            <p className="text-xs font-medium text-evo-muted">Entrena · Mejora · Evoluciona</p>
-          </div>
-        </div>
+    <Link
+      to={tab.to}
+      onClick={handleClick}
+      aria-current={active ? 'page' : undefined}
+      className={[
+        'flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[0.7rem] font-bold transition active:scale-95',
+        active ? 'text-evo-accent' : 'text-evo-muted',
+      ].join(' ')}
+    >
+      <span className="flex h-7 items-center justify-center">
+        <TabIcon tab={tab} active={active} />
+      </span>
+      {tab.label}
+    </Link>
+  )
+}
 
-        <nav aria-label="Principal" className="flex flex-1 flex-col gap-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                [
-                  'flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-bold transition',
-                  isActive
-                    ? 'bg-evo-accent text-[#1a120c] shadow-[0_10px_28px_rgba(255,138,76,0.28)]'
-                    : 'text-evo-text hover:bg-evo-surface-2',
-                ].join(' ')
-              }
-            >
-              <span aria-hidden>
-                <Icon name={item.icon} />
-              </span>
-              {item.label}
-            </NavLink>
+export function AppShell() {
+  const { pathname } = useLocation()
+  const meta = routeMeta(pathname)
+  const showTabs = !meta.focus
+
+  // Cada pantalla empieza arriba: si no, se hereda el scroll de la anterior.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [pathname])
+
+  return (
+    <div className="no-x-scroll min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
+      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-evo-border/40 bg-evo-surface px-4 py-6 lg:flex">
+        <Link to="/" aria-label="Ir al inicio" className="mb-8 flex items-center gap-3 px-2">
+          <BrandLogo size="nav" />
+          <span className="font-display text-xl font-bold">EvoFit</span>
+        </Link>
+        <nav aria-label="Principal" className="flex flex-col gap-1.5">
+          {TABS.map((tab) => (
+            <TabLink key={tab.id} tab={tab} pathname={pathname} variant="side" />
           ))}
         </nav>
-
-        <div className="mt-auto space-y-3 rounded-2xl border-2 border-evo-border bg-evo-surface-2 p-4">
-          <Link to="/profile" className="-m-1 flex items-center gap-3 rounded-2xl p-1 transition hover:bg-evo-surface">
-            <Avatar name={user?.name} url={user?.avatar_url} />
-            <div className="min-w-0">
-              <p className="truncate font-display text-lg font-bold">{user?.name}</p>
-              <p className="truncate text-sm text-evo-muted">{user?.username ? `@${user.username}` : 'Ver mi perfil'}</p>
-            </div>
-          </Link>
-          <ThemeSwitch />
-          <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
-            Cerrar sesión
-          </Button>
-        </div>
       </aside>
 
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col overflow-x-clip">
-        <header className="safe-top sticky top-0 z-20 hidden border-b border-evo-border/70 bg-evo-surface/92 backdrop-blur-md lg:block">
-          <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center px-3 lg:h-14 lg:px-8">
-            <div className="min-w-0 justify-self-start">
-              <p className="truncate font-display text-sm font-semibold leading-none text-evo-text">
-                {helloLine(user?.name)}
-              </p>
-              <p className="mt-1 text-[0.7rem] font-semibold uppercase tracking-wide text-evo-muted">
-                {headerDay.day} {headerDay.num}
-              </p>
-            </div>
-
-            <Link to="/" aria-label="Ir al inicio" className="justify-self-center">
-              <BrandLogo size="nav" />
-            </Link>
-
-            <div className="justify-self-end text-right">
-              <div className="flex items-center justify-end gap-3">
-                <Link to="/profile" className="flex min-w-0 items-center gap-2 text-right" aria-label="Mi perfil">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{user?.name}</p>
-                    <p className="truncate text-xs text-evo-muted">{title}</p>
-                  </div>
-                  <Avatar name={user?.name} url={user?.avatar_url} size="sm" />
-                </Link>
-                <Button variant="ghost" className="!min-h-10 !px-3" onClick={() => void handleLogout()}>
-                  Salir
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <header className="safe-top sticky top-0 z-50 border-b border-evo-border/40 bg-evo-bg/85 backdrop-blur-xl lg:hidden">
-          <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-3">
-            <span aria-hidden />
-            <Link to="/" aria-label="Ir al inicio" className="justify-self-center">
-              <BrandLogo size="nav" />
-            </Link>
-            <button
-              type="button"
-              className="flex h-12 w-12 items-center justify-center justify-self-end rounded-2xl bg-evo-surface-2 text-evo-text transition active:scale-95"
-              aria-expanded={menuOpen}
-              aria-controls="account-drawer"
-              aria-label={menuOpen ? 'Cerrar cuenta' : 'Abrir cuenta'}
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              {menuOpen ? (
-                <Icon name="close" className="h-6 w-6" />
-              ) : (
-                <Avatar name={user?.name} url={user?.avatar_url} size="sm" />
-              )}
-            </button>
-          </div>
-        </header>
+      <div className="flex min-h-dvh w-full min-w-0 flex-col">
+        <TopBar />
 
         <main
           className={[
-            'no-x-scroll flex-1 px-4 py-5 lg:px-8 lg:py-6',
-            hideTabs ? '' : 'pb-28 lg:pb-6',
+            'no-x-scroll mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-8 lg:py-6',
+            showTabs ? 'pb-28 lg:pb-6' : '',
           ].join(' ')}
         >
           <Outlet />
         </main>
 
-        {!hideTabs ? (
+        {showTabs ? (
           <nav
             aria-label="Principal"
             className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-evo-border/40 bg-evo-bg/95 px-2 pt-1.5 backdrop-blur-xl lg:hidden"
           >
             <ul className="mx-auto grid max-w-lg grid-cols-5">
-              {navItems.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      [
-                        'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl text-[0.7rem] font-bold transition',
-                        isActive ? 'text-evo-accent' : 'text-evo-muted active:bg-evo-surface-2',
-                      ].join(' ')
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span
-                          className={[
-                            'flex h-8 w-12 items-center justify-center rounded-full transition',
-                            isActive ? 'bg-evo-accent/20' : '',
-                          ].join(' ')}
-                        >
-                          <Icon name={item.icon} className="h-6 w-6" />
-                        </span>
-                        {item.label}
-                      </>
-                    )}
-                  </NavLink>
+              {TABS.map((tab) => (
+                <li key={tab.id}>
+                  <TabLink tab={tab} pathname={pathname} variant="bottom" />
                 </li>
               ))}
             </ul>
           </nav>
         ) : null}
-
-        {menuOpen ? (
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-            aria-label="Cerrar cuenta"
-            onClick={() => setMenuOpen(false)}
-          />
-        ) : null}
-
-        <aside
-          id="account-drawer"
-          inert={!menuOpen}
-          aria-label="Cuenta"
-          className={[
-            'fixed right-0 top-[calc(env(safe-area-inset-top)+3.5rem)] z-40 flex w-[min(20.5rem,86vw)] flex-col rounded-bl-3xl border-l border-evo-border/40 bg-evo-surface px-4 pb-5 shadow-2xl lg:hidden',
-            'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-            menuOpen ? 'translate-x-0' : 'translate-x-full',
-          ].join(' ')}
-        >
-          <div className="pt-5">
-            <p className="truncate font-display text-2xl font-bold tracking-tight">{helloLine(user?.name)}</p>
-            <p className="mt-1 text-sm font-semibold text-evo-muted">
-              {headerDay.day} {headerDay.num}
-            </p>
-          </div>
-          <div className="safe-bottom mt-5 space-y-3 rounded-3xl bg-evo-surface-2 p-4">
-            <Link to="/profile" className="-m-1 flex items-center gap-3 rounded-2xl p-1 active:bg-evo-surface">
-              <Avatar name={user?.name} url={user?.avatar_url} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-lg font-bold">{user?.name}</p>
-                <p className="truncate text-sm font-semibold text-evo-accent">Ver mi perfil →</p>
-              </div>
-            </Link>
-            <ThemeSwitch />
-            <Button variant="secondary" fullWidth size="lg" onClick={() => void handleLogout()}>
-              Cerrar sesión
-            </Button>
-          </div>
-        </aside>
       </div>
     </div>
   )

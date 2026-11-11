@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button } from '../components/ui/Button'
 import { formatKg } from '../features/workout/model'
@@ -18,7 +18,6 @@ const metricLabels: Record<Metric, string> = {
 
 export function ExerciseHistoryPage() {
   const { routineExerciseId } = useParams()
-  const navigate = useNavigate()
   const [metric, setMetric] = useState<Metric>('best')
 
   const query = useQuery({
@@ -75,14 +74,6 @@ export function ExerciseHistoryPage() {
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent"
-      >
-        ← Volver
-      </button>
-
       {query.isLoading ? <p className="text-sm text-evo-muted">Cargando historial…</p> : null}
 
       {query.isError ? (

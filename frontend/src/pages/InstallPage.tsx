@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { BrandLogo } from '../components/BrandLogo'
 
 function isIos() {
@@ -92,6 +93,10 @@ export function InstallPage() {
         Dirección para compartir:{' '}
         <span className="font-semibold text-evo-text">{window.location.origin}/instalar</span>
       </p>
+
+      <Link to="/" className="mt-6 self-center text-base font-bold text-evo-accent">
+        Ir a EvoFit
+      </Link>
     </div>
   )
 }

@@ -35,6 +35,8 @@ const InstallPage = page(() => import('./pages/InstallPage'), 'InstallPage')
 const NewRoutinePage = page(() => import('./pages/NewRoutinePage'), 'NewRoutinePage')
 const EditProfilePage = page(() => import('./pages/EditProfilePage'), 'EditProfilePage')
 const ProfilePage = page(() => import('./pages/ProfilePage'), 'ProfilePage')
+const NotificationsPage = page(() => import('./pages/NotificationsPage'), 'NotificationsPage')
+const SearchPage = page(() => import('./pages/SearchPage'), 'SearchPage')
 const ProgressPage = page(() => import('./pages/ProgressPage'), 'ProgressPage')
 const RoutineDetailPage = page(() => import('./pages/RoutineDetailPage'), 'RoutineDetailPage')
 const RoutinesPage = page(() => import('./pages/RoutinesPage'), 'RoutinesPage')
@@ -92,6 +94,8 @@ export default function App() {
                 <Route path="progress" element={<ProgressPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="profile/edit" element={<EditProfilePage />} />
+                <Route path="search" element={<SearchPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="workout/:id" element={<WorkoutSessionPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

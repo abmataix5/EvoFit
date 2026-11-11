@@ -237,9 +237,9 @@ export function WorkoutSessionPage() {
       <div className="panel space-y-3 p-4">
         <Link
           to={`/routines/${session.routine_id}`}
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent hover:text-evo-accent-soft"
+          className="text-xs font-bold uppercase tracking-wide text-evo-muted hover:text-evo-accent"
         >
-          ← {session.routine?.name ?? 'Rutina'}
+          {session.routine?.name ?? 'Rutina'}
         </Link>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

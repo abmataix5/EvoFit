@@ -472,7 +472,7 @@ export function EditProfilePage() {
           </label>
         </Section>
 
-        <div className="safe-bottom sticky bottom-24 z-10 flex gap-2 rounded-3xl bg-evo-bg/85 p-1 backdrop-blur-md lg:bottom-4">
+        <div className="safe-bottom sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-evo-border/40 bg-evo-bg/95 px-4 pt-3 pb-3 backdrop-blur-xl lg:mx-0 lg:rounded-3xl lg:border lg:px-3">
           <Button type="button" variant="secondary" size="lg" onClick={() => navigate('/profile')}>
             Cancelar
           </Button>
@@ -482,7 +482,7 @@ export function EditProfilePage() {
         </div>
       </form>
 
-      <Section title="Cuenta">
+      <Section title="Cuenta" id="cuenta">
         <div className="rounded-2xl bg-evo-surface-2 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-evo-muted">Email</p>
           <p className="truncate font-semibold">{user.email}</p>

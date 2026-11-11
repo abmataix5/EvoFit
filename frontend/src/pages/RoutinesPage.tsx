@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { Icon } from '../components/icons/Icon'
 import { Button, ButtonLink } from '../components/ui/Button'
+import { routinesQuery } from '../lib/queries'
 import { api, type Routine } from '../lib/api'
 import { formatShortDate } from '../lib/dates'
 
@@ -15,13 +17,7 @@ function formatRange(routine: Routine) {
 export function RoutinesPage() {
   const queryClient = useQueryClient()
   const { notify } = useUiFeedback()
-  const { data, isLoading } = useQuery({
-    queryKey: ['routines'],
-    queryFn: async () => {
-      const { data: response } = await api.get<{ data: Routine[] }>('/routines')
-      return response.data
-    },
-  })
+  const { data, isLoading } = useQuery(routinesQuery)
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
@@ -43,7 +39,6 @@ export function RoutinesPage() {
     return (
       <div className="flex min-h-[68dvh] items-center">
         <section className="panel w-full space-y-5 p-6 text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-evo-accent">Rutinas</p>
           <div className="space-y-2">
             <h1 className="font-display text-3xl font-bold tracking-tight">Aún no tienes ninguna</h1>
             <p className="text-base leading-relaxed text-evo-muted">
@@ -64,9 +59,15 @@ export function RoutinesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Rutinas</h1>
-          <p className="mt-1 text-base text-evo-muted">Solo las activas salen en la agenda.</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-base text-evo-muted">Solo las activas salen en la agenda.</p>
+          <Link
+            to="/exercises"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-2xl bg-evo-surface-2 px-3 text-sm font-bold"
+          >
+            Catálogo
+            <Icon name="chevron" className="h-4 w-4" />
+          </Link>
         </div>
         <ButtonLink to="/routines/new" size="lg" fullWidth>
           Nueva rutina

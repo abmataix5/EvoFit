@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { Icon } from '../components/icons/Icon'
+import { ThemeSwitch } from '../components/layout/ThemeSwitch'
 import { buttonClasses } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import { Avatar } from '../features/profile/Avatar'
@@ -21,13 +24,25 @@ function StatTile({ value, label }: { value: string | number; label: string }) {
 }
 
 export function ProfilePage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const { confirm } = useUiFeedback()
   const stats = useQuery({
     queryKey: ['profile', 'stats'],
     queryFn: async () => (await api.get<ProfileStats>('/profile/stats')).data,
   })
 
   if (!user) return null
+
+  async function handleLogout() {
+    const ok = await confirm({
+      title: 'Cerrar sesión',
+      message: '¿Quieres salir de EvoFit en este dispositivo?',
+      confirmLabel: 'Salir',
+      cancelLabel: 'Cancelar',
+      danger: true,
+    })
+    if (ok) await logout()
+  }
 
   const goal = goalOption(user.training_goal)
   const level = levelLabel(user.experience_level)
@@ -136,6 +151,32 @@ export function ProfilePage() {
             Cambiar
           </Link>
         </div>
+      </section>
+
+      <section aria-label="Ajustes" className="space-y-4 rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-evo-muted">Ajustes</h2>
+        <ThemeSwitch />
+        <div className="divide-y divide-evo-border/40 overflow-hidden rounded-2xl bg-evo-surface-2">
+          <Link to="/profile/edit#cuenta" className="flex min-h-13 items-center justify-between gap-3 px-4 font-semibold">
+            <span className="min-w-0">
+              <span className="block">Cuenta y contraseña</span>
+              <span className="block truncate text-sm font-normal text-evo-muted">{user.email}</span>
+            </span>
+            <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+          </Link>
+          <Link to="/instalar" className="flex min-h-13 items-center justify-between gap-3 px-4 font-semibold">
+            Instalar la app en el móvil
+            <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+          </Link>
+        </div>
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl font-bold text-evo-danger transition hover:bg-evo-danger/10 active:scale-[0.98]"
+        >
+          <Icon name="logout" className="h-5 w-5" />
+          Cerrar sesión
+        </button>
       </section>
     </div>
   )

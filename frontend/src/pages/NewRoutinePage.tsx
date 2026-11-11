@@ -312,14 +312,7 @@ export function NewRoutinePage() {
     <div className="no-x-scroll mx-auto max-w-xl space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Link
-            to={isEditing ? `/routines/${editingId}` : '/routines'}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-evo-accent"
-          >
-            ← {isEditing ? 'Volver' : 'Rutinas'}
-          </Link>
-          <h2 className="mt-1 font-display text-2xl font-bold">{isEditing ? 'Editar rutina' : 'Nueva rutina'}</h2>
-          <p className="text-sm text-evo-muted">
+          <p className="text-sm font-semibold text-evo-muted">
             {step === 1 ? 'Paso 1 · Datos básicos' : 'Paso 2 · Ejercicios por día'}
           </p>
         </div>

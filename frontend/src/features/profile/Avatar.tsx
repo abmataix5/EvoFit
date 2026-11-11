@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { initials } from './profileOptions'
 
 const sizes = {
+  xs: 'h-7 w-7 text-[0.65rem]',
   sm: 'h-10 w-10 text-sm',
   md: 'h-14 w-14 text-lg',
   lg: 'h-24 w-24 text-3xl',
