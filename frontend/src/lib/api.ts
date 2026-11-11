@@ -73,6 +73,7 @@ export type User = {
   training_goal: TrainingGoal | null
   profile_visibility: ProfileVisibility
   show_age: boolean
+  email_notifications: boolean
   member_since: string | null
   tenant?: {
     id: number

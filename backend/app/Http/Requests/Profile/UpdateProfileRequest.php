@@ -51,6 +51,7 @@ class UpdateProfileRequest extends FormRequest
             'training_goal' => ['sometimes', 'nullable', Rule::enum(TrainingGoal::class)],
             'profile_visibility' => ['sometimes', 'required', Rule::enum(ProfileVisibility::class)],
             'show_age' => ['sometimes', 'required', 'boolean'],
+            'email_notifications' => ['sometimes', 'required', 'boolean'],
         ];
     }
 

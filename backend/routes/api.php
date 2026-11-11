@@ -2,8 +2,12 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogExerciseController;
+use App\Http\Controllers\Api\EmailPreferenceController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
 use App\Http\Controllers\Api\ExerciseLibraryController;
+use App\Http\Controllers\Api\FriendController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
@@ -18,6 +22,11 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/login', [AuthController::class, 'login']);
     });
 
+    // Baja de avisos desde el enlace firmado del email (no requiere sesión).
+    Route::match(['get', 'post'], '/email/unsubscribe/{user}', [EmailPreferenceController::class, 'unsubscribe'])
+        ->middleware(['signed', 'throttle:20,1'])
+        ->name('email.unsubscribe');
+
     Route::middleware(['auth:sanctum', 'tenant', 'throttle:120,1'])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -28,6 +37,25 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->middleware('throttle:10,1');
         Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar']);
         Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar']);
+
+        // Red social: personas, amistades y avisos.
+        Route::get('/people/search', [PeopleController::class, 'search']);
+        Route::get('/people/{user}', [PeopleController::class, 'show']);
+        Route::get('/people/{user}/friends', [FriendController::class, 'ofUser']);
+        Route::post('/people/{user}/block', [PeopleController::class, 'block']);
+        Route::delete('/people/{user}/block', [PeopleController::class, 'unblock']);
+        Route::post('/people/{user}/report', [PeopleController::class, 'report'])->middleware('throttle:10,1');
+
+        Route::get('/friends', [FriendController::class, 'index']);
+        Route::delete('/friends/{user}', [FriendController::class, 'destroy']);
+        Route::get('/friend-requests', [FriendController::class, 'requests']);
+        Route::post('/friend-requests', [FriendController::class, 'store'])->middleware('throttle:30,1');
+        Route::post('/friend-requests/{friendship}/accept', [FriendController::class, 'accept']);
+        Route::delete('/friend-requests/{friendship}', [FriendController::class, 'dismiss']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
 
         Route::apiResource('routines', RoutineController::class);
         Route::post('/routines/{routine}/days/{day}/copy', [RoutineController::class, 'copyDay']);

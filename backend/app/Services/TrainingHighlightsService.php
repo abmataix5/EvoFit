@@ -155,12 +155,16 @@ class TrainingHighlightsService
     {
         $trainedOn = WorkoutSession::trainedOnSql();
 
+        // Sin el filtro de tenant de quien consulta: también se usa para ver el perfil de
+        // otra persona, y ya se filtra por su user_id.
         return WorkoutSession::query()
+            ->withoutGlobalScope('tenant')
             ->where('user_id', $user->id)
             ->where(function ($query) {
                 $query->whereNotNull('completed_at')
                     ->orWhereHas('setLogs', function ($q) {
-                        $q->whereNotNull('weight_kg')->orWhereNotNull('reps')->orWhereNotNull('duration_seconds');
+                        $q->withoutGlobalScope('tenant')
+                            ->where(fn ($inner) => $inner->whereNotNull('weight_kg')->orWhereNotNull('reps')->orWhereNotNull('duration_seconds'));
                     });
             })
             ->selectRaw($trainedOn.' as trained_on')

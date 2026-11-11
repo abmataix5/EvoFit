@@ -19,7 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
 #[Fillable([
     'tenant_id', 'name', 'email', 'password', 'role',
     'username', 'bio', 'location', 'birth_date', 'height_cm', 'gym_name',
-    'experience_level', 'training_goal', 'profile_visibility', 'show_age',
+    'experience_level', 'training_goal', 'profile_visibility', 'show_age', 'email_notifications',
 ])]
 #[Hidden(['password', 'remember_token', 'avatar_path'])]
 class User extends Authenticatable
@@ -77,6 +77,7 @@ class User extends Authenticatable
             'birth_date' => 'date',
             'height_cm' => 'integer',
             'show_age' => 'boolean',
+            'email_notifications' => 'boolean',
             'avatar_updated_at' => 'datetime',
             'experience_level' => ExperienceLevel::class,
             'training_goal' => TrainingGoal::class,

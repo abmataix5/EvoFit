@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
@@ -7,7 +7,8 @@ import { buttonClasses } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import { Avatar } from '../features/profile/Avatar'
 import { goalOption, levelLabel, profileCompletion, visibilityOption } from '../features/profile/profileOptions'
-import { api, type ProfileStats } from '../lib/api'
+import { api, apiErrorMessage, type ProfileStats, type User } from '../lib/api'
+import { friendRequestsQuery, friendsQuery } from '../lib/social'
 
 function formatMonthYear(iso: string | null) {
   if (!iso) return null
@@ -24,8 +25,19 @@ function StatTile({ value, label }: { value: string | number; label: string }) {
 }
 
 export function ProfilePage() {
-  const { user, logout } = useAuth()
-  const { confirm } = useUiFeedback()
+  const { user, logout, setCurrentUser } = useAuth()
+  const { confirm, notify } = useUiFeedback()
+  const friends = useQuery(friendsQuery)
+  const requests = useQuery(friendRequestsQuery)
+  const pendingRequests = requests.data?.incoming.length ?? 0
+  const emailPref = useMutation({
+    mutationFn: async (enabled: boolean) => (await api.patch<{ data: User }>('/profile', { email_notifications: enabled })).data.data,
+    onSuccess: (updated) => {
+      setCurrentUser(updated)
+      notify(updated.email_notifications ? 'Avisos por email activados' : 'Avisos por email desactivados', 'success')
+    },
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido guardar.'), 'error'),
+  })
   const stats = useQuery({
     queryKey: ['profile', 'stats'],
     queryFn: async () => (await api.get<ProfileStats>('/profile/stats')).data,
@@ -103,6 +115,27 @@ export function ProfilePage() {
         </Link>
       </section>
 
+      <Link
+        to={pendingRequests > 0 ? '/friends?tab=requests' : '/friends'}
+        className="flex min-h-16 items-center gap-3 rounded-3xl border border-evo-border/60 bg-evo-surface px-4 transition active:scale-[0.99]"
+      >
+        <span className="text-2xl" aria-hidden>
+          👥
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold">Amigos</span>
+          <span className="block text-sm text-evo-muted">
+            {friends.data ? `${friends.data.length} ${friends.data.length === 1 ? 'amigo' : 'amigos'}` : 'Tus amigos en EvoFit'}
+          </span>
+        </span>
+        {pendingRequests > 0 ? (
+          <span className="rounded-full bg-evo-accent px-2.5 py-1 text-xs font-bold text-[#1a120c]">
+            {pendingRequests} {pendingRequests === 1 ? 'solicitud' : 'solicitudes'}
+          </span>
+        ) : null}
+        <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+      </Link>
+
       {completion.done < completion.total ? (
         <Link
           to="/profile/edit"
@@ -120,7 +153,7 @@ export function ProfilePage() {
               style={{ width: `${(completion.done / completion.total) * 100}%` }}
             />
           </div>
-          <p className="mt-2 text-sm text-evo-muted">Pronto podrás añadir amigos: así te reconocerán.</p>
+          <p className="mt-2 text-sm text-evo-muted">Así te reconocerán tus amigos cuando te busquen.</p>
         </Link>
       ) : null}
 
@@ -156,6 +189,19 @@ export function ProfilePage() {
       <section aria-label="Ajustes" className="space-y-4 rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-evo-muted">Ajustes</h2>
         <ThemeSwitch />
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-evo-surface-2 px-4 py-3">
+          <span>
+            <span className="block font-semibold">Avisos por email</span>
+            <span className="block text-sm text-evo-muted">Te escribimos cuando alguien quiera ser tu amigo.</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={user.email_notifications}
+            disabled={emailPref.isPending}
+            onChange={(e) => emailPref.mutate(e.target.checked)}
+            className="h-6 w-6 shrink-0 accent-evo-accent"
+          />
+        </label>
         <div className="divide-y divide-evo-border/40 overflow-hidden rounded-2xl bg-evo-surface-2">
           <Link to="/profile/edit#cuenta" className="flex min-h-13 items-center justify-between gap-3 px-4 font-semibold">
             <span className="min-w-0">

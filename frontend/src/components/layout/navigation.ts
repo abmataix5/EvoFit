@@ -20,7 +20,7 @@ export const TABS: Tab[] = [
     matches: ['/routines', '/routines/*', '/exercises', '/exercise-history/*'],
   },
   { id: 'progress', to: '/progress', label: 'Progreso', matches: ['/progress'] },
-  { id: 'profile', to: '/profile', label: 'Tú', matches: ['/profile', '/profile/*'] },
+  { id: 'profile', to: '/profile', label: 'Tú', matches: ['/profile', '/profile/*', '/friends'] },
 ]
 
 export type RouteMeta = {
@@ -48,6 +48,8 @@ const ROUTES: Array<{ pattern: string; meta: (params: Record<string, string | un
   { pattern: '/profile/edit', meta: () => ({ title: 'Editar perfil', root: false, parent: '/profile', focus: true }) },
   { pattern: '/search', meta: () => ({ title: 'Buscar', root: false, parent: '/' }) },
   { pattern: '/notifications', meta: () => ({ title: 'Notificaciones', root: false, parent: '/' }) },
+  { pattern: '/friends', meta: () => ({ title: 'Amigos', root: false, parent: '/profile' }) },
+  { pattern: '/u/:id', meta: () => ({ title: 'Perfil', root: false, parent: '/search' }) },
 ]
 
 export function routeMeta(pathname: string): RouteMeta {

@@ -67,6 +67,15 @@ $vars = [
     'SANCTUM_STATEFUL_DOMAINS' => getenv('SANCTUM_STATEFUL_DOMAINS') ?: 'localhost,127.0.0.1',
     'FRONTEND_URL' => getenv('FRONTEND_URL') ?: 'http://localhost:5173',
     'CORS_ALLOWED_ORIGINS' => getenv('CORS_ALLOWED_ORIGINS') ?: 'http://localhost:5173',
+    'MAIL_MAILER' => getenv('MAIL_MAILER') ?: 'log',
+    'MAIL_SCHEME' => (string) getenv('MAIL_SCHEME'),
+    'MAIL_HOST' => (string) getenv('MAIL_HOST'),
+    'MAIL_PORT' => getenv('MAIL_PORT') ?: '587',
+    'MAIL_USERNAME' => (string) getenv('MAIL_USERNAME'),
+    // Entre comillas: las contraseñas de SMTP suelen llevar símbolos.
+    'MAIL_PASSWORD' => '"'.addcslashes((string) getenv('MAIL_PASSWORD'), '"\\$').'"',
+    'MAIL_FROM_ADDRESS' => getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@evofit.app',
+    'MAIL_FROM_NAME' => '"'.(getenv('MAIL_FROM_NAME') ?: 'EvoFit').'"',
 ];
 
 // Asegurar línea APP_KEY (key:generate la necesita para poder reemplazarla)

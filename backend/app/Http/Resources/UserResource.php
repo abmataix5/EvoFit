@@ -33,6 +33,7 @@ class UserResource extends JsonResource
             'training_goal' => $this->training_goal?->value,
             'profile_visibility' => $this->profile_visibility?->value,
             'show_age' => (bool) $this->show_age,
+            'email_notifications' => (bool) $this->email_notifications,
             'member_since' => $this->created_at?->toDateString(),
             'tenant' => $this->whenLoaded('tenant', fn () => [
                 'id' => $this->tenant->id,

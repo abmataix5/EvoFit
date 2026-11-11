@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -5,6 +6,7 @@ import { Avatar } from '../../features/profile/Avatar'
 import { BrandLogo } from '../BrandLogo'
 import { Icon, type IconName } from '../icons/Icon'
 import { isTabActive, routeMeta, TABS, type Tab, type TabId } from './navigation'
+import { unreadCountQuery } from '../../lib/social'
 
 const TAB_ICONS: Record<Exclude<TabId, 'profile'>, IconName> = {
   home: 'home',
@@ -50,6 +52,7 @@ function TopBar() {
   const location = useLocation()
   const meta = routeMeta(location.pathname)
   const goBack = useGoBack(meta.parent)
+  const unread = useQuery(unreadCountQuery).data ?? 0
 
   return (
     <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg/85 backdrop-blur-xl">
@@ -60,8 +63,17 @@ function TopBar() {
             <Link to="/search" className={iconButton} aria-label="Buscar">
               <Icon name="search" className="h-6 w-6" />
             </Link>
-            <Link to="/notifications" className={iconButton} aria-label="Notificaciones">
+            <Link
+              to="/notifications"
+              className={`${iconButton} relative`}
+              aria-label={unread > 0 ? `Notificaciones: ${unread} sin leer` : 'Notificaciones'}
+            >
               <Icon name="bell" className="h-6 w-6" />
+              {unread > 0 ? (
+                <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-evo-accent px-1 text-[0.7rem] font-bold text-[#1a120c] ring-2 ring-evo-bg">
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              ) : null}
             </Link>
           </nav>
         </div>

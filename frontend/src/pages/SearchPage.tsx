@@ -5,6 +5,8 @@ import { Icon } from '../components/icons/Icon'
 import { filterLibrary } from '../lib/exerciseLibrary'
 import { EQUIPMENT } from '../lib/muscles'
 import { catalogExercisesQuery, libraryQuery, routinesQuery } from '../lib/queries'
+import { peopleSearchQuery } from '../lib/social'
+import { PersonRow } from '../features/social/PersonRow'
 
 /** Minúsculas y sin tildes: "press banca" encuentra "Press Banca" y "jalón" encuentra "jalon". */
 function normalize(text: string | null | undefined) {
@@ -47,6 +49,9 @@ export function SearchPage() {
   const routines = useQuery(routinesQuery)
   const exercises = useQuery(catalogExercisesQuery)
   const library = useQuery(libraryQuery)
+  const deferredText = useDeferredValue(text.trim())
+  const people = useQuery(peopleSearchQuery(deferredText))
+  const peopleResults = people.data ?? []
 
   const results = useMemo(() => {
     if (!term) return null
@@ -61,7 +66,13 @@ export function SearchPage() {
   }, [term, routines.data, exercises.data, library.data])
 
   const loading = routines.isLoading || exercises.isLoading || library.isLoading
-  const empty = results && results.routines.length === 0 && results.exercises.length === 0 && results.library.length === 0
+  const empty =
+    results &&
+    !people.isFetching &&
+    peopleResults.length === 0 &&
+    results.routines.length === 0 &&
+    results.exercises.length === 0 &&
+    results.library.length === 0
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -74,7 +85,7 @@ export function SearchPage() {
             autoFocus
             enterKeyHint="search"
             autoComplete="off"
-            placeholder="Rutinas, ejercicios, músculos…"
+            placeholder="Personas, rutinas, ejercicios…"
             value={text}
             onChange={(event) => setParams(event.target.value ? { q: event.target.value } : {}, { replace: true })}
             className="box-border w-full rounded-full border-2 border-evo-border bg-evo-surface-2 py-3.5 pl-12 pr-4 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none focus:ring-4 focus:ring-evo-accent/25"
@@ -84,12 +95,15 @@ export function SearchPage() {
 
       {!term ? (
         <div className="space-y-3">
-          <div className="rounded-3xl border-2 border-dashed border-evo-border/70 p-5">
-            <p className="font-bold">👥 Personas, muy pronto</p>
-            <p className="mt-1 text-sm text-evo-muted">
-              Podrás buscar a tus amigos por su @usuario, seguirles y ver sus entrenos.
-            </p>
-          </div>
+          <Link to="/friends" className="flex items-center gap-3 rounded-3xl border-2 border-dashed border-evo-border/70 p-5 transition active:scale-[0.99]">
+            <span className="text-2xl" aria-hidden>
+              👥
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold">Busca a tus amigos</span>
+              <span className="block text-sm text-evo-muted">Escribe su nombre o su @usuario arriba. Toca aquí para ver tus amigos.</span>
+            </span>
+          </Link>
           <div className="grid grid-cols-2 gap-2">
             <Link to="/routines" className="rounded-2xl bg-evo-surface-2 px-4 py-3 font-bold transition active:scale-[0.98]">
               Mis rutinas
@@ -105,6 +119,16 @@ export function SearchPage() {
         <p className="px-1 text-center text-sm text-evo-muted">Nada que coincida con «{text.trim()}».</p>
       ) : (
         <div className="space-y-5">
+          {peopleResults.length > 0 ? (
+            <section className="space-y-2">
+              <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">Personas</h2>
+              <ul className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
+                {peopleResults.map((person) => (
+                  <PersonRow key={person.id} person={person} />
+                ))}
+              </ul>
+            </section>
+          ) : null}
           {results!.routines.length > 0 ? (
             <ResultSection title="Rutinas">
               {results!.routines.map((routine) => (

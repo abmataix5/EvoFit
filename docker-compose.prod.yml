@@ -56,6 +56,15 @@ services:
       # Workers de `artisan serve` (php -S) para atender peticiones en paralelo.
       PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-4}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      # Correo (avisos de solicitudes de amistad). Sin configurar, se escriben en el log.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@evofit.app}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-EvoFit}
     depends_on:
       mariadb:
         condition: service_healthy
