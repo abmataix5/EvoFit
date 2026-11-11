@@ -31,6 +31,8 @@ type Props = {
   onReplace?: (group: ExerciseGroup) => void
   /** Quitar un ejercicio cambiado o añadido hoy (vuelve el original si lo había). */
   onRemoveExtra?: (group: ExerciseGroup) => void
+  /** Ver foto y claves de técnica (solo ejercicios de la biblioteca). */
+  onShowTechnique?: (slug: string) => void
 }
 
 const cellInput =
@@ -86,6 +88,7 @@ export function ExerciseCard({
   onRecord,
   onReplace,
   onRemoveExtra,
+  onShowTechnique,
 }: Props) {
   const [detailsFor, setDetailsFor] = useState<number | null>(null)
   const doneSets = group.sets.filter((set) => set.done && setLogged(set, group.mode)).length
@@ -206,8 +209,13 @@ export function ExerciseCard({
 
       {open ? (
         <div id={`exercise-body-${group.id}`} className="space-y-3 border-t border-evo-border bg-evo-bg/30 px-3 py-3">
-          {onReplace || (group.exercise.session_only && onRemoveExtra) ? (
+          {onReplace || onShowTechnique || (group.exercise.session_only && onRemoveExtra) ? (
             <div className="flex flex-wrap items-center gap-1.5">
+              {onShowTechnique && group.exercise.library_slug ? (
+                <button type="button" onClick={() => onShowTechnique(group.exercise.library_slug!)} className={smallAction}>
+                  ⓘ Técnica
+                </button>
+              ) : null}
               {onReplace ? (
                 <button type="button" onClick={() => onReplace(group)} className={smallAction}>
                   ⇄ Cambiar
@@ -218,7 +226,7 @@ export function ExerciseCard({
                   {group.exercise.replaces_routine_exercise_id ? '↺ Deshacer cambio' : '✕ Quitar de hoy'}
                 </button>
               ) : null}
-              <span className="ml-auto text-xs text-evo-muted">Solo para hoy</span>
+
             </div>
           ) : null}
           {timed ? (

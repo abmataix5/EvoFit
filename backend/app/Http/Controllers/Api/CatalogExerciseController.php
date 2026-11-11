@@ -7,6 +7,9 @@ use App\Http\Requests\Catalog\StoreCatalogExerciseRequest;
 use App\Http\Requests\Catalog\UpdateCatalogExerciseRequest;
 use App\Http\Resources\CatalogExerciseResource;
 use App\Models\CatalogExercise;
+use App\Models\Exercise;
+use App\Services\CatalogExerciseResolver;
+use App\Services\ExerciseLibrary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +20,7 @@ class CatalogExerciseController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = CatalogExercise::query()
+            ->with('exercise')
             ->where('user_id', $request->user()->id)
             ->orderBy('name');
 
@@ -33,12 +37,32 @@ class CatalogExerciseController extends Controller
         return CatalogExerciseResource::collection($query->get());
     }
 
-    public function store(StoreCatalogExerciseRequest $request): JsonResponse
-    {
+    public function store(
+        StoreCatalogExerciseRequest $request,
+        CatalogExerciseResolver $resolver,
+        ExerciseLibrary $library,
+    ): JsonResponse {
         $payload = $request->validated();
+
+        if (! empty($payload['exercise_id'])) {
+            // Añadir de la biblioteca: si ya lo tenía, se devuelve el suyo.
+            $exercise = $resolver->fromLibrary($request->user(), Exercise::query()->findOrFail($payload['exercise_id']));
+
+            return response()->json([
+                'exercise' => new CatalogExerciseResource($exercise->load('exercise')),
+            ], $exercise->wasRecentlyCreated ? 201 : 200);
+        }
+
+        // Un propio que se llama igual que uno de la biblioteca queda enlazado con él.
+        $match = $library->match($payload['name']);
+        $libraryTaken = $match && CatalogExercise::query()
+            ->where('user_id', $request->user()->id)
+            ->where('exercise_id', $match->id)
+            ->exists();
 
         $exercise = CatalogExercise::query()->create([
             'user_id' => $request->user()->id,
+            'exercise_id' => $libraryTaken ? null : $match?->id,
             'name' => $payload['name'],
             'target_muscle' => $payload['target_muscle'] ?? null,
             'tracking_mode' => $payload['tracking_mode'] ?? 'weight_reps',
@@ -51,7 +75,7 @@ class CatalogExerciseController extends Controller
         ]);
 
         return response()->json([
-            'exercise' => new CatalogExerciseResource($exercise),
+            'exercise' => new CatalogExerciseResource($exercise->load('exercise')),
         ], 201);
     }
 
@@ -74,7 +98,7 @@ class CatalogExerciseController extends Controller
             }
         });
 
-        return new CatalogExerciseResource($catalogExercise->fresh());
+        return new CatalogExerciseResource($catalogExercise->fresh()->load('exercise'));
     }
 
     public function destroy(CatalogExercise $catalogExercise): JsonResponse

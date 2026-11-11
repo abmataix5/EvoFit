@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { ExerciseImage } from '../components/exercises/ExerciseImage'
 import { ExercisePickerSheet } from '../components/exercises/ExercisePickerSheet'
 import { Icon } from '../components/icons/Icon'
 import { CopyDayPicker } from '../components/routines/CopyDayPicker'
@@ -28,6 +29,7 @@ type DraftExercise = {
   default_reps: number
   default_duration_seconds: number
   rest_seconds: number
+  image_urls?: [string, string] | null
 }
 
 type DraftDay = {
@@ -54,6 +56,7 @@ function exerciseFromCatalog(item: CatalogExercise): DraftExercise {
     default_reps: item.default_reps || 10,
     default_duration_seconds: item.default_duration_seconds ?? 60,
     rest_seconds: item.rest_seconds ?? 90,
+    image_urls: item.image_urls ?? null,
   }
 }
 
@@ -80,6 +83,7 @@ function draftsFromRoutine(routine: Routine): DraftDay[] {
           default_reps: exercise.default_reps,
           default_duration_seconds: exercise.default_duration_seconds ?? 60,
           rest_seconds: exercise.rest_seconds ?? 90,
+          image_urls: exercise.image_urls ?? null,
         })),
     }))
 }
@@ -449,7 +453,7 @@ export function NewRoutinePage() {
                     +
                   </span>
                   <span className="font-bold">Añade los ejercicios de este día</span>
-                  <span className="text-sm text-evo-muted">De tu catálogo o nuevos, varios a la vez.</span>
+                  <span className="text-sm text-evo-muted">De la biblioteca, de los tuyos o nuevos. Varios a la vez.</span>
                 </button>
               ) : (
                 <ol className="space-y-2">
@@ -549,8 +553,11 @@ function ExerciseRow({
   return (
     <li className="rounded-3xl border border-evo-border/60 bg-evo-surface p-3">
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-evo-accent/15 text-sm font-bold text-evo-accent" aria-hidden>
-          {index + 1}
+        <span className="relative shrink-0">
+          <ExerciseImage urls={exercise.image_urls} name={exercise.name} className="!h-12 !w-12" />
+          <span className="absolute -left-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-evo-accent text-xs font-bold text-[#1a120c] ring-2 ring-evo-surface" aria-hidden>
+            {index + 1}
+          </span>
         </span>
         <button type="button" onClick={onReplace} className="min-w-0 flex-1 text-left" aria-label={`Cambiar ${exercise.name}`}>
           <span className="block truncate font-bold">{exercise.name}</span>

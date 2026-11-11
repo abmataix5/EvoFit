@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
+import { ExerciseImage } from '../components/exercises/ExerciseImage'
 import { WeekStrip } from '../components/routines/WeekStrip'
 import { Button, ButtonLink } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -206,8 +207,11 @@ export function RoutineDetailPage() {
                     to={`/exercise-history/${exercise.id}`}
                     className="flex min-h-16 items-center gap-3 px-4 py-3 transition active:bg-evo-surface-2"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-evo-accent/15 text-sm font-bold text-evo-accent" aria-hidden>
-                      {index + 1}
+                    <span className="relative shrink-0">
+                      <ExerciseImage urls={exercise.image_urls} name={exercise.name} />
+                      <span className="absolute -left-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-evo-accent text-xs font-bold text-[#1a120c] ring-2 ring-evo-surface" aria-hidden>
+                        {index + 1}
+                      </span>
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-bold">{exercise.name}</span>

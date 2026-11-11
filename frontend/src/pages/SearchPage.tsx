@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useDeferredValue, useMemo, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/icons/Icon'
-import { catalogExercisesQuery, routinesQuery } from '../lib/queries'
+import { filterLibrary } from '../lib/exerciseLibrary'
+import { EQUIPMENT } from '../lib/muscles'
+import { catalogExercisesQuery, libraryQuery, routinesQuery } from '../lib/queries'
 
 /** Minúsculas y sin tildes: "press banca" encuentra "Press Banca" y "jalón" encuentra "jalon". */
 function normalize(text: string | null | undefined) {
@@ -44,19 +46,22 @@ export function SearchPage() {
 
   const routines = useQuery(routinesQuery)
   const exercises = useQuery(catalogExercisesQuery)
+  const library = useQuery(libraryQuery)
 
   const results = useMemo(() => {
     if (!term) return null
     return {
       routines: (routines.data ?? []).filter((r) => normalize(`${r.name} ${r.description ?? ''}`).includes(term)).slice(0, 8),
+      // Propios (sin vincular a la biblioteca) y biblioteca: así no salen duplicados.
       exercises: (exercises.data ?? [])
-        .filter((e) => normalize(`${e.name} ${e.target_muscle ?? ''}`).includes(term))
-        .slice(0, 12),
+        .filter((e) => !e.exercise_id && normalize(`${e.name} ${e.target_muscle ?? ''}`).includes(term))
+        .slice(0, 6),
+      library: filterLibrary(library.data ?? [], { term, muscle: null, equipment: null }).slice(0, 12),
     }
-  }, [term, routines.data, exercises.data])
+  }, [term, routines.data, exercises.data, library.data])
 
-  const loading = routines.isLoading || exercises.isLoading
-  const empty = results && results.routines.length === 0 && results.exercises.length === 0
+  const loading = routines.isLoading || exercises.isLoading || library.isLoading
+  const empty = results && results.routines.length === 0 && results.exercises.length === 0 && results.library.length === 0
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -90,7 +95,7 @@ export function SearchPage() {
               Mis rutinas
             </Link>
             <Link to="/exercises" className="rounded-2xl bg-evo-surface-2 px-4 py-3 font-bold transition active:scale-[0.98]">
-              Catálogo
+              Ejercicios
             </Link>
           </div>
         </div>
@@ -113,9 +118,21 @@ export function SearchPage() {
             </ResultSection>
           ) : null}
           {results!.exercises.length > 0 ? (
-            <ResultSection title="Ejercicios del catálogo">
+            <ResultSection title="Tus ejercicios propios">
               {results!.exercises.map((exercise) => (
-                <ResultRow key={exercise.id} to="/exercises" title={exercise.name} subtitle={exercise.target_muscle} />
+                <ResultRow key={exercise.id} to="/exercises?tab=mine" title={exercise.name} subtitle={exercise.target_muscle} />
+              ))}
+            </ResultSection>
+          ) : null}
+          {results!.library.length > 0 ? (
+            <ResultSection title="Biblioteca de ejercicios">
+              {results!.library.map((exercise) => (
+                <ResultRow
+                  key={exercise.id}
+                  to={`/exercises?ex=${exercise.slug}`}
+                  title={exercise.name}
+                  subtitle={`${exercise.muscle_label} · ${EQUIPMENT[exercise.equipment] ?? exercise.equipment}`}
+                />
               ))}
             </ResultSection>
           ) : null}

@@ -16,7 +16,9 @@ class StoreCatalogExerciseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:160'],
+            // Desde la biblioteca (exercise_id) o propio (name).
+            'exercise_id' => ['nullable', 'integer', 'exists:exercises,id'],
+            'name' => ['required_without:exercise_id', 'nullable', 'string', 'max:160'],
             'target_muscle' => ['nullable', 'string', 'max:80'],
             'tracking_mode' => ['nullable', 'string', 'in:weight_reps,time,weight_time'],
             'time_direction' => ['nullable', 'string', 'in:faster,longer'],
@@ -32,7 +34,7 @@ class StoreCatalogExerciseRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $name = trim((string) $this->input('name', ''));
-            if ($name === '') {
+            if ($name === '' || $this->filled('exercise_id')) {
                 return;
             }
 

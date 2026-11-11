@@ -42,7 +42,7 @@ const ROUTES: Array<{ pattern: string; meta: (params: Record<string, string | un
   { pattern: '/routines/new', meta: () => ({ title: 'Nueva rutina', root: false, parent: '/routines', focus: true }) },
   { pattern: '/routines/:id/edit', meta: (p) => ({ title: 'Editar rutina', root: false, parent: `/routines/${p.id}`, focus: true }) },
   { pattern: '/routines/:id', meta: () => ({ title: 'Rutina', root: false, parent: '/routines' }) },
-  { pattern: '/exercises', meta: () => ({ title: 'Catálogo', root: false, parent: '/routines' }) },
+  { pattern: '/exercises', meta: () => ({ title: 'Ejercicios', root: false, parent: '/routines' }) },
   { pattern: '/exercise-history/:id', meta: () => ({ title: 'Historial', root: false, parent: '/routines' }) },
   { pattern: '/workout/:id', meta: () => ({ title: 'Entreno', root: false, parent: '/', focus: true }) },
   { pattern: '/profile/edit', meta: () => ({ title: 'Editar perfil', root: false, parent: '/profile', focus: true }) },

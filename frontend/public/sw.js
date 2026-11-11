@@ -1,6 +1,7 @@
 /* EvoFit service worker: abre la app sin cobertura (el entreno se guarda en el móvil y se envía al volver la red). */
 const SHELL_CACHE = 'evofit-shell-v1'
 const ASSET_CACHE = 'evofit-assets-v1'
+const MEDIA_CACHE = 'evofit-media-v1'
 const SHELL = ['/', '/index.html', '/site.webmanifest', '/icon-192.png', '/apple-touch-icon.png', '/favicon-32.png', '/logo.png']
 
 self.addEventListener('install', (event) => {
@@ -16,7 +17,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => ![SHELL_CACHE, ASSET_CACHE].includes(k)).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => ![SHELL_CACHE, ASSET_CACHE, MEDIA_CACHE].includes(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   )
 })
@@ -43,8 +44,10 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (url.pathname.startsWith('/assets/')) {
-    // Archivos con hash en el nombre: no cambian nunca.
+  // Archivos con hash en el nombre (no cambian nunca) y fotos de ejercicios (casi nunca):
+  // caché primero, y solo se descargan la primera vez.
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/media/')) {
+    const cacheName = url.pathname.startsWith('/media/') ? MEDIA_CACHE : ASSET_CACHE
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -52,7 +55,7 @@ self.addEventListener('fetch', (event) => {
           fetch(request).then((response) => {
             if (response.ok) {
               const copy = response.clone()
-              caches.open(ASSET_CACHE).then((cache) => cache.put(request, copy))
+              caches.open(cacheName).then((cache) => cache.put(request, copy))
             }
             return response
           }),

@@ -19,7 +19,12 @@ use Illuminate\Support\Facades\DB;
 
 class WorkoutSessionController extends Controller
 {
-    public const DETAIL_RELATIONS = ['routine', 'day.exercises', 'extraExercises', 'setLogs.routineExercise'];
+    public const DETAIL_RELATIONS = [
+        'routine',
+        'day.exercises.catalogExercise.exercise',
+        'extraExercises.catalogExercise.exercise',
+        'setLogs.routineExercise',
+    ];
 
     public function calendar(CalendarRequest $request, TrainingCalendarPlanner $planner): AnonymousResourceCollection
     {

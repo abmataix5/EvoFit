@@ -99,11 +99,17 @@ export type RoutineExercise = {
   /** Cambio o añadido solo para una sesión (no es parte de la rutina). */
   session_only?: boolean
   replaces_routine_exercise_id?: number | null
+  /** Ejercicio de la biblioteca al que corresponde (fotos y técnica). */
+  library_slug?: string | null
+  image_urls?: [string, string] | null
 }
 
 export type CatalogExercise = {
   id: number
   name: string
+  /** Enlace con la biblioteca común (null = ejercicio propio). */
+  exercise_id?: number | null
+  image_urls?: [string, string] | null
   target_muscle?: string | null
   tracking_mode?: TrackingMode
   time_direction?: TimeDirection
@@ -407,4 +413,25 @@ export type ProfileStats = {
   streak_weeks: number
   best_streak_weeks: number
   first_workout_on: string | null
+}
+
+/** Ejercicio de la biblioteca común de EvoFit. */
+export type LibraryExercise = {
+  id: number
+  slug: string
+  name: string
+  aliases: string[]
+  muscle: string
+  muscle_label: string
+  secondary_muscles: string[]
+  equipment: string
+  mechanic: 'compound' | 'isolation' | 'core' | 'power' | 'carry' | 'cardio'
+  tracking_mode: TrackingMode
+  time_direction: TimeDirection
+  default_sets: number
+  default_reps: number
+  default_duration_seconds: number | null
+  rest_seconds: number
+  cues: string[]
+  image_urls: [string, string] | null
 }

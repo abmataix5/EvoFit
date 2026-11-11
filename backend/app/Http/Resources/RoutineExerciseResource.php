@@ -28,6 +28,9 @@ class RoutineExerciseResource extends JsonResource
             // Cambio o añadido solo para una sesión (no forma parte de la rutina).
             'session_only' => $this->workout_session_id !== null,
             'replaces_routine_exercise_id' => $this->replaces_routine_exercise_id,
+            // Ejercicio de la biblioteca (si su catálogo está enlazado): fotos y técnica.
+            'library_slug' => $this->whenLoaded('catalogExercise', fn () => $this->catalogExercise?->exercise?->slug),
+            'image_urls' => $this->whenLoaded('catalogExercise', fn () => $this->catalogExercise?->exercise?->imageUrls()),
         ];
     }
 }

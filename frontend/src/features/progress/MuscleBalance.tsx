@@ -135,7 +135,7 @@ export function MuscleBalance() {
                 {' '}
                 «Sin grupo» son ejercicios sin músculo asignado:{' '}
                 <Link to="/exercises" className="font-bold text-evo-accent">
-                  asígnalo en el catálogo
+                  asígnalo en Ejercicios
                 </Link>
                 .
               </>

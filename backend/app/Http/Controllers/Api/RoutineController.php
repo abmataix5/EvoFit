@@ -24,7 +24,7 @@ class RoutineController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $routines = Routine::query()
-            ->with(['days.exercises'])
+            ->with(RoutineResource::DETAIL_RELATIONS)
             ->where('user_id', $request->user()->id)
             ->orderByDesc('is_active')
             ->orderByDesc('starts_on')
@@ -62,7 +62,7 @@ class RoutineController extends Controller
         $planner->syncRange($request->user(), $syncFrom, $syncTo);
 
         return response()->json([
-            'routine' => new RoutineResource($routine->load('days.exercises')),
+            'routine' => new RoutineResource($routine->load(RoutineResource::DETAIL_RELATIONS)),
         ], 201);
     }
 
@@ -70,7 +70,7 @@ class RoutineController extends Controller
     {
         $this->authorize('view', $routine);
 
-        return new RoutineResource($routine->load('days.exercises'));
+        return new RoutineResource($routine->load(RoutineResource::DETAIL_RELATIONS));
     }
 
     public function update(
@@ -99,7 +99,7 @@ class RoutineController extends Controller
         }
         $planner->syncRange($request->user(), $syncFrom, $syncTo);
 
-        return new RoutineResource($routine->fresh()->load('days.exercises'));
+        return new RoutineResource($routine->fresh()->load(RoutineResource::DETAIL_RELATIONS));
     }
 
     public function destroy(Request $request, Routine $routine, TrainingCalendarPlanner $planner): JsonResponse
@@ -180,6 +180,6 @@ class RoutineController extends Controller
             }
         });
 
-        return new RoutineResource($routine->fresh()->load('days.exercises'));
+        return new RoutineResource($routine->fresh()->load(RoutineResource::DETAIL_RELATIONS));
     }
 }

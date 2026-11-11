@@ -68,3 +68,18 @@ export async function saveCatalogExercise(draft: CatalogDraft, id?: number): Pro
   }
   return exercise
 }
+
+/** Añade un ejercicio de la biblioteca a "Mis ejercicios" (si ya estaba, devuelve el tuyo). */
+export async function addFromLibrary(exerciseId: number): Promise<CatalogExercise> {
+  const { data } = await api.post<{ exercise: CatalogExercise }>('/catalog-exercises', { exercise_id: exerciseId })
+  await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
+  return data.exercise
+}
+
+/** Enlaza (o desenlaza con null) un ejercicio propio con uno de la biblioteca. */
+export async function linkToLibrary(catalogId: number, exerciseId: number | null): Promise<CatalogExercise> {
+  const { data } = await api.patch<{ data: CatalogExercise }>(`/catalog-exercises/${catalogId}`, { exercise_id: exerciseId })
+  await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
+  void queryClient.invalidateQueries({ queryKey: ['routine'] })
+  return data.data
+}

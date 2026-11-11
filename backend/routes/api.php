@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogExerciseController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
+use App\Http\Controllers\Api\ExerciseLibraryController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
@@ -32,6 +33,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/routines/{routine}/days/{day}/copy', [RoutineController::class, 'copyDay']);
         Route::get('/routines/{routine}/history', [RoutineController::class, 'history']);
 
+        Route::get('/exercises', [ExerciseLibraryController::class, 'index']);
         Route::get('/catalog-exercises', [CatalogExerciseController::class, 'index']);
         Route::post('/catalog-exercises', [CatalogExerciseController::class, 'store']);
         Route::patch('/catalog-exercises/{catalog_exercise}', [CatalogExerciseController::class, 'update']);

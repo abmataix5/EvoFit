@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
+import { ExerciseDetailSheet } from '../components/exercises/ExerciseDetailSheet'
 import { ExercisePickerSheet } from '../components/exercises/ExercisePickerSheet'
 import { Button } from '../components/ui/Button'
 import { ExerciseCard } from '../features/workout/ExerciseCard'
@@ -30,6 +31,7 @@ import { useWorkoutAutosave, type SaveState } from '../features/workout/useWorko
 import { api, apiErrorMessage, validationErrors, type CatalogExercise, type WorkoutSession } from '../lib/api'
 import { formatDayLabel } from '../lib/dates'
 import { queryClient } from '../lib/queryClient'
+import { libraryQuery } from '../lib/queries'
 
 const saveLabels: Record<SaveState, { text: string; tone: string }> = {
   idle: { text: 'Los cambios se guardan solos', tone: 'bg-evo-surface-2 text-evo-muted' },
@@ -71,6 +73,9 @@ export function WorkoutSessionPage() {
   /** Selector de ejercicio abierto: para cambiar uno (replace) o añadir al final. */
   const [picker, setPicker] = useState<{ replace?: ExerciseGroup } | null>(null)
   const [changingExercises, setChangingExercises] = useState(false)
+  const [techniqueSlug, setTechniqueSlug] = useState<string | null>(null)
+  const library = useQuery({ ...libraryQuery, enabled: techniqueSlug !== null })
+  const technique = library.data?.find((item) => item.slug === techniqueSlug) ?? null
 
   // Mejores marcas ya celebradas por ejercicio en esta visita: igualarlas no vuelve a saltar.
   const celebrated = useRef(new Map<number, { weight: number; e1rm: number; time: number }>())
@@ -378,6 +383,7 @@ export function WorkoutSessionPage() {
               onRecord={celebrate}
               onReplace={requestReplace}
               onRemoveExtra={(g) => void removeExtra(g)}
+              onShowTechnique={setTechniqueSlug}
             />
           ))}
         </ul>
@@ -395,9 +401,11 @@ export function WorkoutSessionPage() {
         Añadir ejercicio
       </button>
 
+      {technique ? <ExerciseDetailSheet exercise={technique} onClose={() => setTechniqueSlug(null)} /> : null}
+
       {picker ? (
         <ExercisePickerSheet
-          title={picker.replace ? `Cambiar ${picker.replace.name}` : 'Añadir ejercicio a hoy'}
+          title={picker.replace ? `Cambiar ${picker.replace.name} (solo hoy)` : 'Añadir ejercicio a hoy'}
           mode="single"
           busy={changingExercises}
           usedIds={groups.map((group) => group.exercise.catalog_exercise_id).filter((v): v is number => v != null)}

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Catalog;
 
 use App\Models\CatalogExercise;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateCatalogExerciseRequest extends FormRequest
@@ -17,6 +18,13 @@ class UpdateCatalogExerciseRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:160'],
+            // Enlazar (o desenlazar con null) un ejercicio propio con la biblioteca.
+            'exercise_id' => [
+                'sometimes', 'nullable', 'integer', 'exists:exercises,id',
+                Rule::unique('catalog_exercises', 'exercise_id')
+                    ->where('user_id', $this->user()->id)
+                    ->ignore($this->route('catalog_exercise')),
+            ],
             'target_muscle' => ['nullable', 'string', 'max:80'],
             'tracking_mode' => ['sometimes', 'string', 'in:weight_reps,time,weight_time'],
             'time_direction' => ['sometimes', 'string', 'in:faster,longer'],
@@ -25,6 +33,13 @@ class UpdateCatalogExerciseRequest extends FormRequest
             'default_duration_seconds' => ['nullable', 'integer', 'min:1', 'max:7200'],
             'rest_seconds' => ['nullable', 'integer', 'min:0', 'max:600'],
             'notes' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'exercise_id.unique' => 'Ya tienes ese ejercicio de la biblioteca en tus ejercicios.',
         ];
     }
 

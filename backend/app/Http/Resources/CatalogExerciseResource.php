@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CatalogExercise;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\CatalogExercise */
+/** @mixin CatalogExercise */
 class CatalogExerciseResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -13,6 +14,9 @@ class CatalogExerciseResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            // Enlace con la biblioteca común (null = ejercicio propio).
+            'exercise_id' => $this->exercise_id,
+            'image_urls' => $this->whenLoaded('exercise', fn () => $this->exercise?->imageUrls()),
             'target_muscle' => $this->target_muscle,
             'tracking_mode' => $this->tracking_mode ?? 'weight_reps',
             'time_direction' => $this->time_direction ?? 'faster',

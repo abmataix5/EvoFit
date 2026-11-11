@@ -14,6 +14,7 @@ class CatalogExercise extends Model
     protected $fillable = [
         'tenant_id',
         'user_id',
+        'exercise_id',
         'name',
         'name_key',
         'target_muscle',
@@ -37,6 +38,12 @@ class CatalogExercise extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Ejercicio de la biblioteca común al que corresponde (null = ejercicio propio). */
+    public function exercise(): BelongsTo
+    {
+        return $this->belongsTo(Exercise::class);
     }
 
     public function routineExercises(): HasMany

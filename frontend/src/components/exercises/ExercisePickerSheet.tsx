@@ -1,79 +1,134 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { apiErrorMessage, validationErrors, type CatalogExercise } from '../../lib/api'
-import { emptyCatalogDraft, saveCatalogExercise, type CatalogDraft } from '../../lib/catalog'
-import { muscleLabel, normalizeText } from '../../lib/muscles'
-import { catalogExercisesQuery } from '../../lib/queries'
+import { apiErrorMessage, validationErrors, type CatalogExercise, type LibraryExercise } from '../../lib/api'
+import { addFromLibrary, emptyCatalogDraft, saveCatalogExercise, type CatalogDraft } from '../../lib/catalog'
+import { filterLibrary } from '../../lib/exerciseLibrary'
+import { EQUIPMENT, MUSCLES, normalizeText } from '../../lib/muscles'
+import { catalogExercisesQuery, libraryQuery } from '../../lib/queries'
 import { exercisePlanLabel } from '../../lib/tracking'
+import { useUiFeedback } from '../feedback/UiFeedback'
 import { Icon } from '../icons/Icon'
 import { Button } from '../ui/Button'
 import { Sheet } from '../ui/Sheet'
+import { ExerciseFilters } from './ExerciseFilters'
 import { ExerciseForm } from './ExerciseForm'
+import { ExerciseListRow } from './ExerciseListRow'
 
-type Props = {
+type Common = {
   title: string
   onClose: () => void
-  /** "single": tocar un ejercicio lo elige. "multiple": se marcan varios y se confirma. */
-  mode: 'single' | 'multiple'
-  onConfirm: (exercises: CatalogExercise[]) => void | Promise<void>
-  /** Ejercicios del catálogo que ya están (se marcan como tal). */
-  usedIds?: number[]
-  confirmLabel?: (count: number) => string
   busy?: boolean
 }
 
-/** Buscar en el catálogo (o crear uno nuevo) y elegir ejercicios. */
-export function ExercisePickerSheet({ title, onClose, mode, onConfirm, usedIds = [], confirmLabel, busy }: Props) {
-  const { data: catalog = [], isLoading } = useQuery(catalogExercisesQuery)
+type Props = Common &
+  (
+    | {
+        /** Elegir de "Mis ejercicios" o de la biblioteca (que se añade a los tuyos al elegirlo). */
+        source?: 'all'
+        /** "single": tocar un ejercicio lo elige. "multiple": se marcan varios y se confirma. */
+        mode: 'single' | 'multiple'
+        onConfirm: (exercises: CatalogExercise[]) => void | Promise<void>
+        /** Ejercicios de "Mis ejercicios" que ya están (se indica en la lista). */
+        usedIds?: number[]
+        confirmLabel?: (count: number) => string
+        onConfirmLibrary?: never
+      }
+    | {
+        /** Solo la biblioteca (p. ej. para vincular un ejercicio propio). */
+        source: 'library'
+        mode: 'single'
+        onConfirmLibrary: (exercise: LibraryExercise) => void
+        onConfirm?: never
+        usedIds?: never
+        confirmLabel?: never
+      }
+  )
+
+type Pick = { kind: 'mine'; item: CatalogExercise } | { kind: 'library'; item: LibraryExercise }
+const pickKey = (pick: Pick) => `${pick.kind}:${pick.item.id}`
+
+const muscleKeyOfLabel = (label: string | null | undefined) =>
+  MUSCLES.find((m) => normalizeText(m.label) === normalizeText(label))?.key ?? null
+
+/** Buscar y elegir ejercicios: de los tuyos, de la biblioteca o uno nuevo. */
+export function ExercisePickerSheet(props: Props) {
+  const { title, onClose, busy } = props
+  const libraryOnly = props.source === 'library'
+  const { notify } = useUiFeedback()
+  const library = useQuery(libraryQuery)
+  const catalog = useQuery({ ...catalogExercisesQuery, enabled: !libraryOnly })
+  const mine = useMemo(() => catalog.data ?? [], [catalog.data])
+  const libraryItems = useMemo(() => library.data ?? [], [library.data])
+
+  const [chosenTab, setTab] = useState<'mine' | 'library' | null>(null)
+  const tab = libraryOnly ? 'library' : (chosenTab ?? (mine.length > 0 ? 'mine' : 'library'))
   const [search, setSearch] = useState('')
   const [muscle, setMuscle] = useState<string | null>(null)
-  const [selected, setSelected] = useState<CatalogExercise[]>([])
+  const [selected, setSelected] = useState<Pick[]>([])
   const [creating, setCreating] = useState<CatalogDraft | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [working, setWorking] = useState(false)
   const [createError, setCreateError] = useState<string | undefined>()
 
-  const term = normalizeText(search)
-  const muscles = useMemo(
-    () => [...new Set(catalog.map((item) => muscleLabel(item.target_muscle)))].sort((a, b) => a.localeCompare(b, 'es')),
-    [catalog],
+  const mineByLibrary = useMemo(
+    () => new Map(mine.filter((m) => m.exercise_id).map((m) => [m.exercise_id as number, m])),
+    [mine],
+  )
+  const usedIds = props.usedIds ?? []
+
+  const libraryResults = useMemo(
+    () => filterLibrary(libraryItems, { term: search, muscle, equipment: null }),
+    [libraryItems, search, muscle],
+  )
+  const mineResults = useMemo(() => {
+    const term = normalizeText(search)
+    return mine
+      .filter((item) => !muscle || muscleKeyOfLabel(item.target_muscle) === muscle)
+      .filter((item) => !term || normalizeText(`${item.name} ${item.target_muscle ?? ''}`).includes(term))
+      .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  }, [mine, muscle, search])
+  const mineMuscles = useMemo(
+    () => new Set(mine.map((m) => muscleKeyOfLabel(m.target_muscle)).filter((k): k is string => k !== null)),
+    [mine],
   )
 
-  const visible = useMemo(
-    () =>
-      catalog.filter((item) => {
-        if (muscle && muscleLabel(item.target_muscle) !== muscle) return false
-        if (!term) return true
-        return normalizeText(`${item.name} ${item.target_muscle ?? ''}`).includes(term)
-      }),
-    [catalog, muscle, term],
-  )
+  const term = search.trim()
+  const exactExists =
+    mine.some((m) => normalizeText(m.name) === normalizeText(term)) ||
+    libraryItems.some((l) => normalizeText(l.name) === normalizeText(term))
 
-  // Sin buscar, agrupado por músculo; buscando, lista plana por relevancia (empieza por… primero).
-  const groups = useMemo(() => {
-    if (term) {
-      const sorted = [...visible].sort(
-        (a, b) => Number(!normalizeText(a.name).startsWith(term)) - Number(!normalizeText(b.name).startsWith(term)),
-      )
-      return [{ label: null as string | null, items: sorted }]
+  /** Convierte lo elegido en ejercicios de "Mis ejercicios" (añadiendo los de la biblioteca). */
+  async function toCatalog(picks: Pick[]): Promise<CatalogExercise[]> {
+    const result: CatalogExercise[] = []
+    for (const pick of picks) {
+      if (pick.kind === 'mine') result.push(pick.item)
+      else result.push(mineByLibrary.get(pick.item.id) ?? (await addFromLibrary(pick.item.id)))
     }
-    const map = new Map<string, CatalogExercise[]>()
-    for (const item of visible) {
-      const key = muscleLabel(item.target_muscle)
-      map.set(key, [...(map.get(key) ?? []), item])
-    }
-    return [...map.entries()]
-      .sort(([a], [b]) => (a === 'Sin grupo' ? 1 : b === 'Sin grupo' ? -1 : a.localeCompare(b, 'es')))
-      .map(([label, items]) => ({ label: label as string | null, items }))
-  }, [visible, term])
+    return result
+  }
 
-  const exact = catalog.some((item) => normalizeText(item.name) === term)
-
-  function toggle(item: CatalogExercise) {
-    if (mode === 'single') {
-      void onConfirm([item])
+  async function confirm(picks: Pick[]) {
+    if (props.source === 'library') {
+      const first = picks[0]
+      if (first?.kind === 'library') props.onConfirmLibrary(first.item)
       return
     }
-    setSelected((current) => (current.some((s) => s.id === item.id) ? current.filter((s) => s.id !== item.id) : [...current, item]))
+    setWorking(true)
+    try {
+      await props.onConfirm(await toCatalog(picks))
+    } catch (error) {
+      notify(apiErrorMessage(error, 'No se ha podido añadir el ejercicio.'), 'error')
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  function toggle(pick: Pick) {
+    if (props.mode === 'single') {
+      void confirm([pick])
+      return
+    }
+    const key = pickKey(pick)
+    setSelected((current) => (current.some((p) => pickKey(p) === key) ? current.filter((p) => pickKey(p) !== key) : [...current, pick]))
   }
 
   async function createExercise() {
@@ -82,166 +137,177 @@ export function ExercisePickerSheet({ title, onClose, mode, onConfirm, usedIds =
       setCreateError('Pon un nombre al ejercicio.')
       return
     }
-    setSaving(true)
+    setWorking(true)
     try {
       const created = await saveCatalogExercise(creating)
       setCreating(null)
       setSearch('')
       setCreateError(undefined)
-      if (mode === 'single') await onConfirm([created])
-      else setSelected((current) => [...current, created])
+      if (props.mode === 'single' && props.source !== 'library') await props.onConfirm([created])
+      else setSelected((current) => [...current, { kind: 'mine', item: created }])
+      setTab('mine')
     } catch (error) {
       setCreateError(validationErrors(error).name ?? apiErrorMessage(error, 'No se ha podido crear el ejercicio.'))
     } finally {
-      setSaving(false)
+      setWorking(false)
     }
   }
+
+  const disabled = busy || working
 
   if (creating) {
     return (
       <Sheet
-        title="Nuevo ejercicio"
+        title="Nuevo ejercicio propio"
         onClose={onClose}
         onBack={() => setCreating(null)}
         footer={
-          <Button size="lg" fullWidth disabled={saving} onClick={() => void createExercise()}>
-            {saving ? 'Guardando…' : mode === 'single' ? 'Crear y elegir' : 'Crear y añadir'}
+          <Button size="lg" fullWidth disabled={disabled} onClick={() => void createExercise()}>
+            {working ? 'Guardando…' : props.mode === 'single' ? 'Crear y elegir' : 'Crear y añadir'}
           </Button>
         }
       >
         <ExerciseForm value={creating} onChange={setCreating} nameError={createError} autoFocusName={!creating.name} />
-        <p className="mt-4 text-xs text-evo-muted">Se guarda en tu catálogo para usarlo en cualquier rutina.</p>
+        <p className="mt-4 text-xs text-evo-muted">Se guarda en «Mis ejercicios» para usarlo en cualquier rutina.</p>
       </Sheet>
     )
   }
 
+  const isSelected = (pick: Pick) => selected.some((p) => pickKey(p) === pickKey(pick))
+  const trailing = (pick: Pick) =>
+    props.mode === 'multiple' ? (
+      <span
+        aria-hidden
+        className={[
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
+          isSelected(pick) ? 'border-evo-accent bg-evo-accent text-[#1a120c]' : 'border-evo-border',
+        ].join(' ')}
+      >
+        {isSelected(pick) ? '✓' : ''}
+      </span>
+    ) : (
+      <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+    )
+
   const count = selected.length
+  const loading = tab === 'library' ? library.isLoading : catalog.isLoading
 
   return (
     <Sheet
       title={title}
       onClose={onClose}
       footer={
-        mode === 'multiple' ? (
-          <Button size="lg" fullWidth disabled={count === 0 || busy} onClick={() => void onConfirm(selected)}>
-            {confirmLabel ? confirmLabel(count) : count === 0 ? 'Elige ejercicios' : `Añadir ${count}`}
+        props.mode === 'multiple' ? (
+          <Button size="lg" fullWidth disabled={count === 0 || disabled} onClick={() => void confirm(selected)}>
+            {working ? 'Añadiendo…' : props.confirmLabel ? props.confirmLabel(count) : count === 0 ? 'Elige ejercicios' : `Añadir ${count}`}
           </Button>
         ) : undefined
       }
     >
       <div className="sticky top-0 z-10 -mx-4 space-y-2 bg-evo-surface px-4 pb-3">
-        <label className="relative block">
-          <span className="sr-only">Buscar ejercicio</span>
-          <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-evo-muted" />
-          <input
-            type="search"
-            enterKeyHint="search"
-            autoComplete="off"
-            placeholder="Buscar o crear ejercicio"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="box-border w-full rounded-full border-2 border-evo-border bg-evo-surface-2 py-3 pl-11 pr-4 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none"
-          />
-        </label>
-        {muscles.length > 1 ? (
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none]">
-            {[null, ...muscles].map((m) => {
-              const active = muscle === m
-              return (
-                <button
-                  key={m ?? 'all'}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setMuscle(m)}
-                  className={[
-                    'min-h-9 shrink-0 rounded-full px-3.5 text-sm font-bold transition',
-                    active ? 'bg-evo-text text-evo-bg' : 'bg-evo-surface-2 text-evo-muted',
-                  ].join(' ')}
-                >
-                  {m ?? 'Todos'}
-                </button>
-              )
-            })}
+        {!libraryOnly ? (
+          <div role="tablist" className="grid grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
+            {(
+              [
+                { id: 'mine', label: 'Mis ejercicios' },
+                { id: 'library', label: 'Biblioteca' },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === item.id}
+                onClick={() => {
+                  setTab(item.id)
+                  setMuscle(null)
+                }}
+                className={[
+                  'min-h-10 rounded-xl text-sm font-bold transition',
+                  tab === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted',
+                ].join(' ')}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         ) : null}
+        <ExerciseFilters
+          search={search}
+          onSearch={setSearch}
+          muscle={muscle}
+          onMuscle={setMuscle}
+          availableMuscles={tab === 'mine' ? mineMuscles : undefined}
+          placeholder={tab === 'library' ? 'Buscar en la biblioteca' : 'Buscar en tus ejercicios'}
+        />
       </div>
 
-      {term && !exact ? (
+      {term && !exactExists && !libraryOnly ? (
         <button
           type="button"
-          onClick={() => setCreating(emptyCatalogDraft(search.trim()))}
+          disabled={disabled}
+          onClick={() => setCreating(emptyCatalogDraft(term))}
           className="mb-3 flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-evo-accent/60 px-4 py-3 text-left font-bold text-evo-accent transition active:scale-[0.99]"
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-evo-accent/15 text-lg" aria-hidden>
             +
           </span>
-          <span className="min-w-0 truncate">Crear «{search.trim()}»</span>
+          <span className="min-w-0 truncate">Crear «{term}» como propio</span>
         </button>
       ) : null}
 
-      {isLoading ? (
-        <p className="py-6 text-center text-sm text-evo-muted">Cargando tu catálogo…</p>
-      ) : catalog.length === 0 ? (
-        <div className="space-y-3 py-6 text-center">
-          <p className="font-bold">Tu catálogo está vacío</p>
-          <p className="text-sm text-evo-muted">Escribe el nombre arriba o crea tu primer ejercicio.</p>
-          <Button variant="secondary" onClick={() => setCreating(emptyCatalogDraft(search.trim()))}>
-            Crear ejercicio
-          </Button>
-        </div>
-      ) : visible.length === 0 ? (
-        <p className="py-6 text-center text-sm text-evo-muted">Nada con ese nombre en tu catálogo.</p>
+      {loading ? (
+        <p className="py-6 text-center text-sm text-evo-muted">Cargando…</p>
+      ) : tab === 'mine' ? (
+        mineResults.length === 0 ? (
+          <div className="space-y-3 py-6 text-center">
+            <p className="text-sm text-evo-muted">{mine.length === 0 ? 'Aún no tienes ejercicios guardados.' : 'Nada con ese nombre en tus ejercicios.'}</p>
+            <Button variant="secondary" onClick={() => setTab('library')}>
+              {term ? `Buscar «${term}» en la biblioteca` : 'Ver la biblioteca'}
+            </Button>
+          </div>
+        ) : (
+          <ul className="overflow-hidden rounded-2xl border border-evo-border/60">
+            {mineResults.map((item) => {
+              const pick: Pick = { kind: 'mine', item }
+              return (
+                <ExerciseListRow
+                  key={item.id}
+                  name={item.name}
+                  subtitle={`${usedIds.includes(item.id) ? 'Ya está · ' : ''}${exercisePlanLabel(item)}`}
+                  imageUrls={item.image_urls}
+                  onClick={() => toggle(pick)}
+                  selected={isSelected(pick)}
+                  pressed={props.mode === 'multiple' ? isSelected(pick) : undefined}
+                  disabled={disabled}
+                  trailing={trailing(pick)}
+                />
+              )
+            })}
+          </ul>
+        )
+      ) : libraryResults.length === 0 ? (
+        <p className="py-6 text-center text-sm text-evo-muted">Nada con ese nombre en la biblioteca.</p>
       ) : (
-        <div className="space-y-4">
-          {groups.map((group) => (
-            <section key={group.label ?? 'results'}>
-              {group.label ? (
-                <h3 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">{group.label}</h3>
-              ) : null}
-              <ul className="overflow-hidden rounded-2xl border border-evo-border/60">
-                {group.items.map((item) => {
-                  const isSelected = selected.some((s) => s.id === item.id)
-                  const used = usedIds.includes(item.id)
-                  return (
-                    <li key={item.id} className="border-b border-evo-border/40 last:border-b-0">
-                      <button
-                        type="button"
-                        aria-pressed={mode === 'multiple' ? isSelected : undefined}
-                        disabled={busy}
-                        onClick={() => toggle(item)}
-                        className={[
-                          'flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-evo-surface-2',
-                          isSelected ? 'bg-evo-accent/10' : '',
-                        ].join(' ')}
-                      >
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-bold">{item.name}</span>
-                          <span className="block truncate text-sm text-evo-muted">
-                            {used ? 'Ya está · ' : ''}
-                            {exercisePlanLabel(item)}
-                          </span>
-                        </span>
-                        {mode === 'multiple' ? (
-                          <span
-                            aria-hidden
-                            className={[
-                              'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
-                              isSelected ? 'border-evo-accent bg-evo-accent text-[#1a120c]' : 'border-evo-border',
-                            ].join(' ')}
-                          >
-                            {isSelected ? '✓' : ''}
-                          </span>
-                        ) : (
-                          <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
-                        )}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <ul className="overflow-hidden rounded-2xl border border-evo-border/60">
+          {libraryResults.map((item) => {
+            const pick: Pick = { kind: 'library', item }
+            const own = mineByLibrary.get(item.id)
+            return (
+              <ExerciseListRow
+                key={item.id}
+                name={item.name}
+                subtitle={`${own && usedIds.includes(own.id) ? 'Ya está · ' : own ? 'Tuyo · ' : ''}${item.muscle_label} · ${EQUIPMENT[item.equipment] ?? item.equipment}`}
+                imageUrls={item.image_urls}
+                onClick={() => toggle(pick)}
+                selected={isSelected(pick)}
+                pressed={props.mode === 'multiple' ? isSelected(pick) : undefined}
+                disabled={disabled}
+                trailing={trailing(pick)}
+              />
+            )
+          })}
+        </ul>
       )}
     </Sheet>
   )

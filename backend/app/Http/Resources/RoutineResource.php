@@ -9,6 +9,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin Routine */
 class RoutineResource extends JsonResource
 {
+    /** Días con sus ejercicios y, de cada uno, el de la biblioteca (para fotos y técnica). */
+    public const DETAIL_RELATIONS = ['days.exercises.catalogExercise.exercise'];
+
     public function toArray(Request $request): array
     {
         return [

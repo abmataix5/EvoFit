@@ -50,7 +50,7 @@ export function RoutinesPage() {
             Crear rutina
           </ButtonLink>
           <Link to="/exercises" className="inline-flex text-base font-bold text-evo-accent">
-            Ver catálogo de ejercicios
+            Ver la biblioteca de ejercicios
           </Link>
         </section>
       </div>
@@ -64,7 +64,7 @@ export function RoutinesPage() {
           + Nueva rutina
         </ButtonLink>
         <ButtonLink to="/exercises" size="lg" variant="secondary">
-          Catálogo
+          Ejercicios
         </ButtonLink>
       </div>
 

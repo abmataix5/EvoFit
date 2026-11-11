@@ -1,0 +1,6020 @@
+[
+ {
+  "slug": "press-banca",
+  "name": "Press banca",
+  "aliases": [
+   "bench press",
+   "press de banca",
+   "press plano",
+   "press banca con barra",
+   "banca"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Escápulas juntas y hacia abajo, pies firmes en el suelo.",
+   "Baja la barra controlada a la parte baja del pecho y empuja en ligera diagonal."
+  ],
+  "image_source": "Barbell_Bench_Press_-_Medium_Grip"
+ },
+ {
+  "slug": "press-banca-agarre-ancho",
+  "name": "Press banca agarre ancho",
+  "aliases": [
+   "wide grip bench press"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Manos algo más abiertas que en el press normal.",
+   "Recorrido más corto: no rebotes en el pecho."
+  ],
+  "image_source": "Wide-Grip_Barbell_Bench_Press"
+ },
+ {
+  "slug": "press-banca-cerrado",
+  "name": "Press banca agarre cerrado",
+  "aliases": [
+   "close grip bench press",
+   "press cerrado"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest",
+   "shoulders"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Manos a la anchura de los hombros, codos pegados.",
+   "Baja a la parte baja del pecho y bloquea con tríceps."
+  ],
+  "image_source": "Close-Grip_Barbell_Bench_Press"
+ },
+ {
+  "slug": "press-inclinado-barra",
+  "name": "Press inclinado con barra",
+  "aliases": [
+   "incline bench press",
+   "press inclinado",
+   "press banca inclinado"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Banco a 30°: más inclinación carga el hombro.",
+   "Baja la barra a la parte alta del pecho."
+  ],
+  "image_source": "Barbell_Incline_Bench_Press_-_Medium_Grip"
+ },
+ {
+  "slug": "press-declinado-barra",
+  "name": "Press declinado con barra",
+  "aliases": [
+   "decline bench press",
+   "press declinado"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Sujeta bien las piernas en el banco.",
+   "Baja a la parte baja del pecho, codos a unos 45°."
+  ],
+  "image_source": "Decline_Barbell_Bench_Press"
+ },
+ {
+  "slug": "press-banca-mancuernas",
+  "name": "Press banca con mancuernas",
+  "aliases": [
+   "dumbbell bench press",
+   "press plano mancuernas",
+   "press con mancuernas"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Baja hasta notar estiramiento en el pecho.",
+   "Junta ligeramente las mancuernas arriba sin chocarlas."
+  ],
+  "image_source": "Dumbbell_Bench_Press"
+ },
+ {
+  "slug": "press-inclinado-mancuernas",
+  "name": "Press inclinado con mancuernas",
+  "aliases": [
+   "incline dumbbell press",
+   "press inclinado mancuernas"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Banco a 30-45°.",
+   "Codos ligeramente por debajo de los hombros al bajar."
+  ],
+  "image_source": "Incline_Dumbbell_Press"
+ },
+ {
+  "slug": "press-declinado-mancuernas",
+  "name": "Press declinado con mancuernas",
+  "aliases": [
+   "decline dumbbell press"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Controla la bajada, sin rebote.",
+   "Empuja hacia arriba y ligeramente hacia dentro."
+  ],
+  "image_source": "Decline_Dumbbell_Bench_Press"
+ },
+ {
+  "slug": "press-mancuernas-agarre-neutro",
+  "name": "Press con mancuernas agarre neutro",
+  "aliases": [
+   "neutral grip dumbbell press",
+   "press martillo"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Palmas enfrentadas, codos pegados al cuerpo.",
+   "Más amable para hombros sensibles."
+  ],
+  "image_source": "Dumbbell_Bench_Press_with_Neutral_Grip"
+ },
+ {
+  "slug": "press-suelo",
+  "name": "Press en el suelo",
+  "aliases": [
+   "floor press"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Tumbado en el suelo, rodillas flexionadas.",
+   "Pausa breve con los tríceps en el suelo y empuja."
+  ],
+  "image_source": "Floor_Press"
+ },
+ {
+  "slug": "press-banca-maquina",
+  "name": "Press de pecho en máquina",
+  "aliases": [
+   "chest press machine",
+   "press pecho maquina",
+   "chest press"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Ajusta el asiento: asas a la altura del pecho medio.",
+   "Empuja sin bloquear del todo y vuelve lento."
+  ],
+  "image_source": "Machine_Bench_Press"
+ },
+ {
+  "slug": "press-inclinado-maquina",
+  "name": "Press inclinado en máquina",
+  "aliases": [
+   "incline chest press machine",
+   "press inclinado maquina"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Espalda pegada al respaldo.",
+   "Recorrido completo, sin despegar los hombros."
+  ],
+  "image_source": "Leverage_Incline_Chest_Press"
+ },
+ {
+  "slug": "press-declinado-maquina",
+  "name": "Press declinado en máquina",
+  "aliases": [
+   "decline chest press machine"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Pecho alto y escápulas atrás.",
+   "Controla la vuelta."
+  ],
+  "image_source": "Leverage_Decline_Chest_Press"
+ },
+ {
+  "slug": "press-banca-multipower",
+  "name": "Press banca en multipower",
+  "aliases": [
+   "smith machine bench press",
+   "press banca smith",
+   "press multipower"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Coloca el banco para que la barra baje a la parte baja del pecho.",
+   "Pies firmes y escápulas juntas."
+  ],
+  "image_source": "Smith_Machine_Bench_Press"
+ },
+ {
+  "slug": "press-inclinado-multipower",
+  "name": "Press inclinado en multipower",
+  "aliases": [
+   "smith incline press",
+   "press inclinado smith"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Banco a 30°.",
+   "La barra baja a la parte alta del pecho."
+  ],
+  "image_source": "Smith_Machine_Incline_Bench_Press"
+ },
+ {
+  "slug": "press-pecho-polea",
+  "name": "Press de pecho en polea",
+  "aliases": [
+   "cable chest press"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Un pie adelantado para estabilizar.",
+   "Empuja hacia delante y junta las manos."
+  ],
+  "image_source": "Cable_Chest_Press"
+ },
+ {
+  "slug": "aperturas-mancuernas",
+  "name": "Aperturas con mancuernas",
+  "aliases": [
+   "dumbbell fly",
+   "aperturas planas",
+   "flyes"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos ligeramente flexionados y fijos todo el recorrido.",
+   "Baja hasta notar estiramiento, no más."
+  ],
+  "image_source": "Dumbbell_Flyes"
+ },
+ {
+  "slug": "aperturas-inclinadas",
+  "name": "Aperturas inclinadas con mancuernas",
+  "aliases": [
+   "incline dumbbell fly",
+   "aperturas inclinado"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Banco a 30°.",
+   "Abre en arco, como abrazando un barril."
+  ],
+  "image_source": "Incline_Dumbbell_Flyes"
+ },
+ {
+  "slug": "cruce-poleas",
+  "name": "Cruce de poleas",
+  "aliases": [
+   "cable crossover",
+   "cruces en polea",
+   "crossover"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Poleas altas, tronco ligeramente inclinado.",
+   "Junta las manos delante de la cadera y aprieta."
+  ],
+  "image_source": "Cable_Crossover"
+ },
+ {
+  "slug": "cruce-poleas-bajas",
+  "name": "Cruce de poleas bajas",
+  "aliases": [
+   "low cable crossover",
+   "aperturas polea baja"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Lleva las manos de abajo hacia la altura del pecho.",
+   "Enfatiza el pecho superior."
+  ],
+  "image_source": "Low_Cable_Crossover"
+ },
+ {
+  "slug": "aperturas-polea-banco",
+  "name": "Aperturas en polea tumbado",
+  "aliases": [
+   "cable fly bench",
+   "aperturas polea banco plano"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Tensión constante también abajo.",
+   "Codos semiflexionados."
+  ],
+  "image_source": "Flat_Bench_Cable_Flyes"
+ },
+ {
+  "slug": "aperturas-polea-inclinado",
+  "name": "Aperturas en polea inclinado",
+  "aliases": [
+   "incline cable fly"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Banco inclinado entre dos poleas bajas.",
+   "Junta arriba sin chocar las manos."
+  ],
+  "image_source": "Incline_Cable_Flye"
+ },
+ {
+  "slug": "contractor-pecho",
+  "name": "Contractor de pecho (pec deck)",
+  "aliases": [
+   "pec deck",
+   "butterfly",
+   "contractor",
+   "peck deck",
+   "maquina aperturas"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Asas a la altura del pecho.",
+   "Junta delante y vuelve sin dejar que el peso choque."
+  ],
+  "image_source": "Butterfly"
+ },
+ {
+  "slug": "fondos-pecho",
+  "name": "Fondos en paralelas (pecho)",
+  "aliases": [
+   "chest dips",
+   "fondos",
+   "dips"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Inclina el tronco hacia delante.",
+   "Baja hasta que el hombro quede a la altura del codo."
+  ],
+  "image_source": "Dips_-_Chest_Version"
+ },
+ {
+  "slug": "flexiones",
+  "name": "Flexiones",
+  "aliases": [
+   "push ups",
+   "push-up",
+   "lagartijas"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps",
+   "shoulders",
+   "core"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Cuerpo en línea recta de cabeza a talones.",
+   "Pecho casi al suelo, codos a 45°."
+  ],
+  "image_source": "Pushups"
+ },
+ {
+  "slug": "flexiones-abiertas",
+  "name": "Flexiones abiertas",
+  "aliases": [
+   "wide push up"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Manos más anchas que los hombros.",
+   "Abdomen apretado, sin hundir la cadera."
+  ],
+  "image_source": "Push-Up_Wide"
+ },
+ {
+  "slug": "flexiones-diamante",
+  "name": "Flexiones cerradas (diamante)",
+  "aliases": [
+   "diamond push up",
+   "flexiones triceps"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Manos juntas bajo el pecho.",
+   "Codos pegados al cuerpo."
+  ],
+  "image_source": "Push-Ups_-_Close_Triceps_Position"
+ },
+ {
+  "slug": "flexiones-declinadas",
+  "name": "Flexiones declinadas",
+  "aliases": [
+   "decline push up",
+   "flexiones pies elevados"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Pies en un banco.",
+   "Más carga en el pecho superior y el hombro."
+  ],
+  "image_source": "Decline_Push-Up"
+ },
+ {
+  "slug": "flexiones-inclinadas",
+  "name": "Flexiones inclinadas",
+  "aliases": [
+   "incline push up"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Manos en un banco: versión más fácil.",
+   "Cuerpo recto y pecho al banco."
+  ],
+  "image_source": "Incline_Push-Up"
+ },
+ {
+  "slug": "pullover-mancuerna",
+  "name": "Pullover con mancuerna",
+  "aliases": [
+   "dumbbell pullover",
+   "pullover"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [
+   "back",
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Brazos semiflexionados, baja por detrás de la cabeza.",
+   "Sube hasta encima del pecho apretando."
+  ],
+  "image_source": "Bent-Arm_Dumbbell_Pullover"
+ },
+ {
+  "slug": "svend-press",
+  "name": "Svend press",
+  "aliases": [
+   "svend press",
+   "press con disco"
+  ],
+  "muscle": "chest",
+  "secondary_muscles": [],
+  "equipment": "plate",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Aprieta el disco entre las palmas.",
+   "Extiende los brazos sin dejar de apretar."
+  ],
+  "image_source": "Svend_Press"
+ },
+ {
+  "slug": "dominadas",
+  "name": "Dominadas",
+  "aliases": [
+   "pull ups",
+   "pull-up",
+   "dominadas pronas"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Agarre algo más ancho que los hombros, palmas al frente.",
+   "Saca pecho y lleva los codos hacia los bolsillos."
+  ],
+  "image_source": "Pullups"
+ },
+ {
+  "slug": "dominadas-supinas",
+  "name": "Dominadas supinas (chin-up)",
+  "aliases": [
+   "chin up",
+   "chin-ups",
+   "dominadas supinas"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Palmas hacia ti, a la anchura de los hombros.",
+   "Barbilla por encima de la barra sin balanceo."
+  ],
+  "image_source": "Chin-Up"
+ },
+ {
+  "slug": "dominadas-lastradas",
+  "name": "Dominadas lastradas",
+  "aliases": [
+   "weighted pull ups",
+   "dominadas con peso"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Cinturón de lastre o mancuerna entre los pies.",
+   "Mismo recorrido que sin peso."
+  ],
+  "image_source": "Weighted_Pull_Ups"
+ },
+ {
+  "slug": "dominadas-asistidas",
+  "name": "Dominadas asistidas",
+  "aliases": [
+   "assisted pull up",
+   "dominadas con goma",
+   "maquina asistida"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Usa goma o máquina para completar el recorrido.",
+   "Reduce la ayuda según progresas."
+  ],
+  "image_source": "Band_Assisted_Pull-Up"
+ },
+ {
+  "slug": "dominadas-agarre-neutro",
+  "name": "Dominadas agarre neutro",
+  "aliases": [
+   "neutral grip pull up",
+   "dominadas neutras"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Palmas enfrentadas.",
+   "Pecho hacia la barra."
+  ],
+  "image_source": "V-Bar_Pullup"
+ },
+ {
+  "slug": "jalon-pecho",
+  "name": "Jalón al pecho",
+  "aliases": [
+   "lat pulldown",
+   "jalon",
+   "polea al pecho",
+   "jalon ancho"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Saca pecho y lleva la barra a la parte alta del pecho.",
+   "No te eches atrás: mueve codos, no el tronco."
+  ],
+  "image_source": "Wide-Grip_Lat_Pulldown"
+ },
+ {
+  "slug": "jalon-agarre-cerrado",
+  "name": "Jalón agarre cerrado",
+  "aliases": [
+   "close grip pulldown"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Agarre a la anchura de los hombros.",
+   "Codos pegados al tronco al bajar."
+  ],
+  "image_source": "Close-Grip_Front_Lat_Pulldown"
+ },
+ {
+  "slug": "jalon-triangulo",
+  "name": "Jalón con triángulo",
+  "aliases": [
+   "v bar pulldown",
+   "jalon neutro",
+   "jalon con triangulo"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Agarre neutro estrecho.",
+   "Lleva el triángulo al esternón."
+  ],
+  "image_source": "V-Bar_Pulldown"
+ },
+ {
+  "slug": "jalon-supino",
+  "name": "Jalón supino",
+  "aliases": [
+   "underhand pulldown",
+   "reverse grip pulldown"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Palmas hacia ti.",
+   "Más implicación del bíceps y dorsal bajo."
+  ],
+  "image_source": "Underhand_Cable_Pulldowns"
+ },
+ {
+  "slug": "jalon-unilateral",
+  "name": "Jalón a una mano",
+  "aliases": [
+   "single arm pulldown"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Lleva el codo hacia la cadera.",
+   "Estira bien arriba."
+  ],
+  "image_source": "One_Arm_Lat_Pulldown"
+ },
+ {
+  "slug": "remo-barra",
+  "name": "Remo con barra",
+  "aliases": [
+   "barbell row",
+   "bent over row",
+   "remo inclinado",
+   "pendlay row",
+   "remo pendlay"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps",
+   "lower_back"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Tronco inclinado a unos 45°, espalda neutra.",
+   "Lleva la barra al ombligo apretando la espalda."
+  ],
+  "image_source": "Bent_Over_Barbell_Row"
+ },
+ {
+  "slug": "remo-barra-supino",
+  "name": "Remo con barra supino",
+  "aliases": [
+   "reverse grip barbell row",
+   "remo yates"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Palmas hacia arriba.",
+   "Codos pegados, barra a la parte baja del abdomen."
+  ],
+  "image_source": "Reverse_Grip_Bent-Over_Rows"
+ },
+ {
+  "slug": "remo-mancuerna",
+  "name": "Remo con mancuerna a una mano",
+  "aliases": [
+   "one arm dumbbell row",
+   "remo unilateral",
+   "remo serrucho"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Apoya mano y rodilla en el banco, espalda plana.",
+   "Lleva la mancuerna hacia la cadera, no al pecho."
+  ],
+  "image_source": "One-Arm_Dumbbell_Row"
+ },
+ {
+  "slug": "remo-mancuernas-inclinado",
+  "name": "Remo con mancuernas inclinado",
+  "aliases": [
+   "bent over dumbbell row",
+   "remo con dos mancuernas"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Tronco inclinado y espalda neutra.",
+   "Aprieta las escápulas arriba."
+  ],
+  "image_source": "Bent_Over_Two-Dumbbell_Row"
+ },
+ {
+  "slug": "remo-banco-inclinado",
+  "name": "Remo en banco inclinado (pecho apoyado)",
+  "aliases": [
+   "chest supported row",
+   "seal row",
+   "remo pecho apoyado"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Pecho apoyado en el banco a 30-45°.",
+   "Sin impulso: solo trabaja la espalda."
+  ],
+  "image_source": "Dumbbell_Incline_Row"
+ },
+ {
+  "slug": "remo-t",
+  "name": "Remo en T",
+  "aliases": [
+   "t bar row",
+   "remo t"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps",
+   "lower_back"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Rodillas flexionadas, pecho fuera.",
+   "Lleva el agarre al abdomen."
+  ],
+  "image_source": "T-Bar_Row_with_Handle"
+ },
+ {
+  "slug": "remo-t-pecho-apoyado",
+  "name": "Remo en T con pecho apoyado",
+  "aliases": [
+   "lying t bar row",
+   "remo t maquina"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Pecho pegado al soporte.",
+   "Aprieta la espalda arriba un segundo."
+  ],
+  "image_source": "Lying_T-Bar_Row"
+ },
+ {
+  "slug": "remo-polea-baja",
+  "name": "Remo en polea baja",
+  "aliases": [
+   "seated cable row",
+   "remo sentado",
+   "remo gironda",
+   "remo en polea"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Espalda recta, sin balancear el tronco.",
+   "Lleva el agarre al ombligo y junta las escápulas."
+  ],
+  "image_source": "Seated_Cable_Rows"
+ },
+ {
+  "slug": "remo-polea-unilateral",
+  "name": "Remo en polea a una mano",
+  "aliases": [
+   "single arm cable row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Gira un poco el tronco al estirar.",
+   "Codo pegado al cuerpo al tirar."
+  ],
+  "image_source": "Seated_One-arm_Cable_Pulley_Rows"
+ },
+ {
+  "slug": "remo-maquina",
+  "name": "Remo en máquina",
+  "aliases": [
+   "machine row",
+   "remo maquina",
+   "iso row",
+   "hammer row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Pecho contra el apoyo.",
+   "Tira con los codos, no con las manos."
+  ],
+  "image_source": "Leverage_Iso_Row"
+ },
+ {
+  "slug": "remo-alto-maquina",
+  "name": "Remo alto en máquina",
+  "aliases": [
+   "high row machine"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Tira desde arriba hacia el pecho.",
+   "Hombros abajo durante todo el recorrido."
+  ],
+  "image_source": "Leverage_High_Row"
+ },
+ {
+  "slug": "remo-multipower",
+  "name": "Remo en multipower",
+  "aliases": [
+   "smith machine row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Tronco inclinado y fijo.",
+   "Barra al abdomen."
+  ],
+  "image_source": "Smith_Machine_Bent_Over_Row"
+ },
+ {
+  "slug": "remo-invertido",
+  "name": "Remo invertido",
+  "aliases": [
+   "inverted row",
+   "australian pull up",
+   "remo australiano"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps",
+   "core"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Cuerpo recto bajo una barra.",
+   "Lleva el pecho a la barra."
+  ],
+  "image_source": "Inverted_Row"
+ },
+ {
+  "slug": "remo-trx",
+  "name": "Remo en TRX",
+  "aliases": [
+   "trx row",
+   "suspended row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "other",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Cuerpo en bloque, talones apoyados.",
+   "Más inclinado = más difícil."
+  ],
+  "image_source": "Suspended_Row"
+ },
+ {
+  "slug": "remo-mina",
+  "name": "Remo con barra a una mano (landmine)",
+  "aliases": [
+   "landmine row",
+   "meadows row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Barra anclada en una esquina.",
+   "Tira hacia la cadera."
+  ],
+  "image_source": "One-Arm_Long_Bar_Row"
+ },
+ {
+  "slug": "remo-renegado",
+  "name": "Remo renegado",
+  "aliases": [
+   "renegade row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "core",
+   "chest"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "En posición de flexión sobre las mancuernas.",
+   "Rema sin girar la cadera."
+  ],
+  "image_source": "Alternating_Renegade_Row"
+ },
+ {
+  "slug": "pullover-polea",
+  "name": "Pullover en polea alta",
+  "aliases": [
+   "straight arm pulldown",
+   "pullover polea",
+   "jalon brazos rectos"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Brazos casi rectos.",
+   "Baja la barra hasta los muslos con el dorsal."
+  ],
+  "image_source": "Straight-Arm_Pulldown"
+ },
+ {
+  "slug": "pullover-cuerda",
+  "name": "Pullover en polea con cuerda",
+  "aliases": [
+   "rope pullover",
+   "rope straight arm pulldown"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Tronco inclinado, brazos semirrectos.",
+   "Separa la cuerda abajo."
+  ],
+  "image_source": "Rope_Straight-Arm_Pulldown"
+ },
+ {
+  "slug": "peso-muerto",
+  "name": "Peso muerto",
+  "aliases": [
+   "deadlift",
+   "peso muerto convencional",
+   "dl"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "hamstrings",
+   "glutes",
+   "lower_back",
+   "traps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Barra pegada a las piernas, espalda neutra.",
+   "Empuja el suelo con las piernas y bloquea con glúteo."
+  ],
+  "image_source": "Barbell_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-sumo",
+  "name": "Peso muerto sumo",
+  "aliases": [
+   "sumo deadlift"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "quads",
+   "hamstrings",
+   "back",
+   "adductors"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Piernas muy abiertas, puntas hacia fuera.",
+   "Rodillas hacia fuera y pecho alto."
+  ],
+  "image_source": "Sumo_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-trap-bar",
+  "name": "Peso muerto con barra hexagonal",
+  "aliases": [
+   "trap bar deadlift",
+   "hex bar deadlift",
+   "barra hexagonal"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "back",
+   "hamstrings"
+  ],
+  "equipment": "trap_bar",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Ponte en el centro de la barra.",
+   "Empuja con las piernas manteniendo la espalda neutra."
+  ],
+  "image_source": "Trap_Bar_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-deficit",
+  "name": "Peso muerto en déficit",
+  "aliases": [
+   "deficit deadlift"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Sobre un disco o plataforma de 3-5 cm.",
+   "Más recorrido: baja el peso."
+  ],
+  "image_source": "Deficit_Deadlift"
+ },
+ {
+  "slug": "rack-pull",
+  "name": "Rack pull (peso muerto parcial)",
+  "aliases": [
+   "rack pull",
+   "peso muerto desde soportes"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "traps",
+   "glutes"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Barra apoyada a la altura de las rodillas.",
+   "Bloquea arriba apretando glúteos."
+  ],
+  "image_source": "Rack_Pulls"
+ },
+ {
+  "slug": "hiperextensiones",
+  "name": "Hiperextensiones",
+  "aliases": [
+   "back extension",
+   "hyperextension",
+   "extensiones lumbares"
+  ],
+  "muscle": "lower_back",
+  "secondary_muscles": [
+   "glutes",
+   "hamstrings"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Bisagra de cadera, sin hiperextender arriba.",
+   "Añade un disco cuando sea fácil."
+  ],
+  "image_source": "Hyperextensions_Back_Extensions"
+ },
+ {
+  "slug": "buenos-dias",
+  "name": "Buenos días",
+  "aliases": [
+   "good morning"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "lower_back",
+   "glutes"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Barra en la espalda, rodillas ligeramente flexionadas.",
+   "Lleva la cadera atrás con la espalda neutra."
+  ],
+  "image_source": "Good_Morning"
+ },
+ {
+  "slug": "superman",
+  "name": "Superman",
+  "aliases": [
+   "superman",
+   "extensiones en el suelo"
+  ],
+  "muscle": "lower_back",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Boca abajo, eleva brazos y piernas a la vez.",
+   "Mantén 2 segundos arriba."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "press-militar",
+  "name": "Press militar",
+  "aliases": [
+   "overhead press",
+   "ohp",
+   "military press",
+   "press militar de pie"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps",
+   "core"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Glúteos y abdomen apretados, sin arquear la espalda.",
+   "Mete la cabeza bajo la barra al pasar la frente."
+  ],
+  "image_source": "Standing_Military_Press"
+ },
+ {
+  "slug": "press-militar-sentado",
+  "name": "Press militar sentado con barra",
+  "aliases": [
+   "seated barbell press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Respaldo casi vertical.",
+   "Baja hasta la barbilla."
+  ],
+  "image_source": "Seated_Barbell_Military_Press"
+ },
+ {
+  "slug": "press-hombro-mancuernas",
+  "name": "Press de hombro con mancuernas",
+  "aliases": [
+   "dumbbell shoulder press",
+   "press hombro",
+   "press mancuernas sentado"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Codos ligeramente por delante del cuerpo.",
+   "Baja hasta la altura de las orejas."
+  ],
+  "image_source": "Dumbbell_Shoulder_Press"
+ },
+ {
+  "slug": "press-arnold",
+  "name": "Press Arnold",
+  "aliases": [
+   "arnold press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Empieza con las palmas hacia ti.",
+   "Gira las muñecas mientras empujas."
+  ],
+  "image_source": "Arnold_Dumbbell_Press"
+ },
+ {
+  "slug": "press-hombro-maquina",
+  "name": "Press de hombro en máquina",
+  "aliases": [
+   "shoulder press machine",
+   "press hombro maquina"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Asas a la altura de los hombros.",
+   "Espalda pegada al respaldo."
+  ],
+  "image_source": "Machine_Shoulder_Military_Press"
+ },
+ {
+  "slug": "press-hombro-multipower",
+  "name": "Press de hombro en multipower",
+  "aliases": [
+   "smith shoulder press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Banco justo bajo la barra.",
+   "Baja a la barbilla."
+  ],
+  "image_source": "Smith_Machine_Overhead_Shoulder_Press"
+ },
+ {
+  "slug": "push-press",
+  "name": "Push press",
+  "aliases": [
+   "push press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps",
+   "quads"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Pequeña flexión de rodillas y empuja con las piernas.",
+   "Bloquea arriba con la barra sobre la cabeza."
+  ],
+  "image_source": "Push_Press"
+ },
+ {
+  "slug": "elevaciones-laterales",
+  "name": "Elevaciones laterales",
+  "aliases": [
+   "lateral raise",
+   "laterales",
+   "side raise",
+   "pajaritos laterales"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Sube hasta la altura de los hombros, codos ligeramente flexionados.",
+   "Lidera con el codo, sin balanceo."
+  ],
+  "image_source": "Side_Lateral_Raise"
+ },
+ {
+  "slug": "elevaciones-laterales-sentado",
+  "name": "Elevaciones laterales sentado",
+  "aliases": [
+   "seated lateral raise"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Sentado evitas el impulso.",
+   "Pausa breve arriba."
+  ],
+  "image_source": "Seated_Side_Lateral_Raise"
+ },
+ {
+  "slug": "elevaciones-laterales-polea",
+  "name": "Elevaciones laterales en polea",
+  "aliases": [
+   "cable lateral raise",
+   "lateral polea"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Polea baja, cable por delante del cuerpo.",
+   "Tensión constante en todo el recorrido."
+  ],
+  "image_source": "Standing_Low-Pulley_Deltoid_Raise"
+ },
+ {
+  "slug": "elevaciones-laterales-inclinado",
+  "name": "Elevación lateral tumbado de lado",
+  "aliases": [
+   "lying lateral raise",
+   "lean away lateral"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Tumbado de lado en banco inclinado.",
+   "Más tensión al inicio del movimiento."
+  ],
+  "image_source": "Lying_One-Arm_Lateral_Raise"
+ },
+ {
+  "slug": "elevaciones-frontales",
+  "name": "Elevaciones frontales",
+  "aliases": [
+   "front raise",
+   "frontales"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Sube hasta la altura de los ojos.",
+   "Sin balancear el tronco."
+  ],
+  "image_source": "Front_Dumbbell_Raise"
+ },
+ {
+  "slug": "elevaciones-frontales-disco",
+  "name": "Elevación frontal con disco",
+  "aliases": [
+   "plate front raise"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "plate",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Disco agarrado por los lados.",
+   "Sube con brazos casi rectos."
+  ],
+  "image_source": "Front_Plate_Raise"
+ },
+ {
+  "slug": "elevaciones-frontales-polea",
+  "name": "Elevación frontal en polea",
+  "aliases": [
+   "cable front raise"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "De espaldas a la polea baja.",
+   "Sube controlado hasta los ojos."
+  ],
+  "image_source": "Front_Cable_Raise"
+ },
+ {
+  "slug": "pajaros",
+  "name": "Pájaros (deltoides posterior)",
+  "aliases": [
+   "rear delt fly",
+   "reverse fly",
+   "pajaros",
+   "elevaciones posteriores"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "back"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Tronco inclinado casi paralelo al suelo.",
+   "Abre los brazos hacia los lados sin juntar escápulas."
+  ],
+  "image_source": "Seated_Bent-Over_Rear_Delt_Raise"
+ },
+ {
+  "slug": "pajaros-maquina",
+  "name": "Contractor invertido (deltoides posterior)",
+  "aliases": [
+   "reverse pec deck",
+   "rear delt machine",
+   "pec deck invertido"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "back"
+  ],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Pecho contra el respaldo.",
+   "Abre con los codos, brazos casi rectos."
+  ],
+  "image_source": "Reverse_Machine_Flyes"
+ },
+ {
+  "slug": "pajaros-polea",
+  "name": "Aperturas posteriores en polea",
+  "aliases": [
+   "cable rear delt fly",
+   "cruce invertido"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "back"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Cables cruzados a la altura de los hombros.",
+   "Abre hacia atrás sin girar las muñecas."
+  ],
+  "image_source": "Cable_Rear_Delt_Fly"
+ },
+ {
+  "slug": "face-pull",
+  "name": "Face pull",
+  "aliases": [
+   "face pull",
+   "jalon a la cara"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "traps",
+   "back"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Cuerda a la altura de la cara.",
+   "Tira hacia los ojos abriendo los codos y rota hacia fuera."
+  ],
+  "image_source": "Face_Pull"
+ },
+ {
+  "slug": "remo-al-menton",
+  "name": "Remo al mentón",
+  "aliases": [
+   "upright row",
+   "remo al menton"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "traps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Agarre algo más ancho que los hombros.",
+   "Sube los codos hasta la altura del hombro, no más."
+  ],
+  "image_source": "Upright_Barbell_Row"
+ },
+ {
+  "slug": "remo-al-menton-polea",
+  "name": "Remo al mentón en polea",
+  "aliases": [
+   "cable upright row"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "traps"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Agarre ancho.",
+   "Codos por encima de las manos."
+  ],
+  "image_source": "Upright_Cable_Row"
+ },
+ {
+  "slug": "cuban-press",
+  "name": "Press cubano",
+  "aliases": [
+   "cuban press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Remo al mentón, rotación externa y press.",
+   "Peso ligero: es para salud del hombro."
+  ],
+  "image_source": "Cuban_Press"
+ },
+ {
+  "slug": "rotacion-externa-polea",
+  "name": "Rotación externa en polea",
+  "aliases": [
+   "external rotation",
+   "manguito rotador"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Codo pegado al costado a 90°.",
+   "Rota hacia fuera lento."
+  ],
+  "image_source": "External_Rotation_with_Cable"
+ },
+ {
+  "slug": "band-pull-apart",
+  "name": "Aperturas con goma (band pull-apart)",
+  "aliases": [
+   "band pull apart"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "back"
+  ],
+  "equipment": "band",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Brazos rectos a la altura del pecho.",
+   "Abre la goma hasta tocar el pecho."
+  ],
+  "image_source": "Band_Pull_Apart"
+ },
+ {
+  "slug": "pino-flexiones",
+  "name": "Flexiones en pino",
+  "aliases": [
+   "handstand push up",
+   "hspu"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Contra la pared, manos a la anchura de hombros.",
+   "Baja la cabeza controlada al suelo."
+  ],
+  "image_source": "Handstand_Push-Ups"
+ },
+ {
+  "slug": "landmine-press",
+  "name": "Press landmine",
+  "aliases": [
+   "landmine press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "chest",
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Barra anclada en una esquina.",
+   "Empuja hacia arriba y delante."
+  ],
+  "image_source": "Landmine_Linear_Jammer"
+ },
+ {
+  "slug": "encogimientos-barra",
+  "name": "Encogimientos con barra",
+  "aliases": [
+   "barbell shrug",
+   "encogimientos"
+  ],
+  "muscle": "traps",
+  "secondary_muscles": [],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Sube los hombros hacia las orejas.",
+   "Pausa arriba, sin girar los hombros."
+  ],
+  "image_source": "Barbell_Shrug"
+ },
+ {
+  "slug": "encogimientos-mancuernas",
+  "name": "Encogimientos con mancuernas",
+  "aliases": [
+   "dumbbell shrug"
+  ],
+  "muscle": "traps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Brazos colgando a los lados.",
+   "Sube recto y aprieta un segundo."
+  ],
+  "image_source": "Dumbbell_Shrug"
+ },
+ {
+  "slug": "encogimientos-maquina",
+  "name": "Encogimientos en máquina",
+  "aliases": [
+   "machine shrug"
+  ],
+  "muscle": "traps",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Recorrido completo.",
+   "Pausa arriba."
+  ],
+  "image_source": "Leverage_Shrug"
+ },
+ {
+  "slug": "curl-barra",
+  "name": "Curl con barra",
+  "aliases": [
+   "barbell curl",
+   "curl biceps barra"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos pegados al cuerpo y quietos.",
+   "Sin balancear el tronco."
+  ],
+  "image_source": "Barbell_Curl"
+ },
+ {
+  "slug": "curl-barra-z",
+  "name": "Curl con barra Z",
+  "aliases": [
+   "ez bar curl",
+   "curl barra z"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "ez_bar",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Agarre en la parte inclinada de la barra.",
+   "Más cómodo para las muñecas."
+  ],
+  "image_source": "EZ-Bar_Curl"
+ },
+ {
+  "slug": "curl-mancuernas",
+  "name": "Curl con mancuernas",
+  "aliases": [
+   "dumbbell curl",
+   "curl biceps"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Gira la palma hacia arriba al subir.",
+   "Baja controlado hasta estirar."
+  ],
+  "image_source": "Dumbbell_Bicep_Curl"
+ },
+ {
+  "slug": "curl-alterno",
+  "name": "Curl alterno con mancuernas",
+  "aliases": [
+   "alternate dumbbell curl",
+   "curl alterno"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Un brazo cada vez.",
+   "Supina la muñeca arriba."
+  ],
+  "image_source": "Dumbbell_Alternate_Bicep_Curl"
+ },
+ {
+  "slug": "curl-martillo",
+  "name": "Curl martillo",
+  "aliases": [
+   "hammer curl",
+   "curl martillo"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Palmas enfrentadas todo el recorrido.",
+   "Trabaja braquial y antebrazo."
+  ],
+  "image_source": "Hammer_Curls"
+ },
+ {
+  "slug": "curl-martillo-cuerda",
+  "name": "Curl martillo en polea con cuerda",
+  "aliases": [
+   "rope hammer curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos fijos.",
+   "Separa la cuerda arriba."
+  ],
+  "image_source": "Cable_Hammer_Curls_-_Rope_Attachment"
+ },
+ {
+  "slug": "curl-inclinado",
+  "name": "Curl inclinado con mancuernas",
+  "aliases": [
+   "incline dumbbell curl",
+   "curl en banco inclinado"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Banco a 45-60°, brazos colgando.",
+   "Gran estiramiento del bíceps."
+  ],
+  "image_source": "Incline_Dumbbell_Curl"
+ },
+ {
+  "slug": "curl-concentrado",
+  "name": "Curl concentrado",
+  "aliases": [
+   "concentration curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codo apoyado en la cara interna del muslo.",
+   "Aprieta arriba un segundo."
+  ],
+  "image_source": "Concentration_Curls"
+ },
+ {
+  "slug": "curl-predicador",
+  "name": "Curl en banco Scott",
+  "aliases": [
+   "preacher curl",
+   "curl scott",
+   "curl predicador"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "ez_bar",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Axilas pegadas al banco.",
+   "No bloquees del todo abajo."
+  ],
+  "image_source": "Preacher_Curl"
+ },
+ {
+  "slug": "curl-predicador-mancuerna",
+  "name": "Curl Scott con mancuerna",
+  "aliases": [
+   "dumbbell preacher curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Un brazo cada vez.",
+   "Controla la bajada."
+  ],
+  "image_source": "One_Arm_Dumbbell_Preacher_Curl"
+ },
+ {
+  "slug": "curl-predicador-maquina",
+  "name": "Curl de bíceps en máquina",
+  "aliases": [
+   "machine curl",
+   "machine preacher curl",
+   "curl maquina"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos alineados con el eje de la máquina.",
+   "Recorrido completo."
+  ],
+  "image_source": "Machine_Preacher_Curls"
+ },
+ {
+  "slug": "curl-polea",
+  "name": "Curl en polea baja",
+  "aliases": [
+   "cable curl",
+   "curl polea"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos fijos a los costados.",
+   "Tensión constante."
+  ],
+  "image_source": "Standing_Biceps_Cable_Curl"
+ },
+ {
+  "slug": "curl-polea-alta",
+  "name": "Curl en polea alta",
+  "aliases": [
+   "high cable curl",
+   "curl doble biceps polea"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Brazos en cruz a la altura de los hombros.",
+   "Lleva las manos a las orejas."
+  ],
+  "image_source": "High_Cable_Curls"
+ },
+ {
+  "slug": "curl-araña",
+  "name": "Curl araña",
+  "aliases": [
+   "spider curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "ez_bar",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Pecho apoyado en un banco inclinado.",
+   "Brazos colgando perpendiculares al suelo."
+  ],
+  "image_source": "Spider_Curl"
+ },
+ {
+  "slug": "curl-zottman",
+  "name": "Curl Zottman",
+  "aliases": [
+   "zottman curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [
+   "forearms"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Sube con palmas arriba.",
+   "Gira y baja con palmas abajo."
+  ],
+  "image_source": "Zottman_Curl"
+ },
+ {
+  "slug": "curl-drag",
+  "name": "Curl arrastrado (drag curl)",
+  "aliases": [
+   "drag curl"
+  ],
+  "muscle": "biceps",
+  "secondary_muscles": [],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Arrastra la barra pegada al cuerpo.",
+   "Los codos van hacia atrás."
+  ],
+  "image_source": "Drag_Curl"
+ },
+ {
+  "slug": "curl-invertido",
+  "name": "Curl invertido",
+  "aliases": [
+   "reverse curl",
+   "curl prono"
+  ],
+  "muscle": "forearms",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Palmas hacia abajo.",
+   "Trabaja antebrazo y braquiorradial."
+  ],
+  "image_source": "Reverse_Barbell_Curl"
+ },
+ {
+  "slug": "extension-triceps-polea",
+  "name": "Extensión de tríceps en polea",
+  "aliases": [
+   "triceps pushdown",
+   "jalon triceps",
+   "pushdown",
+   "extension triceps polea alta"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos pegados y quietos.",
+   "Extiende del todo abajo."
+  ],
+  "image_source": "Triceps_Pushdown"
+ },
+ {
+  "slug": "extension-triceps-cuerda",
+  "name": "Extensión de tríceps con cuerda",
+  "aliases": [
+   "rope pushdown",
+   "triceps cuerda"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Separa la cuerda abajo.",
+   "Codos fijos al costado."
+  ],
+  "image_source": "Triceps_Pushdown_-_Rope_Attachment"
+ },
+ {
+  "slug": "extension-triceps-v",
+  "name": "Extensión de tríceps con barra V",
+  "aliases": [
+   "v bar pushdown"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Muñecas firmes.",
+   "Bloquea abajo y sube controlado."
+  ],
+  "image_source": "Triceps_Pushdown_-_V-Bar_Attachment"
+ },
+ {
+  "slug": "extension-triceps-supino",
+  "name": "Extensión de tríceps agarre supino",
+  "aliases": [
+   "reverse grip pushdown"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Palmas hacia arriba.",
+   "Codos pegados."
+  ],
+  "image_source": "Reverse_Grip_Triceps_Pushdown"
+ },
+ {
+  "slug": "extension-triceps-trasnuca-polea",
+  "name": "Extensión de tríceps sobre la cabeza en polea",
+  "aliases": [
+   "overhead cable extension",
+   "extension trasnuca polea",
+   "triceps francés polea"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "De espaldas a la polea, codos junto a la cabeza.",
+   "Gran estiramiento de la cabeza larga."
+  ],
+  "image_source": "Triceps_Overhead_Extension_with_Rope"
+ },
+ {
+  "slug": "press-frances",
+  "name": "Press francés",
+  "aliases": [
+   "skull crusher",
+   "skullcrusher",
+   "press frances",
+   "rompecraneos"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "ez_bar",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Brazos inclinados ligeramente hacia atrás.",
+   "Baja la barra a la frente doblando solo el codo."
+  ],
+  "image_source": "EZ-Bar_Skullcrusher"
+ },
+ {
+  "slug": "press-frances-mancuernas",
+  "name": "Press francés con mancuernas",
+  "aliases": [
+   "dumbbell skull crusher",
+   "lying dumbbell extension"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Palmas enfrentadas.",
+   "Codos apuntando al techo."
+  ],
+  "image_source": "Lying_Dumbbell_Tricep_Extension"
+ },
+ {
+  "slug": "extension-triceps-mancuerna",
+  "name": "Extensión de tríceps sobre la cabeza con mancuerna",
+  "aliases": [
+   "overhead dumbbell extension",
+   "triceps tras nuca",
+   "copa"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Mancuerna con las dos manos tras la cabeza.",
+   "Codos cerca de las orejas."
+  ],
+  "image_source": "Standing_Dumbbell_Triceps_Extension"
+ },
+ {
+  "slug": "patada-triceps",
+  "name": "Patada de tríceps",
+  "aliases": [
+   "triceps kickback",
+   "kickback",
+   "patada de triceps"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Brazo pegado al cuerpo y paralelo al suelo.",
+   "Extiende y aprieta atrás."
+  ],
+  "image_source": "Tricep_Dumbbell_Kickback"
+ },
+ {
+  "slug": "fondos-triceps",
+  "name": "Fondos en paralelas (tríceps)",
+  "aliases": [
+   "triceps dips",
+   "fondos triceps"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest",
+   "shoulders"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Tronco vertical.",
+   "Codos hacia atrás, no hacia fuera."
+  ],
+  "image_source": "Dips_-_Triceps_Version"
+ },
+ {
+  "slug": "fondos-banco",
+  "name": "Fondos en banco",
+  "aliases": [
+   "bench dips",
+   "fondos entre bancos"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Manos en el banco tras la cadera.",
+   "Baja hasta 90° de codo."
+  ],
+  "image_source": "Bench_Dips"
+ },
+ {
+  "slug": "fondos-maquina",
+  "name": "Fondos en máquina",
+  "aliases": [
+   "dip machine"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Tronco erguido.",
+   "Extiende del todo abajo."
+  ],
+  "image_source": "Dip_Machine"
+ },
+ {
+  "slug": "extension-triceps-maquina",
+  "name": "Extensión de tríceps en máquina",
+  "aliases": [
+   "triceps machine"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos alineados con el eje.",
+   "Controla la vuelta."
+  ],
+  "image_source": "Machine_Triceps_Extension"
+ },
+ {
+  "slug": "press-jm",
+  "name": "Press JM",
+  "aliases": [
+   "jm press"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [
+   "chest"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Mezcla de press cerrado y press francés.",
+   "Baja la barra hacia la barbilla."
+  ],
+  "image_source": "JM_Press"
+ },
+ {
+  "slug": "press-tate",
+  "name": "Press Tate",
+  "aliases": [
+   "tate press"
+  ],
+  "muscle": "triceps",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Codos hacia fuera.",
+   "Las mancuernas bajan al pecho."
+  ],
+  "image_source": "Tate_Press"
+ },
+ {
+  "slug": "curl-muneca",
+  "name": "Curl de muñeca",
+  "aliases": [
+   "wrist curl",
+   "curl de muñeca"
+  ],
+  "muscle": "forearms",
+  "secondary_muscles": [],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Antebrazos apoyados en el banco.",
+   "Solo se mueve la muñeca."
+  ],
+  "image_source": "Palms-Up_Barbell_Wrist_Curl_Over_A_Bench"
+ },
+ {
+  "slug": "curl-muneca-inverso",
+  "name": "Curl de muñeca inverso",
+  "aliases": [
+   "reverse wrist curl"
+  ],
+  "muscle": "forearms",
+  "secondary_muscles": [],
+  "equipment": "barbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Palmas hacia abajo.",
+   "Recorrido corto y controlado."
+  ],
+  "image_source": "Palms-Down_Wrist_Curl_Over_A_Bench"
+ },
+ {
+  "slug": "rodillo-muneca",
+  "name": "Rodillo de muñeca",
+  "aliases": [
+   "wrist roller"
+  ],
+  "muscle": "forearms",
+  "secondary_muscles": [],
+  "equipment": "other",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 3,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Brazos extendidos al frente.",
+   "Enrolla y desenrolla despacio."
+  ],
+  "image_source": "Wrist_Roller"
+ },
+ {
+  "slug": "pinza-discos",
+  "name": "Pinza con discos",
+  "aliases": [
+   "plate pinch",
+   "agarre de discos"
+  ],
+  "muscle": "forearms",
+  "secondary_muscles": [],
+  "equipment": "plate",
+  "mechanic": "carry",
+  "tracking_mode": "weight_time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 30,
+  "rest_seconds": 90,
+  "cues": [
+   "Sujeta dos discos lisos entre los dedos.",
+   "Aguanta el máximo tiempo."
+  ],
+  "image_source": "Plate_Pinch"
+ },
+ {
+  "slug": "sentadilla",
+  "name": "Sentadilla",
+  "aliases": [
+   "squat",
+   "back squat",
+   "sentadilla trasera",
+   "sentadilla con barra"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "hamstrings",
+   "core"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Pies a la anchura de hombros, rodillas en la dirección de las puntas.",
+   "Baja al menos hasta paralelo con el pecho alto."
+  ],
+  "image_source": "Barbell_Squat"
+ },
+ {
+  "slug": "sentadilla-frontal",
+  "name": "Sentadilla frontal",
+  "aliases": [
+   "front squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "core"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Barra apoyada en la parte delantera de los hombros, codos altos.",
+   "Tronco más vertical que en la trasera."
+  ],
+  "image_source": "Front_Barbell_Squat"
+ },
+ {
+  "slug": "sentadilla-caja",
+  "name": "Sentadilla a caja",
+  "aliases": [
+   "box squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "hamstrings"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Siéntate controlado en la caja sin relajarte.",
+   "Sube explosivo."
+  ],
+  "image_source": "Box_Squat"
+ },
+ {
+  "slug": "sentadilla-zercher",
+  "name": "Sentadilla Zercher",
+  "aliases": [
+   "zercher squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "core"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Barra en el pliegue de los codos.",
+   "Tronco erguido."
+  ],
+  "image_source": "Zercher_Squats"
+ },
+ {
+  "slug": "sentadilla-overhead",
+  "name": "Sentadilla overhead",
+  "aliases": [
+   "overhead squat",
+   "ohs"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "shoulders",
+   "core"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Barra bloqueada sobre la cabeza con agarre ancho.",
+   "Requiere mucha movilidad: empieza ligero."
+  ],
+  "image_source": "Overhead_Squat"
+ },
+ {
+  "slug": "sentadilla-goblet",
+  "name": "Sentadilla goblet",
+  "aliases": [
+   "goblet squat",
+   "sentadilla copa"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "core"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Mancuerna o kettlebell pegada al pecho.",
+   "Codos entre las rodillas al bajar."
+  ],
+  "image_source": "Goblet_Squat"
+ },
+ {
+  "slug": "sentadilla-mancuernas",
+  "name": "Sentadilla con mancuernas",
+  "aliases": [
+   "dumbbell squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Mancuernas a los lados.",
+   "Pecho alto."
+  ],
+  "image_source": "Dumbbell_Squat"
+ },
+ {
+  "slug": "sentadilla-multipower",
+  "name": "Sentadilla en multipower",
+  "aliases": [
+   "smith squat",
+   "sentadilla smith"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Pies algo adelantados respecto a la barra.",
+   "Baja controlado hasta paralelo."
+  ],
+  "image_source": "Smith_Machine_Squat"
+ },
+ {
+  "slug": "sentadilla-hack",
+  "name": "Sentadilla hack",
+  "aliases": [
+   "hack squat",
+   "hack"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Espalda pegada al respaldo.",
+   "Baja profundo con las rodillas alineadas."
+  ],
+  "image_source": "Hack_Squat"
+ },
+ {
+  "slug": "sentadilla-sumo-mancuerna",
+  "name": "Sentadilla sumo con mancuerna",
+  "aliases": [
+   "sumo squat",
+   "plie squat",
+   "sentadilla sumo"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "adductors",
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Piernas muy abiertas, puntas hacia fuera.",
+   "Mancuerna colgando entre las piernas."
+  ],
+  "image_source": "Plie_Dumbbell_Squat"
+ },
+ {
+  "slug": "sentadilla-peso-corporal",
+  "name": "Sentadilla sin peso",
+  "aliases": [
+   "air squat",
+   "bodyweight squat",
+   "sentadilla libre"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Talones en el suelo.",
+   "Brazos al frente para equilibrarte."
+  ],
+  "image_source": "Bodyweight_Squat"
+ },
+ {
+  "slug": "sentadilla-salto",
+  "name": "Sentadilla con salto",
+  "aliases": [
+   "jump squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "calves"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Baja a media sentadilla y salta explosivo.",
+   "Aterriza suave y encadena."
+  ],
+  "image_source": "Freehand_Jump_Squat"
+ },
+ {
+  "slug": "sentadilla-sissy",
+  "name": "Sentadilla sissy",
+  "aliases": [
+   "sissy squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Sube los talones e inclina el cuerpo hacia atrás.",
+   "Rodillas hacia delante, cadera extendida."
+  ],
+  "image_source": "Weighted_Sissy_Squat"
+ },
+ {
+  "slug": "pistol",
+  "name": "Sentadilla a una pierna (pistol)",
+  "aliases": [
+   "pistol squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "core"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "La otra pierna estirada al frente.",
+   "Usa un apoyo hasta dominarla."
+  ],
+  "image_source": "Kettlebell_Pistol_Squat"
+ },
+ {
+  "slug": "prensa",
+  "name": "Prensa de piernas",
+  "aliases": [
+   "leg press",
+   "prensa"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "hamstrings"
+  ],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Pies a la anchura de hombros en el centro de la plataforma.",
+   "Baja hasta que la cadera no se despegue del respaldo."
+  ],
+  "image_source": "Leg_Press"
+ },
+ {
+  "slug": "prensa-pies-juntos",
+  "name": "Prensa con pies juntos",
+  "aliases": [
+   "narrow leg press"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Pies juntos en la parte baja de la plataforma.",
+   "Más trabajo de cuádriceps."
+  ],
+  "image_source": "Narrow_Stance_Leg_Press"
+ },
+ {
+  "slug": "extension-cuadriceps",
+  "name": "Extensión de cuádriceps",
+  "aliases": [
+   "leg extension",
+   "extensiones",
+   "extension de piernas",
+   "cuadriceps maquina"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Eje de la máquina alineado con la rodilla.",
+   "Aprieta arriba un segundo y baja lento."
+  ],
+  "image_source": "Leg_Extensions"
+ },
+ {
+  "slug": "extension-cuadriceps-unilateral",
+  "name": "Extensión de cuádriceps a una pierna",
+  "aliases": [
+   "single leg extension"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Una pierna cada vez.",
+   "Corrige desequilibrios."
+  ],
+  "image_source": "Single-Leg_Leg_Extension"
+ },
+ {
+  "slug": "zancadas",
+  "name": "Zancadas con mancuernas",
+  "aliases": [
+   "lunges",
+   "dumbbell lunge",
+   "zancadas",
+   "estocadas",
+   "tijeras"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "hamstrings"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Paso largo, rodilla de atrás casi al suelo.",
+   "Tronco erguido."
+  ],
+  "image_source": "Dumbbell_Lunges"
+ },
+ {
+  "slug": "zancadas-caminando",
+  "name": "Zancadas caminando",
+  "aliases": [
+   "walking lunge"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Avanza alternando piernas.",
+   "Rodilla delantera sobre el pie."
+  ],
+  "image_source": "Bodyweight_Walking_Lunge"
+ },
+ {
+  "slug": "zancadas-barra",
+  "name": "Zancadas con barra",
+  "aliases": [
+   "barbell lunge"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Barra en la espalda.",
+   "Paso estable y controlado."
+  ],
+  "image_source": "Barbell_Lunge"
+ },
+ {
+  "slug": "zancadas-atras",
+  "name": "Zancadas hacia atrás",
+  "aliases": [
+   "reverse lunge",
+   "zancada inversa"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "quads"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Da el paso hacia atrás.",
+   "Más amable con las rodillas."
+  ],
+  "image_source": "Dumbbell_Rear_Lunge"
+ },
+ {
+  "slug": "sentadilla-bulgara",
+  "name": "Sentadilla búlgara",
+  "aliases": [
+   "bulgarian split squat",
+   "bulgaras",
+   "split squat"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Pie de atrás apoyado en un banco.",
+   "Baja vertical: el tronco algo inclinado da más glúteo."
+  ],
+  "image_source": "Split_Squat_with_Dumbbells"
+ },
+ {
+  "slug": "step-up",
+  "name": "Subidas al cajón (step-up)",
+  "aliases": [
+   "step up",
+   "subidas al banco"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Sube empujando con el talón de la pierna de arriba.",
+   "No te impulses con la de abajo."
+  ],
+  "image_source": "Dumbbell_Step_Ups"
+ },
+ {
+  "slug": "peso-muerto-rumano",
+  "name": "Peso muerto rumano",
+  "aliases": [
+   "romanian deadlift",
+   "rdl",
+   "peso muerto rumano"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "glutes",
+   "lower_back"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Rodillas ligeramente flexionadas y fijas.",
+   "Lleva la cadera atrás con la barra pegada a las piernas."
+  ],
+  "image_source": "Romanian_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-rumano-mancuernas",
+  "name": "Peso muerto rumano con mancuernas",
+  "aliases": [
+   "dumbbell rdl",
+   "stiff legged dumbbell deadlift"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Mancuernas por delante de los muslos.",
+   "Baja hasta notar estiramiento en el femoral."
+  ],
+  "image_source": "Stiff-Legged_Dumbbell_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-piernas-rigidas",
+  "name": "Peso muerto piernas rígidas",
+  "aliases": [
+   "stiff legged deadlift",
+   "sldl"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "lower_back",
+   "glutes"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 150,
+  "cues": [
+   "Piernas casi rectas.",
+   "Espalda neutra durante todo el recorrido."
+  ],
+  "image_source": "Stiff-Legged_Barbell_Deadlift"
+ },
+ {
+  "slug": "peso-muerto-una-pierna",
+  "name": "Peso muerto a una pierna",
+  "aliases": [
+   "single leg deadlift",
+   "single leg rdl"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "glutes",
+   "core"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Cadera cuadrada al suelo.",
+   "La pierna libre sube en línea con el tronco."
+  ],
+  "image_source": "Kettlebell_One-Legged_Deadlift"
+ },
+ {
+  "slug": "curl-femoral-tumbado",
+  "name": "Curl femoral tumbado",
+  "aliases": [
+   "lying leg curl",
+   "curl femoral",
+   "femoral tumbado"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "calves"
+  ],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Cadera pegada al banco.",
+   "Sube rápido y baja en 3 segundos."
+  ],
+  "image_source": "Lying_Leg_Curls"
+ },
+ {
+  "slug": "curl-femoral-sentado",
+  "name": "Curl femoral sentado",
+  "aliases": [
+   "seated leg curl"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Ajusta el rodillo sobre los tobillos.",
+   "Inclínate ligeramente hacia delante para más estiramiento."
+  ],
+  "image_source": "Seated_Leg_Curl"
+ },
+ {
+  "slug": "curl-femoral-pie",
+  "name": "Curl femoral de pie",
+  "aliases": [
+   "standing leg curl"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Una pierna cada vez.",
+   "Cadera quieta."
+  ],
+  "image_source": "Standing_Leg_Curl"
+ },
+ {
+  "slug": "curl-nordico",
+  "name": "Curl nórdico",
+  "aliases": [
+   "nordic curl",
+   "nordic hamstring curl",
+   "curl nordico"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Tobillos sujetos, cuerpo recto de rodillas a cabeza.",
+   "Baja lo más lento posible."
+  ],
+  "image_source": "Natural_Glute_Ham_Raise"
+ },
+ {
+  "slug": "glute-ham-raise",
+  "name": "Glute ham raise",
+  "aliases": [
+   "ghr",
+   "glute ham raise"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Rodillas detrás del cojín.",
+   "Sube con femoral y glúteo."
+  ],
+  "image_source": "Glute_Ham_Raise"
+ },
+ {
+  "slug": "curl-femoral-fitball",
+  "name": "Curl femoral con fitball",
+  "aliases": [
+   "ball leg curl",
+   "swiss ball curl"
+  ],
+  "muscle": "hamstrings",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "other",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Cadera elevada todo el tiempo.",
+   "Lleva el balón hacia los glúteos."
+  ],
+  "image_source": "Ball_Leg_Curl"
+ },
+ {
+  "slug": "hip-thrust",
+  "name": "Hip thrust",
+  "aliases": [
+   "hip thrust",
+   "empuje de cadera",
+   "puente de gluteo con barra"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Espalda alta apoyada en el banco, barra sobre la cadera.",
+   "Extiende la cadera y aprieta glúteos arriba, barbilla abajo."
+  ],
+  "image_source": "Barbell_Hip_Thrust"
+ },
+ {
+  "slug": "puente-gluteo",
+  "name": "Puente de glúteo",
+  "aliases": [
+   "glute bridge",
+   "puente de gluteos"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Tumbado en el suelo, barra sobre la cadera.",
+   "Aprieta arriba 1-2 segundos."
+  ],
+  "image_source": "Barbell_Glute_Bridge"
+ },
+ {
+  "slug": "puente-gluteo-unilateral",
+  "name": "Puente de glúteo a una pierna",
+  "aliases": [
+   "single leg glute bridge"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Una pierna estirada.",
+   "Cadera nivelada."
+  ],
+  "image_source": "Single_Leg_Glute_Bridge"
+ },
+ {
+  "slug": "hip-thrust-multipower",
+  "name": "Hip thrust en multipower",
+  "aliases": [
+   "smith hip thrust"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "smith",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Barra sobre la cadera con almohadilla.",
+   "Extiende y aprieta."
+  ],
+  "image_source": "Smith_Machine_Hip_Raise"
+ },
+ {
+  "slug": "patada-gluteo-polea",
+  "name": "Patada de glúteo en polea",
+  "aliases": [
+   "cable kickback",
+   "glute kickback",
+   "patada de gluteo"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Tobillera en la polea baja.",
+   "Lleva la pierna atrás sin arquear la espalda."
+  ],
+  "image_source": "One-Legged_Cable_Kickback"
+ },
+ {
+  "slug": "patada-gluteo",
+  "name": "Patada de glúteo a cuatro patas",
+  "aliases": [
+   "donkey kick",
+   "kickback suelo"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "A cuatro patas, rodilla a 90°.",
+   "Empuja el talón hacia el techo."
+  ],
+  "image_source": "Glute_Kickback"
+ },
+ {
+  "slug": "pull-through",
+  "name": "Pull through en polea",
+  "aliases": [
+   "cable pull through"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings"
+  ],
+  "equipment": "cable",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "De espaldas a la polea baja, cuerda entre las piernas.",
+   "Bisagra de cadera y extiende apretando glúteo."
+  ],
+  "image_source": "Pull_Through"
+ },
+ {
+  "slug": "abduccion-maquina",
+  "name": "Abducción de cadera en máquina",
+  "aliases": [
+   "hip abduction machine",
+   "abductores",
+   "abduccion"
+  ],
+  "muscle": "abductors",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Abre las piernas controlado.",
+   "Inclinarte hacia delante enfatiza el glúteo."
+  ],
+  "image_source": "Thigh_Abductor"
+ },
+ {
+  "slug": "aduccion-maquina",
+  "name": "Aducción de cadera en máquina",
+  "aliases": [
+   "hip adduction machine",
+   "aductores",
+   "aduccion"
+  ],
+  "muscle": "adductors",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Cierra las piernas sin golpear.",
+   "Recorrido completo."
+  ],
+  "image_source": "Thigh_Adductor"
+ },
+ {
+  "slug": "aduccion-polea",
+  "name": "Aducción en polea",
+  "aliases": [
+   "cable adduction"
+  ],
+  "muscle": "adductors",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Tobillera en la pierna cercana a la polea.",
+   "Cruza por delante del cuerpo."
+  ],
+  "image_source": "Cable_Hip_Adduction"
+ },
+ {
+  "slug": "monster-walk",
+  "name": "Paseo lateral con goma (monster walk)",
+  "aliases": [
+   "monster walk",
+   "lateral band walk"
+  ],
+  "muscle": "abductors",
+  "secondary_muscles": [
+   "glutes"
+  ],
+  "equipment": "band",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Goma sobre las rodillas o tobillos.",
+   "Pasos cortos manteniendo tensión."
+  ],
+  "image_source": "Monster_Walk"
+ },
+ {
+  "slug": "elevacion-gemelos-pie",
+  "name": "Elevación de gemelos de pie",
+  "aliases": [
+   "standing calf raise",
+   "gemelos de pie",
+   "calf raise"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Baja del todo para estirar.",
+   "Pausa arriba de puntillas."
+  ],
+  "image_source": "Standing_Calf_Raises"
+ },
+ {
+  "slug": "elevacion-gemelos-sentado",
+  "name": "Elevación de gemelos sentado",
+  "aliases": [
+   "seated calf raise",
+   "gemelos sentado",
+   "soleo"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Trabaja más el sóleo.",
+   "Recorrido completo y lento."
+  ],
+  "image_source": "Seated_Calf_Raise"
+ },
+ {
+  "slug": "gemelos-prensa",
+  "name": "Gemelos en prensa",
+  "aliases": [
+   "leg press calf raise",
+   "gemelos prensa"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Solo la punta de los pies en la plataforma.",
+   "Rodillas casi rectas."
+  ],
+  "image_source": "Calf_Press_On_The_Leg_Press_Machine"
+ },
+ {
+  "slug": "gemelos-multipower",
+  "name": "Gemelos en multipower",
+  "aliases": [
+   "smith calf raise"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "smith",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Puntas sobre un step.",
+   "Sube y baja completo."
+  ],
+  "image_source": "Smith_Machine_Calf_Raise"
+ },
+ {
+  "slug": "gemelos-mancuerna",
+  "name": "Gemelos a una pierna con mancuerna",
+  "aliases": [
+   "single leg calf raise"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 45,
+  "cues": [
+   "Sujétate con una mano.",
+   "Pausa arriba."
+  ],
+  "image_source": "Calf_Raise_On_A_Dumbbell"
+ },
+ {
+  "slug": "gemelos-burro",
+  "name": "Gemelos burro",
+  "aliases": [
+   "donkey calf raise"
+  ],
+  "muscle": "calves",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "isolation",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Tronco inclinado, cadera flexionada.",
+   "Gran estiramiento abajo."
+  ],
+  "image_source": "Donkey_Calf_Raises"
+ },
+ {
+  "slug": "plancha",
+  "name": "Plancha",
+  "aliases": [
+   "plank",
+   "plancha abdominal",
+   "puente"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": 45,
+  "rest_seconds": 60,
+  "cues": [
+   "Antebrazos bajo los hombros, cuerpo recto.",
+   "Aprieta glúteos y abdomen, sin hundir la cadera."
+  ],
+  "image_source": "Plank"
+ },
+ {
+  "slug": "plancha-lateral",
+  "name": "Plancha lateral",
+  "aliases": [
+   "side plank"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": 30,
+  "rest_seconds": 60,
+  "cues": [
+   "Codo bajo el hombro, cadera alta.",
+   "Cuerpo en línea recta."
+  ],
+  "image_source": "Side_Bridge"
+ },
+ {
+  "slug": "crunch",
+  "name": "Crunch abdominal",
+  "aliases": [
+   "crunch",
+   "encogimientos abdominales",
+   "abdominales"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Despega solo los hombros del suelo.",
+   "Exhala al subir."
+  ],
+  "image_source": "Crunches"
+ },
+ {
+  "slug": "crunch-polea",
+  "name": "Crunch en polea",
+  "aliases": [
+   "cable crunch",
+   "crunch polea alta",
+   "abdominales polea"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "De rodillas, cuerda junto a la cabeza.",
+   "Enrolla el tronco llevando los codos a los muslos."
+  ],
+  "image_source": "Cable_Crunch"
+ },
+ {
+  "slug": "crunch-maquina",
+  "name": "Crunch en máquina",
+  "aliases": [
+   "ab crunch machine",
+   "abdominales maquina"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "machine",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Movimiento corto y controlado.",
+   "Exhala al contraer."
+  ],
+  "image_source": "Ab_Crunch_Machine"
+ },
+ {
+  "slug": "crunch-inverso",
+  "name": "Crunch inverso",
+  "aliases": [
+   "reverse crunch"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Lleva las rodillas al pecho despegando la cadera.",
+   "Baja lento."
+  ],
+  "image_source": "Reverse_Crunch"
+ },
+ {
+  "slug": "crunch-declinado",
+  "name": "Crunch declinado",
+  "aliases": [
+   "decline crunch"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Banco declinado, pies sujetos.",
+   "Añade un disco para progresar."
+  ],
+  "image_source": "Decline_Crunch"
+ },
+ {
+  "slug": "crunch-bicicleta",
+  "name": "Crunch bicicleta",
+  "aliases": [
+   "bicycle crunch"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Codo hacia la rodilla contraria.",
+   "Despacio, sin tirar del cuello."
+  ],
+  "image_source": "Air_Bike"
+ },
+ {
+  "slug": "crunch-oblicuo",
+  "name": "Crunch oblicuo",
+  "aliases": [
+   "oblique crunch"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "De lado, eleva el hombro hacia la cadera.",
+   "Controla la bajada."
+  ],
+  "image_source": "Oblique_Crunches_-_On_The_Floor"
+ },
+ {
+  "slug": "elevacion-piernas-colgado",
+  "name": "Elevación de piernas colgado",
+  "aliases": [
+   "hanging leg raise",
+   "elevaciones de piernas en barra"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Sin balanceo.",
+   "Lleva las piernas hasta paralelo o más arriba."
+  ],
+  "image_source": "Hanging_Leg_Raise"
+ },
+ {
+  "slug": "elevacion-rodillas-paralelas",
+  "name": "Elevación de rodillas en paralelas",
+  "aliases": [
+   "captains chair",
+   "knee raise",
+   "silla romana"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Espalda pegada al respaldo.",
+   "Rodillas al pecho, baja lento."
+  ],
+  "image_source": "Knee_Hip_Raise_On_Parallel_Bars"
+ },
+ {
+  "slug": "elevacion-piernas-tumbado",
+  "name": "Elevación de piernas tumbado",
+  "aliases": [
+   "lying leg raise"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Zona lumbar pegada al banco.",
+   "Baja las piernas sin tocar el suelo."
+  ],
+  "image_source": "Flat_Bench_Lying_Leg_Raise"
+ },
+ {
+  "slug": "rueda-abdominal",
+  "name": "Rueda abdominal",
+  "aliases": [
+   "ab wheel",
+   "ab roller",
+   "rueda"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [
+   "back"
+  ],
+  "equipment": "other",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Empieza de rodillas.",
+   "Avanza sin hundir la zona lumbar."
+  ],
+  "image_source": "Ab_Roller"
+ },
+ {
+  "slug": "dead-bug",
+  "name": "Dead bug",
+  "aliases": [
+   "dead bug",
+   "bicho muerto"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Zona lumbar pegada al suelo.",
+   "Extiende brazo y pierna contrarios lento."
+  ],
+  "image_source": "Dead_Bug"
+ },
+ {
+  "slug": "giro-ruso",
+  "name": "Giro ruso",
+  "aliases": [
+   "russian twist"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "plate",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 20,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Tronco inclinado atrás, pies elevados o apoyados.",
+   "Gira desde el tronco, no solo los brazos."
+  ],
+  "image_source": "Russian_Twist"
+ },
+ {
+  "slug": "pallof-press",
+  "name": "Pallof press",
+  "aliases": [
+   "pallof press",
+   "antirotacion"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "cable",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "De lado a la polea, agarre pegado al pecho.",
+   "Extiende los brazos sin dejar que el cable te gire."
+  ],
+  "image_source": "Pallof_Press"
+ },
+ {
+  "slug": "lenador-polea",
+  "name": "Leñador en polea",
+  "aliases": [
+   "wood chop",
+   "cable woodchopper",
+   "leñador"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "cable",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Gira desde la cadera y el tronco.",
+   "Brazos casi rectos."
+  ],
+  "image_source": "Standing_Cable_Wood_Chop"
+ },
+ {
+  "slug": "mountain-climbers",
+  "name": "Escaladores (mountain climbers)",
+  "aliases": [
+   "mountain climbers",
+   "escaladores"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": 30,
+  "rest_seconds": 60,
+  "cues": [
+   "Posición de plancha alta.",
+   "Rodillas al pecho alternando rápido."
+  ],
+  "image_source": "Mountain_Climbers"
+ },
+ {
+  "slug": "v-up",
+  "name": "V-ups (navaja)",
+  "aliases": [
+   "v up",
+   "jackknife",
+   "navaja"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Sube piernas y tronco a la vez.",
+   "Toca los pies arriba."
+  ],
+  "image_source": "Jackknife_Sit-Up"
+ },
+ {
+  "slug": "sit-up",
+  "name": "Sit-up",
+  "aliases": [
+   "sit up",
+   "abdominales completos"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Pies sujetos.",
+   "Sube hasta sentarte."
+  ],
+  "image_source": "Sit-Up"
+ },
+ {
+  "slug": "flexion-lateral-mancuerna",
+  "name": "Inclinación lateral con mancuerna",
+  "aliases": [
+   "side bend",
+   "oblicuos con mancuerna"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "dumbbell",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Mancuerna en una mano.",
+   "Inclínate solo de lado."
+  ],
+  "image_source": "Dumbbell_Side_Bend"
+ },
+ {
+  "slug": "hollow-hold",
+  "name": "Hollow hold",
+  "aliases": [
+   "hollow hold",
+   "hollow body",
+   "barquita"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [],
+  "equipment": "bodyweight",
+  "mechanic": "core",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 15,
+  "default_duration_seconds": 30,
+  "rest_seconds": 60,
+  "cues": [
+   "Lumbar pegada al suelo, brazos y piernas estirados.",
+   "Mantén la posición sin arquear."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "cargada-potencia",
+  "name": "Cargada de potencia (power clean)",
+  "aliases": [
+   "power clean",
+   "cargada",
+   "clean"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "quads",
+   "glutes",
+   "traps",
+   "back"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 3,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Extensión explosiva de cadera, rodillas y tobillos.",
+   "Recibe la barra en los hombros con los codos altos."
+  ],
+  "image_source": "Power_Clean"
+ },
+ {
+  "slug": "cargada-colgada",
+  "name": "Cargada colgada (hang clean)",
+  "aliases": [
+   "hang clean"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "quads",
+   "traps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 3,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Empieza con la barra por encima de las rodillas.",
+   "Codos rápidos al recibir."
+  ],
+  "image_source": "Hang_Clean"
+ },
+ {
+  "slug": "arrancada",
+  "name": "Arrancada (snatch)",
+  "aliases": [
+   "snatch",
+   "arrancada"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "quads",
+   "traps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 2,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Agarre ancho, barra pegada al cuerpo.",
+   "Recibe en sentadilla con brazos bloqueados."
+  ],
+  "image_source": "Snatch"
+ },
+ {
+  "slug": "arrancada-potencia",
+  "name": "Arrancada de potencia",
+  "aliases": [
+   "power snatch"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "quads"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 2,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Recibe por encima de paralelo.",
+   "Bloquea arriba de golpe."
+  ],
+  "image_source": "Power_Snatch"
+ },
+ {
+  "slug": "dos-tiempos",
+  "name": "Dos tiempos (clean & jerk)",
+  "aliases": [
+   "clean and jerk",
+   "dos tiempos"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "quads",
+   "traps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 2,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Cargada a hombros y envión.",
+   "Técnica antes que peso."
+  ],
+  "image_source": "Clean_and_Jerk"
+ },
+ {
+  "slug": "envion",
+  "name": "Envión (split jerk)",
+  "aliases": [
+   "split jerk",
+   "jerk",
+   "envion"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "quads",
+   "triceps"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 3,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Flexión corta y empuje explosivo.",
+   "Recibe en tijera con los brazos bloqueados."
+  ],
+  "image_source": "Split_Jerk"
+ },
+ {
+  "slug": "cargada-press",
+  "name": "Cargada y press",
+  "aliases": [
+   "clean and press"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "quads"
+  ],
+  "equipment": "barbell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Cargada a los hombros.",
+   "Press estricto sobre la cabeza."
+  ],
+  "image_source": "Clean_and_Press"
+ },
+ {
+  "slug": "thruster",
+  "name": "Thruster",
+  "aliases": [
+   "thruster",
+   "barbell thruster"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "quads",
+   "shoulders"
+  ],
+  "equipment": "barbell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Sentadilla frontal y press en un solo movimiento.",
+   "Usa el impulso de las piernas para el press."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "thruster-kettlebell",
+  "name": "Thruster con kettlebells",
+  "aliases": [
+   "kettlebell thruster"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "quads",
+   "shoulders"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Kettlebells en posición de rack.",
+   "Sentadilla y press encadenados."
+  ],
+  "image_source": "Kettlebell_Thruster"
+ },
+ {
+  "slug": "swing-kettlebell",
+  "name": "Swing con kettlebell",
+  "aliases": [
+   "kettlebell swing",
+   "kb swing",
+   "swing"
+  ],
+  "muscle": "glutes",
+  "secondary_muscles": [
+   "hamstrings",
+   "core"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Bisagra de cadera, no sentadilla.",
+   "La cadera impulsa la pesa; los brazos solo guían."
+  ],
+  "image_source": "One-Arm_Kettlebell_Swings"
+ },
+ {
+  "slug": "levantamiento-turco",
+  "name": "Levantamiento turco (turkish get-up)",
+  "aliases": [
+   "turkish get up",
+   "tgu"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "core"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 3,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Mira la pesa todo el tiempo.",
+   "Paso a paso, brazo siempre bloqueado."
+  ],
+  "image_source": "Kettlebell_Turkish_Get-Up_Squat_style"
+ },
+ {
+  "slug": "arrancada-kettlebell",
+  "name": "Arrancada con kettlebell",
+  "aliases": [
+   "kettlebell snatch"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "glutes"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Impulso de cadera.",
+   "Mete la mano para que la pesa no golpee el antebrazo."
+  ],
+  "image_source": "One-Arm_Kettlebell_Snatch"
+ },
+ {
+  "slug": "cargada-kettlebell",
+  "name": "Cargada con kettlebell",
+  "aliases": [
+   "kettlebell clean"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "glutes",
+   "shoulders"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 5,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 180,
+  "cues": [
+   "Pesa pegada al cuerpo al subir.",
+   "Recibe en rack sin golpe."
+  ],
+  "image_source": "One-Arm_Kettlebell_Clean"
+ },
+ {
+  "slug": "press-kettlebell",
+  "name": "Press con kettlebell",
+  "aliases": [
+   "kettlebell press"
+  ],
+  "muscle": "shoulders",
+  "secondary_muscles": [
+   "triceps"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Desde posición de rack.",
+   "Glúteo y abdomen apretados."
+  ],
+  "image_source": "Two-Arm_Kettlebell_Military_Press"
+ },
+ {
+  "slug": "remo-kettlebell",
+  "name": "Remo con kettlebell",
+  "aliases": [
+   "kettlebell row"
+  ],
+  "muscle": "back",
+  "secondary_muscles": [
+   "biceps"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 75,
+  "cues": [
+   "Espalda plana.",
+   "Codo hacia la cadera."
+  ],
+  "image_source": "One-Arm_Kettlebell_Row"
+ },
+ {
+  "slug": "windmill-kettlebell",
+  "name": "Molino con kettlebell",
+  "aliases": [
+   "kettlebell windmill"
+  ],
+  "muscle": "core",
+  "secondary_muscles": [
+   "shoulders"
+  ],
+  "equipment": "kettlebell",
+  "mechanic": "core",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 8,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Brazo con la pesa bloqueado arriba.",
+   "Baja la otra mano por la pierna."
+  ],
+  "image_source": "Kettlebell_Windmill"
+ },
+ {
+  "slug": "burpees",
+  "name": "Burpees",
+  "aliases": [
+   "burpee",
+   "burpees"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "chest",
+   "quads"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "cardio",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 12,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Al suelo, flexión, salto con las manos arriba.",
+   "Ritmo constante que puedas mantener."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "box-jump",
+  "name": "Saltos al cajón",
+  "aliases": [
+   "box jump",
+   "saltos al cajon"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "calves"
+  ],
+  "equipment": "other",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 6,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Aterriza suave con las rodillas flexionadas.",
+   "Baja andando, no saltando."
+  ],
+  "image_source": "Front_Box_Jump"
+ },
+ {
+  "slug": "slam-balon",
+  "name": "Lanzamiento de balón al suelo (ball slam)",
+  "aliases": [
+   "ball slam",
+   "med ball slam",
+   "slam"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "core",
+   "shoulders"
+  ],
+  "equipment": "medicine_ball",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Balón por encima de la cabeza.",
+   "Lánzalo con todo el cuerpo."
+  ],
+  "image_source": "Overhead_Slam"
+ },
+ {
+  "slug": "lanzamiento-pared",
+  "name": "Wall ball",
+  "aliases": [
+   "wall ball",
+   "wall balls"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "quads",
+   "shoulders"
+  ],
+  "equipment": "medicine_ball",
+  "mechanic": "compound",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 15,
+  "default_duration_seconds": null,
+  "rest_seconds": 90,
+  "cues": [
+   "Sentadilla y lanza el balón a la diana.",
+   "Recíbelo bajando a la siguiente sentadilla."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "cuerda-batida",
+  "name": "Cuerdas de batida (battle ropes)",
+  "aliases": [
+   "battle ropes",
+   "battling ropes",
+   "cuerdas"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "shoulders",
+   "core"
+  ],
+  "equipment": "other",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": 30,
+  "rest_seconds": 60,
+  "cues": [
+   "Rodillas flexionadas, tronco firme.",
+   "Ondas rápidas y constantes."
+  ],
+  "image_source": "Battling_Ropes"
+ },
+ {
+  "slug": "volteo-neumatico",
+  "name": "Volteo de neumático",
+  "aliases": [
+   "tire flip"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "glutes",
+   "back"
+  ],
+  "equipment": "other",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 5,
+  "default_duration_seconds": null,
+  "rest_seconds": 120,
+  "cues": [
+   "Empuja con las piernas, no con la espalda.",
+   "Pecho pegado al neumático."
+  ],
+  "image_source": "Tire_Flip"
+ },
+ {
+  "slug": "golpe-mazo",
+  "name": "Golpes con mazo",
+  "aliases": [
+   "sledgehammer"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "core",
+   "shoulders"
+  ],
+  "equipment": "other",
+  "mechanic": "power",
+  "tracking_mode": "weight_reps",
+  "time_direction": "faster",
+  "default_sets": 4,
+  "default_reps": 10,
+  "default_duration_seconds": null,
+  "rest_seconds": 60,
+  "cues": [
+   "Alterna lados.",
+   "Golpea con todo el cuerpo."
+  ],
+  "image_source": "Sledgehammer_Swings"
+ },
+ {
+  "slug": "paseo-granjero",
+  "name": "Paseo del granjero",
+  "aliases": [
+   "farmers walk",
+   "farmer walk",
+   "paseo granjero"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "forearms",
+   "traps",
+   "core"
+  ],
+  "equipment": "dumbbell",
+  "mechanic": "carry",
+  "tracking_mode": "weight_time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 40,
+  "rest_seconds": 90,
+  "cues": [
+   "Mancuernas o kettlebells pesadas a los lados.",
+   "Hombros atrás y pasos cortos y firmes."
+  ],
+  "image_source": "Farmers_Walk"
+ },
+ {
+  "slug": "empuje-trineo",
+  "name": "Empuje de trineo",
+  "aliases": [
+   "sled push",
+   "prowler",
+   "trineo"
+  ],
+  "muscle": "quads",
+  "secondary_muscles": [
+   "glutes",
+   "calves"
+  ],
+  "equipment": "other",
+  "mechanic": "carry",
+  "tracking_mode": "weight_time",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 20,
+  "rest_seconds": 120,
+  "cues": [
+   "Brazos extendidos y cuerpo inclinado.",
+   "Pasos cortos y potentes."
+  ],
+  "image_source": "Sled_Push"
+ },
+ {
+  "slug": "arrastre-trineo",
+  "name": "Arrastre de trineo",
+  "aliases": [
+   "sled drag"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "equipment": "other",
+  "mechanic": "carry",
+  "tracking_mode": "weight_time",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 30,
+  "rest_seconds": 120,
+  "cues": [
+   "Arnés o cuerdas.",
+   "Avanza con pasos largos."
+  ],
+  "image_source": "Sled_Drag_-_Harness"
+ },
+ {
+  "slug": "paseo-yugo",
+  "name": "Paseo con yugo",
+  "aliases": [
+   "yoke walk"
+  ],
+  "muscle": "full_body",
+  "secondary_muscles": [
+   "core",
+   "quads"
+  ],
+  "equipment": "other",
+  "mechanic": "carry",
+  "tracking_mode": "weight_time",
+  "time_direction": "faster",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 20,
+  "rest_seconds": 150,
+  "cues": [
+   "Tronco rígido.",
+   "Pasos rápidos y cortos."
+  ],
+  "image_source": "Yoke_Walk"
+ },
+ {
+  "slug": "cinta-correr",
+  "name": "Correr en cinta",
+  "aliases": [
+   "treadmill",
+   "cinta",
+   "correr en cinta"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads",
+   "calves"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1200,
+  "rest_seconds": 0,
+  "cues": [
+   "Zancada corta y cadencia alta.",
+   "Usa 1% de inclinación para simular el exterior."
+  ],
+  "image_source": "Running_Treadmill"
+ },
+ {
+  "slug": "caminar-inclinado",
+  "name": "Caminar en cinta inclinada",
+  "aliases": [
+   "incline walk",
+   "caminata inclinada",
+   "12 3 30"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "glutes",
+   "calves"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1800,
+  "rest_seconds": 0,
+  "cues": [
+   "Inclinación alta y paso firme.",
+   "No te agarres a la barandilla."
+  ],
+  "image_source": "Walking_Treadmill"
+ },
+ {
+  "slug": "bici-estatica",
+  "name": "Bicicleta estática",
+  "aliases": [
+   "stationary bike",
+   "bici",
+   "spinning",
+   "ciclo indoor"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1200,
+  "rest_seconds": 0,
+  "cues": [
+   "Sillín a la altura de la cadera.",
+   "Rodilla casi estirada abajo."
+  ],
+  "image_source": "Bicycling_Stationary"
+ },
+ {
+  "slug": "bici-reclinada",
+  "name": "Bicicleta reclinada",
+  "aliases": [
+   "recumbent bike"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1200,
+  "rest_seconds": 0,
+  "cues": [
+   "Espalda apoyada.",
+   "Buena opción con molestias lumbares."
+  ],
+  "image_source": "Recumbent_Bike"
+ },
+ {
+  "slug": "remo-ergometro",
+  "name": "Remo (ergómetro)",
+  "aliases": [
+   "rowing machine",
+   "remoergometro",
+   "concept2",
+   "remo cardio"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "back",
+   "quads"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "faster",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 600,
+  "rest_seconds": 0,
+  "cues": [
+   "Piernas, tronco, brazos; y al revés al volver.",
+   "La fuerza sale de las piernas."
+  ],
+  "image_source": "Rowing_Stationary"
+ },
+ {
+  "slug": "eliptica",
+  "name": "Elíptica",
+  "aliases": [
+   "elliptical",
+   "eliptica"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads",
+   "glutes"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1200,
+  "rest_seconds": 0,
+  "cues": [
+   "Tronco erguido.",
+   "Empuja también con los brazos."
+  ],
+  "image_source": "Elliptical_Trainer"
+ },
+ {
+  "slug": "escaladora",
+  "name": "Escaladora (stairmaster)",
+  "aliases": [
+   "stairmaster",
+   "escaleras",
+   "step mill"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "glutes",
+   "quads"
+  ],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 900,
+  "rest_seconds": 0,
+  "cues": [
+   "No te apoyes en los brazos.",
+   "Pisa con todo el pie."
+  ],
+  "image_source": "Stairmaster"
+ },
+ {
+  "slug": "assault-bike",
+  "name": "Air bike (assault bike)",
+  "aliases": [
+   "assault bike",
+   "air bike",
+   "echo bike"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [],
+  "equipment": "cardio_machine",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "faster",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 600,
+  "rest_seconds": 0,
+  "cues": [
+   "Empuja y tira con brazos y piernas.",
+   "Ideal para intervalos cortos."
+  ],
+  "image_source": null
+ },
+ {
+  "slug": "comba",
+  "name": "Saltar a la comba",
+  "aliases": [
+   "jump rope",
+   "comba",
+   "cuerda",
+   "dobles"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "calves"
+  ],
+  "equipment": "other",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 5,
+  "default_reps": 10,
+  "default_duration_seconds": 60,
+  "rest_seconds": 45,
+  "cues": [
+   "Saltos bajos sobre la punta de los pies.",
+   "Gira la cuerda con las muñecas."
+  ],
+  "image_source": "Rope_Jumping"
+ },
+ {
+  "slug": "correr-exterior",
+  "name": "Correr al aire libre",
+  "aliases": [
+   "running",
+   "carrera",
+   "correr",
+   "trote",
+   "run"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads",
+   "calves"
+  ],
+  "equipment": "other",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "faster",
+  "default_sets": 1,
+  "default_reps": 10,
+  "default_duration_seconds": 1800,
+  "rest_seconds": 0,
+  "cues": [
+   "Ritmo conversacional para rodajes suaves.",
+   "Aumenta la distancia semanal poco a poco."
+  ],
+  "image_source": "Trail_Running_Walking"
+ },
+ {
+  "slug": "sprints",
+  "name": "Sprints",
+  "aliases": [
+   "sprint",
+   "series de velocidad"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "quads",
+   "hamstrings",
+   "glutes"
+  ],
+  "equipment": "other",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "faster",
+  "default_sets": 6,
+  "default_reps": 10,
+  "default_duration_seconds": 15,
+  "rest_seconds": 90,
+  "cues": [
+   "Calienta bien antes.",
+   "Recupera del todo entre series."
+  ],
+  "image_source": "Wind_Sprints"
+ },
+ {
+  "slug": "jumping-jacks",
+  "name": "Jumping jacks",
+  "aliases": [
+   "jumping jacks",
+   "saltos de tijera"
+  ],
+  "muscle": "cardio",
+  "secondary_muscles": [
+   "calves",
+   "shoulders"
+  ],
+  "equipment": "bodyweight",
+  "mechanic": "cardio",
+  "tracking_mode": "time",
+  "time_direction": "longer",
+  "default_sets": 3,
+  "default_reps": 10,
+  "default_duration_seconds": 45,
+  "rest_seconds": 30,
+  "cues": [
+   "Brazos arriba al abrir las piernas.",
+   "Ritmo constante."
+  ],
+  "image_source": "Star_Jump"
+ }
+]
