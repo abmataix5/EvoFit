@@ -310,6 +310,7 @@ export function WorkoutSessionPage() {
         title={session.day?.name ?? session.routine?.name ?? 'Entrenamiento'}
         stats={finished.stats}
         minutes={finished.minutes}
+        existingPost={session.post ?? null}
         onDone={(shared) => navigate(shared ? '/' : '/calendar')}
       />
     )

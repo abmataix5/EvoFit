@@ -24,6 +24,7 @@ class WorkoutSessionController extends Controller
         'day.exercises.catalogExercise.exercise',
         'extraExercises.catalogExercise.exercise',
         'setLogs.routineExercise',
+        'post',
     ];
 
     public function calendar(CalendarRequest $request, TrainingCalendarPlanner $planner): AnonymousResourceCollection

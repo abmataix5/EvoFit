@@ -208,6 +208,67 @@ class FeedTest extends TestCase
         $this->actingAs($ana)->getJson('/api/v1/notifications')->assertJsonCount(0, 'data');
     }
 
+    public function test_session_exposes_its_post_and_post_can_be_edited(): void
+    {
+        Storage::fake('local');
+        [$ana, $session] = $this->trainedUser();
+        $this->actingAs($ana)->getJson("/api/v1/workout-sessions/{$session->id}")->assertJsonPath('data.post', null);
+
+        $postId = $this->share($ana, $session, ['caption' => 'Primero'])->json('data.id');
+        $this->actingAs($ana)->getJson("/api/v1/workout-sessions/{$session->id}")
+            ->assertJsonPath('data.post.id', $postId)->assertJsonPath('data.post.caption', 'Primero');
+
+        $this->actingAs($ana)->post("/api/v1/posts/{$postId}", [
+            'caption' => 'Editado',
+            'gym_name' => 'Otro gym',
+            'photo' => UploadedFile::fake()->image('p.jpg', 800, 1000),
+        ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.caption', 'Editado')
+            ->assertJsonPath('data.gym_name', 'Otro gym')
+            ->assertJsonPath('data.edited', true)
+            ->assertJsonPath('data.summary.sets', 3);
+        $this->assertNotNull(Post::query()->find($postId)->photo_path);
+
+        // Un "me gusta" no marca la publicación como editada ni cambia la URL de la foto.
+        $friend = $this->makeUser('Amigo');
+        $this->befriend($ana, $friend);
+        $url = Post::query()->find($postId)->photoUrl();
+        $this->actingAs($friend)->postJson("/api/v1/posts/{$postId}/like");
+        $this->assertSame($url, Post::query()->find($postId)->photoUrl());
+
+        $this->actingAs($friend)->post("/api/v1/posts/{$postId}", ['caption' => 'hack'], ['Accept' => 'application/json'])->assertNotFound();
+    }
+
+    public function test_likers_list_and_preview_name(): void
+    {
+        [$ana, $session] = $this->trainedUser();
+        $luis = $this->makeUser('Luis');
+        $marta = $this->makeUser('Marta');
+        $this->befriend($ana, $luis);
+        $this->befriend($ana, $marta);
+        $post = $this->postOf($ana, $session);
+
+        $this->actingAs($luis)->postJson("/api/v1/posts/{$post->id}/like");
+        $this->actingAs($marta)->postJson("/api/v1/posts/{$post->id}/like");
+
+        $this->actingAs($ana)->getJson("/api/v1/posts/{$post->id}/likes")
+            ->assertOk()->assertJsonPath('data.0.name', 'Marta')->assertJsonPath('data.1.name', 'Luis');
+        $this->actingAs($ana)->getJson('/api/v1/feed')->assertJsonPath('data.0.liked_by_name', 'Marta');
+        // A Marta se le muestra otra persona, no ella misma.
+        $this->actingAs($marta)->getJson("/api/v1/posts/{$post->id}")->assertJsonPath('data.liked_by_name', 'Luis');
+    }
+
+    public function test_route_limits_do_not_count_other_requests(): void
+    {
+        [$ana, $session] = $this->trainedUser();
+        // 25 peticiones normales no deben agotar el límite de 20/min para publicar.
+        for ($i = 0; $i < 25; $i++) {
+            $this->actingAs($ana)->getJson('/api/v1/feed')->assertOk();
+        }
+        $this->share($ana, $session)->assertCreated();
+    }
+
     private function postOf(User $user, ?WorkoutSession $session = null): Post
     {
         return Post::query()->where('user_id', $user->id)

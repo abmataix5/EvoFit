@@ -211,6 +211,8 @@ export type WorkoutSession = {
   was_swapped?: boolean
   routine?: Routine
   day?: RoutineDay
+  /** Su publicación en el feed, si ya se compartió. */
+  post?: { id: number; caption: string | null; gym_name: string | null; photo_url: string | null } | null
   /** Lo que toca hoy: ejercicios del día con los cambios de esta sesión aplicados. */
   exercises?: RoutineExercise[]
   set_logs?: ExerciseSetLog[]

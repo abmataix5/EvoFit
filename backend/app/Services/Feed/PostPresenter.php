@@ -35,14 +35,19 @@ class PostPresenter
             ->pluck('post_id')
             ->flip()
             ->all();
+        $likers = $this->latestLikers($posts, $viewer);
 
-        return $posts->map(fn (Post $post) => $this->present($post, $viewer, isset($liked[$post->id])))->values()->all();
+        return $posts
+            ->map(fn (Post $post) => $this->present($post, $viewer, isset($liked[$post->id]), $likers[$post->id] ?? null))
+            ->values()
+            ->all();
     }
 
     /** @return array<string, mixed> */
-    public function present(Post $post, User $viewer, ?bool $likedByMe = null): array
+    public function present(Post $post, User $viewer, ?bool $likedByMe = null, ?User $liker = null): array
     {
         $likedByMe ??= $post->likes()->where('user_id', $viewer->id)->exists();
+        $liker ??= $this->latestLikers(collect([$post]), $viewer)[$post->id] ?? null;
         $mine = $post->user_id === $viewer->id;
 
         return [
@@ -56,12 +61,39 @@ class PostPresenter
             'likes_count' => $post->likes_count,
             'comments_count' => $post->comments_count,
             'liked_by_me' => $likedByMe,
+            // "Le gusta a Ana y 11 más": la última persona (que no seas tú) que dio "me gusta".
+            'liked_by_name' => $liker?->name,
+            'edited' => $post->edited_at !== null,
             'comments_preview' => $post->relationLoaded('comments')
                 ? $post->comments->sortBy('id')->map(fn (PostComment $c) => $this->comment($c, $viewer, $post))->values()->all()
                 : [],
             'mine' => $mine,
             'workout_session_id' => $mine ? $post->workout_session_id : null,
         ];
+    }
+
+    /**
+     * Última persona (distinta de quien mira) que ha dado "me gusta" a cada publicación.
+     *
+     * @param  Collection<int, Post>  $posts
+     * @return array<int, User>
+     */
+    private function latestLikers(Collection $posts, User $viewer): array
+    {
+        $withLikes = $posts->filter(fn (Post $p) => $p->likes_count > 0)->pluck('id');
+        if ($withLikes->isEmpty()) {
+            return [];
+        }
+
+        $likes = PostLike::query()
+            ->whereIn('post_id', $withLikes)
+            ->where('user_id', '!=', $viewer->id)
+            ->orderByDesc('id')
+            ->get(['post_id', 'user_id'])
+            ->unique('post_id');
+        $users = User::query()->whereIn('id', $likes->pluck('user_id'))->get()->keyBy('id');
+
+        return $likes->mapWithKeys(fn (PostLike $l) => [$l->post_id => $users->get($l->user_id)])->filter()->all();
     }
 
     /** @return array<string, mixed> */

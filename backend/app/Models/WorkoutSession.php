@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class WorkoutSession extends Model
@@ -98,6 +99,12 @@ class WorkoutSession extends Model
         return $today
             ->concat($extras->reject(fn (RoutineExercise $extra) => in_array($extra->id, $placed, true)))
             ->values();
+    }
+
+    /** Su publicación en el feed, si se ha compartido. */
+    public function post(): HasOne
+    {
+        return $this->hasOne(Post::class);
     }
 
     public function setLogs(): HasMany

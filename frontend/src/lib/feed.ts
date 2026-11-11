@@ -36,6 +36,9 @@ export type Post = {
   likes_count: number
   comments_count: number
   liked_by_me: boolean
+  /** Última persona (que no seas tú) que dio "me gusta": "Le gusta a Ana y 11 más". */
+  liked_by_name: string | null
+  edited: boolean
   comments_preview: PostComment[]
   mine: boolean
   workout_session_id: number | null
@@ -111,14 +114,32 @@ export async function toggleLike(post: Post) {
 
 export type ShareInput = { caption: string; gym_name: string; photo: File | null; remove_photo?: boolean }
 
-export async function shareWorkout(sessionId: number, input: ShareInput): Promise<Post> {
+function formData(input: ShareInput) {
   const body = new FormData()
   body.append('caption', input.caption)
   body.append('gym_name', input.gym_name)
   if (input.photo) body.append('photo', input.photo)
   if (input.remove_photo) body.append('remove_photo', '1')
-  const { data } = await api.post<{ data: Post }>(`/workout-sessions/${sessionId}/share`, body)
+  return body
+}
+
+/** Publica un entreno (o edita su publicación si ya existía). */
+export async function shareWorkout(sessionId: number, input: ShareInput): Promise<Post> {
+  const { data } = await api.post<{ data: Post }>(`/workout-sessions/${sessionId}/share`, formData(input))
   await queryClient.invalidateQueries({ queryKey: ['feed'] })
   void queryClient.invalidateQueries({ queryKey: ['person-posts'] })
+  void queryClient.invalidateQueries({ queryKey: ['workout-session', sessionId] })
   return data.data
 }
+
+export async function updatePost(postId: number, input: ShareInput): Promise<Post> {
+  const { data } = await api.post<{ data: Post }>(`/posts/${postId}`, formData(input))
+  patchPost(postId, () => data.data)
+  return data.data
+}
+
+export const likersQuery = (postId: number) =>
+  queryOptions({
+    queryKey: ['post-likers', postId],
+    queryFn: async () => (await api.get<{ data: PostAuthor[] }>(`/posts/${postId}/likes`)).data.data,
+  })

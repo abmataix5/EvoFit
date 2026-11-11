@@ -66,7 +66,7 @@ export function PostDetailPage() {
       <PostCard post={post.data} detailed />
 
       <section aria-label="Comentarios" className="space-y-3">
-        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">
+        <h2 className="pt-2 text-xs font-semibold uppercase tracking-wide text-evo-muted">
           Comentarios{post.data.comments_count ? ` · ${post.data.comments_count}` : ''}
         </h2>
         {comments.isLoading ? (
@@ -74,32 +74,28 @@ export function PostDetailPage() {
         ) : (comments.data ?? []).length === 0 ? (
           <p className="px-1 text-sm text-evo-muted">Sé el primero en comentar.</p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {comments.data!.map((comment) => (
               <li key={comment.id} className="flex gap-3">
                 <Link to={`/u/${comment.author.id}`} className="shrink-0">
                   <Avatar name={comment.author.name} url={comment.author.avatar_url} size="sm" />
                 </Link>
-                <div className="min-w-0 flex-1 rounded-2xl bg-evo-surface px-3 py-2">
-                  <p className="text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="whitespace-pre-line break-words text-[0.95rem] leading-snug">
                     <Link to={`/u/${comment.author.id}`} className="font-bold">
                       {comment.author.name}
                     </Link>{' '}
-                    <span className="text-xs text-evo-muted">{timeAgo(comment.created_at)}</span>
+                    {comment.body}
                   </p>
-                  <p className="whitespace-pre-line break-words text-[0.95rem] leading-snug">{comment.body}</p>
+                  <p className="mt-1 flex gap-3 text-xs font-semibold text-evo-muted">
+                    <span>{timeAgo(comment.created_at)}</span>
+                    {comment.can_delete ? (
+                      <button type="button" onClick={() => remove.mutate(comment.id)} disabled={remove.isPending} className="hover:text-evo-danger">
+                        Eliminar
+                      </button>
+                    ) : null}
+                  </p>
                 </div>
-                {comment.can_delete ? (
-                  <button
-                    type="button"
-                    onClick={() => remove.mutate(comment.id)}
-                    disabled={remove.isPending}
-                    className="self-center rounded-lg px-2 py-1 text-xs font-semibold text-evo-muted hover:text-evo-danger"
-                    aria-label="Borrar comentario"
-                  >
-                    Borrar
-                  </button>
-                ) : null}
               </li>
             ))}
           </ul>
@@ -133,7 +129,7 @@ export function PostDetailPage() {
           disabled={!body.trim() || send.isPending}
           className="mb-0.5 min-h-11 rounded-2xl px-3 font-bold text-evo-accent disabled:opacity-40"
         >
-          Enviar
+          Publicar
         </button>
       </form>
     </div>

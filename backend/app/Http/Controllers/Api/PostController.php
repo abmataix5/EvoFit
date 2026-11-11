@@ -8,13 +8,13 @@ use App\Models\User;
 use App\Models\WorkoutSession;
 use App\Services\Feed\PostPresenter;
 use App\Services\Feed\PostVisibility;
+use App\Services\Feed\PostWriter;
 use App\Services\Feed\WorkoutSummaryBuilder;
-use App\Services\Images\JpegEncoder;
 use App\Services\Social\SocialGraph;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PostController extends Controller
@@ -73,49 +73,66 @@ class PostController extends Controller
      * Compartir (o editar lo compartido de) un entreno propio: resumen calculado aquí,
      * texto, gimnasio y foto opcional.
      */
-    public function share(Request $request, WorkoutSession $workoutSession, WorkoutSummaryBuilder $summaries, JpegEncoder $encoder): JsonResponse
+    public function share(Request $request, WorkoutSession $workoutSession, WorkoutSummaryBuilder $summaries, PostWriter $writer): JsonResponse
     {
         $this->authorize('update', $workoutSession);
-        $validated = $request->validate([
-            'caption' => ['nullable', 'string', 'max:500'],
-            'gym_name' => ['nullable', 'string', 'max:80'],
+        $validated = $this->validatePostFields($request);
+        abort_unless($summaries->hasLoggedSets($workoutSession), 422, 'Este entreno aún no tiene series apuntadas.');
+
+        $post = Post::query()->firstOrNew(['workout_session_id' => $workoutSession->id]);
+        $created = ! $post->exists;
+        $writer->write($post, $request->user(), Arr::only($validated, ['caption', 'gym_name']), $request->file('photo'), $request->boolean('remove_photo'), $workoutSession);
+
+        return response()->json([
+            'data' => $this->presenter->present($post->load(PostPresenter::with()), $request->user()),
+        ], $created ? 201 : 200);
+    }
+
+    /** Editar texto, gimnasio o foto de una publicación propia. */
+    public function update(Request $request, Post $post, PostWriter $writer): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+        $validated = $this->validatePostFields($request);
+
+        // El resumen se recalcula si el entreno sigue existiendo (por si cambiaron las series).
+        $session = $post->workout_session_id
+            ? WorkoutSession::query()->where('user_id', $request->user()->id)->find($post->workout_session_id)
+            : null;
+        $writer->write($post, $request->user(), Arr::only($validated, ['caption', 'gym_name']), $request->file('photo'), $request->boolean('remove_photo'), $session);
+
+        return response()->json(['data' => $this->presenter->present($post->load(PostPresenter::with()), $request->user())]);
+    }
+
+    /** Quién ha dado "me gusta" (los más recientes primero). */
+    public function likers(Request $request, Post $post, SocialGraph $graph): JsonResponse
+    {
+        $viewer = $request->user();
+        abort_unless($this->visibility->canView($viewer, $post), 404);
+
+        $users = User::query()
+            ->join('post_likes', 'post_likes.user_id', '=', 'users.id')
+            ->where('post_likes.post_id', $post->id)
+            ->whereNotIn('users.id', $graph->hiddenIds($viewer))
+            ->orderByDesc('post_likes.id')
+            ->limit(200)
+            ->get(['users.*']);
+
+        return response()->json(['data' => $users->map(fn (User $u) => PostPresenter::author($u))->values()]);
+    }
+
+    /** @return array<string, mixed> */
+    private function validatePostFields(Request $request): array
+    {
+        return $request->validate([
+            'caption' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'gym_name' => ['sometimes', 'nullable', 'string', 'max:80'],
             'photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:12288'],
             'remove_photo' => ['sometimes', 'boolean'],
         ], [
+            'caption.max' => 'El texto puede tener como mucho 500 caracteres.',
             'photo.mimes' => 'La foto tiene que ser JPG, PNG o WebP.',
             'photo.max' => 'La foto pesa demasiado (máximo 12 MB).',
         ]);
-        abort_unless($summaries->hasLoggedSets($workoutSession), 422, 'Este entreno aún no tiene series apuntadas.');
-
-        $user = $request->user();
-        $post = Post::query()->firstOrNew(['workout_session_id' => $workoutSession->id]);
-        $created = ! $post->exists;
-        $post->fill([
-            'user_id' => $user->id,
-            'caption' => blank($validated['caption'] ?? null) ? null : trim($validated['caption']),
-            'gym_name' => array_key_exists('gym_name', $validated)
-                ? (blank($validated['gym_name']) ? null : trim($validated['gym_name']))
-                : ($post->gym_name ?? $user->gym_name),
-            'summary' => $summaries->build($workoutSession),
-        ]);
-
-        $previousPhoto = $post->photo_path;
-        if ($request->hasFile('photo')) {
-            $path = 'posts/'.$user->id.'/'.Str::uuid()->toString().'.jpg';
-            Storage::disk(Post::PHOTO_DISK)->put($path, $encoder->encode($request->file('photo'), 1440));
-            $post->photo_path = $path;
-        } elseif ($request->boolean('remove_photo')) {
-            $post->photo_path = null;
-        }
-
-        $post->save();
-        if ($previousPhoto && $previousPhoto !== $post->photo_path) {
-            Storage::disk(Post::PHOTO_DISK)->delete($previousPhoto);
-        }
-
-        return response()->json([
-            'data' => $this->presenter->present($post->load(PostPresenter::with()), $user, false),
-        ], $created ? 201 : 200);
     }
 
     public function destroy(Request $request, Post $post): JsonResponse

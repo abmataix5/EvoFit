@@ -14,11 +14,11 @@ class Post extends Model
 {
     public const PHOTO_DISK = 'local';
 
-    protected $fillable = ['user_id', 'workout_session_id', 'caption', 'gym_name', 'summary', 'photo_path'];
+    protected $fillable = ['user_id', 'workout_session_id', 'caption', 'gym_name', 'summary', 'photo_path', 'edited_at'];
 
     protected function casts(): array
     {
-        return ['summary' => 'array'];
+        return ['summary' => 'array', 'edited_at' => 'datetime'];
     }
 
     protected static function booted(): void
@@ -26,6 +26,11 @@ class Post extends Model
         static::deleting(function (Post $post): void {
             $post->deletePhotoFile();
         });
+    }
+
+    public function workoutSession(): BelongsTo
+    {
+        return $this->belongsTo(WorkoutSession::class);
     }
 
     public function user(): BelongsTo
@@ -49,7 +54,8 @@ class Post extends Model
             return null;
         }
 
-        return '/api/v1/posts/'.$this->id.'/photo?v='.$this->updated_at?->getTimestamp();
+        // La versión cambia con la foto (no con cada "me gusta"): la caché del navegador dura.
+        return '/api/v1/posts/'.$this->id.'/photo?v='.substr(md5($this->photo_path), 0, 10);
     }
 
     public function deletePhotoFile(): void

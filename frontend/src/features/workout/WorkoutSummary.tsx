@@ -1,77 +1,80 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useUiFeedback } from '../../components/feedback/UiFeedback'
 import { Button } from '../../components/ui/Button'
-import { apiErrorMessage, validationErrors } from '../../lib/api'
+import { apiErrorMessage, validationErrors, type WorkoutSession } from '../../lib/api'
 import { shareWorkout } from '../../lib/feed'
 import { prepareProgressPhoto } from '../../lib/preparePhoto'
 import { useAuth } from '../auth/AuthContext'
+import { PostComposer, composerDirty, composerFrom } from '../feed/PostComposer'
 import { SessionReportButton } from '../reports/SessionReportButton'
 import type { SessionStats } from './model'
 
 const HOME_VIEW_KEY = 'evofit:home-view'
+
+type ExistingPost = NonNullable<WorkoutSession['post']>
 
 export function WorkoutSummary({
   sessionId,
   title,
   stats,
   minutes,
+  existingPost,
   onDone,
 }: {
   sessionId: number
   title: string
   stats: SessionStats
   minutes: number | null
-  /** shared: se ha publicado en el feed (se vuelve al inicio con la vista de amigos). */
+  /** Si ya se compartió, se ofrece editar la publicación en vez de publicarla otra vez. */
+  existingPost: ExistingPost | null
+  /** shared: se ha publicado o editado en el feed (se vuelve al inicio con la vista de amigos). */
   onDone: (shared: boolean) => void
 }) {
   const hasRecords = stats.records.length > 0
   const canShare = stats.doneSets > 0
   const { user } = useAuth()
   const { notify } = useUiFeedback()
-  const [share, setShare] = useState(canShare)
-  const [caption, setCaption] = useState('')
-  const [gym, setGym] = useState(user?.gym_name ?? '')
-  const [photo, setPhoto] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
+  const [original] = useState(() => composerFrom(existingPost, user?.gym_name ?? ''))
+  const [value, setValue] = useState(original)
+  // Nuevo: compartir viene activado. Ya publicado: solo si quieres editar.
+  const [active, setActive] = useState(existingPost ? false : canShare)
   const [publishing, setPublishing] = useState(false)
-  const fileInput = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!photo) {
-      setPreview(null)
-      return
-    }
-    const url = URL.createObjectURL(photo)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [photo])
+  const willPublish = canShare && active && (!existingPost || composerDirty(value, original))
 
   async function finish() {
-    if (!share || !canShare) {
+    if (!willPublish) {
       onDone(false)
       return
     }
     setPublishing(true)
     try {
       await shareWorkout(sessionId, {
-        caption: caption.trim(),
-        gym_name: gym.trim(),
-        photo: photo ? await prepareProgressPhoto(photo) : null,
+        caption: value.caption.trim(),
+        gym_name: value.gym.trim(),
+        photo: value.photo ? await prepareProgressPhoto(value.photo) : null,
+        remove_photo: value.removePhoto && !value.photo,
       })
       try {
         localStorage.setItem(HOME_VIEW_KEY, 'friends')
       } catch {
         // Sin almacenamiento: no pasa nada.
       }
-      notify('Compartido con tus amigos 💪', 'success')
+      notify(existingPost ? 'Publicación actualizada' : 'Compartido con tus amigos 💪', 'success')
       onDone(true)
     } catch (error) {
-      const message = Object.values(validationErrors(error))[0]
-      notify(message ?? apiErrorMessage(error, 'No se ha podido compartir. Tu entreno está guardado.'), 'error')
+      notify(Object.values(validationErrors(error))[0] ?? apiErrorMessage(error, 'No se ha podido publicar. Tu entreno está guardado.'), 'error')
     } finally {
       setPublishing(false)
     }
   }
+
+  const audience =
+    user?.profile_visibility === 'private'
+      ? 'Tu perfil es privado: solo lo verás tú.'
+      : user?.profile_visibility === 'public'
+        ? 'Lo verán tus amigos y quien visite tu perfil.'
+        : 'Lo verán tus amigos en su feed.'
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-6">
@@ -103,89 +106,47 @@ export function WorkoutSummary({
         </div>
       ) : null}
 
-      {canShare ? (
-        <section className={['panel space-y-4 p-4 transition', share ? '' : 'opacity-80'].join(' ')}>
+      {canShare && existingPost ? (
+        <section className="panel space-y-4 p-4">
+          <div className="flex items-center gap-3">
+            {existingPost.photo_url ? (
+              <img src={existingPost.photo_url} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+            ) : (
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff9d68] to-[#f0623c] text-2xl" aria-hidden>
+                🎉
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-bold">✓ Ya está en el feed</p>
+              <p className="truncate text-sm text-evo-muted">{existingPost.caption || 'Sin pie de foto'}</p>
+            </div>
+            {!active ? (
+              <Button variant="secondary" className="!min-h-10 shrink-0" onClick={() => setActive(true)}>
+                Editar
+              </Button>
+            ) : null}
+          </div>
+          {active ? <PostComposer value={value} onChange={setValue} /> : null}
+          {active ? <p className="text-xs text-evo-muted">Los datos del entreno de la publicación se actualizan al guardar.</p> : null}
+        </section>
+      ) : null}
+
+      {canShare && !existingPost ? (
+        <section className="panel space-y-4 p-4">
           <label className="flex cursor-pointer items-center justify-between gap-3">
             <span>
               <span className="block font-display text-lg font-bold">Compartir con amigos</span>
-              <span className="block text-sm text-evo-muted">
-                {user?.profile_visibility === 'private'
-                  ? 'Tu perfil es privado: solo lo verás tú.'
-                  : user?.profile_visibility === 'public'
-                    ? 'Lo verán tus amigos y cualquiera que visite tu perfil.'
-                    : 'Lo verán tus amigos en su feed.'}
-              </span>
+              <span className="block text-sm text-evo-muted">{audience}</span>
             </span>
-            <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} className="h-6 w-6 shrink-0 accent-evo-accent" />
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="h-6 w-6 shrink-0 accent-evo-accent" />
           </label>
-
-          {share ? (
-            <>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                tabIndex={-1}
-                aria-hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  e.target.value = ''
-                  if (file) setPhoto(file)
-                }}
-              />
-              {preview ? (
-                <div className="relative overflow-hidden rounded-2xl">
-                  <img src={preview} alt="Foto que vas a compartir" className="max-h-80 w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setPhoto(null)}
-                    className="absolute right-2 top-2 rounded-full bg-black/60 px-3 py-1.5 text-sm font-bold text-white"
-                  >
-                    Quitar
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInput.current?.click()}
-                  className="flex min-h-24 w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-evo-border text-evo-muted transition active:scale-[0.99]"
-                >
-                  <span className="text-2xl" aria-hidden>
-                    📸
-                  </span>
-                  <span className="text-sm font-bold">Añadir una foto (opcional)</span>
-                </button>
-              )}
-              <label className="block space-y-1.5">
-                <span className="text-sm font-semibold">¿Qué tal ha ido?</span>
-                <textarea
-                  rows={2}
-                  maxLength={500}
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Opcional: cómo te has sentido, un logro…"
-                  className="w-full resize-none rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 py-3 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none"
-                />
-              </label>
-              <label className="block space-y-1.5">
-                <span className="text-sm font-semibold">📍 Gimnasio</span>
-                <input
-                  value={gym}
-                  maxLength={80}
-                  onChange={(e) => setGym(e.target.value)}
-                  placeholder="Dónde has entrenado (opcional)"
-                  className="w-full rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 py-3 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none"
-                />
-              </label>
-            </>
-          ) : null}
+          {active ? <PostComposer value={value} onChange={setValue} /> : null}
         </section>
       ) : null}
 
       <div className="space-y-2">
         <Button size="lg" fullWidth disabled={publishing} onClick={() => void finish()}>
-          {publishing ? 'Publicando…' : share && canShare ? 'Publicar y terminar' : 'Terminar'}
+          {publishing ? 'Guardando…' : willPublish ? (existingPost ? 'Guardar cambios y terminar' : 'Publicar y terminar') : 'Terminar'}
         </Button>
         <SessionReportButton sessionId={sessionId} size="lg" fullWidth label="Descargar resumen en PDF" />
       </div>

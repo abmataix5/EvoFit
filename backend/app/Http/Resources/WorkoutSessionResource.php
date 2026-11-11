@@ -29,6 +29,13 @@ class WorkoutSessionResource extends JsonResource
                 fn () => RoutineExerciseResource::collection($this->resource->exercisesForToday()),
             ),
             'set_logs' => ExerciseSetLogResource::collection($this->whenLoaded('setLogs')),
+            // Si ya se compartió: al terminar se ofrece editar en vez de publicar de nuevo.
+            'post' => $this->whenLoaded('post', fn () => $this->post ? [
+                'id' => $this->post->id,
+                'caption' => $this->post->caption,
+                'gym_name' => $this->post->gym_name,
+                'photo_url' => $this->post->photoUrl(),
+            ] : null),
             // Objeto {routine_exercise_id: …}: como array con claves numéricas el
             // JsonResource lo reindexaría como lista y se perderían los ids.
             'previous_lifts' => $this->when(
