@@ -5,6 +5,7 @@ import { BrandLogo } from '../BrandLogo'
 import { useUiFeedback } from '../feedback/UiFeedback'
 import { Icon } from '../icons/Icon'
 import { ThemeSwitch } from './ThemeSwitch'
+import { Avatar } from '../../features/profile/Avatar'
 import { Button } from '../ui/Button'
 import { formatHeaderDay, helloLine } from '../../lib/motivation'
 
@@ -23,6 +24,8 @@ const pageTitles: Record<string, string> = {
   '/exercises': 'Catálogo',
   '/calendar': 'Agenda',
   '/progress': 'Progreso',
+  '/profile': 'Mi perfil',
+  '/profile/edit': 'Editar perfil',
 }
 
 function resolveTitle(pathname: string) {
@@ -32,7 +35,7 @@ function resolveTitle(pathname: string) {
   if (pathname.startsWith('/exercise-history/')) {
     return 'Historial'
   }
-  if (pathname.endsWith('/edit')) {
+  if (pathname.endsWith('/edit') && pathname.startsWith('/routines/')) {
     return 'Editar'
   }
   if (pathname.startsWith('/workout/')) {
@@ -117,11 +120,13 @@ export function AppShell() {
         </nav>
 
         <div className="mt-auto space-y-3 rounded-2xl border-2 border-evo-border bg-evo-surface-2 p-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-evo-muted">Cuenta</p>
-            <p className="mt-1 font-display text-lg font-bold">{user?.name}</p>
-            <p className="truncate text-sm text-evo-muted">{user?.email}</p>
-          </div>
+          <Link to="/profile" className="-m-1 flex items-center gap-3 rounded-2xl p-1 transition hover:bg-evo-surface">
+            <Avatar name={user?.name} url={user?.avatar_url} />
+            <div className="min-w-0">
+              <p className="truncate font-display text-lg font-bold">{user?.name}</p>
+              <p className="truncate text-sm text-evo-muted">{user?.username ? `@${user.username}` : 'Ver mi perfil'}</p>
+            </div>
+          </Link>
           <ThemeSwitch />
           <Button variant="secondary" fullWidth onClick={() => void handleLogout()}>
             Cerrar sesión
@@ -147,10 +152,13 @@ export function AppShell() {
 
             <div className="justify-self-end text-right">
               <div className="flex items-center justify-end gap-3">
-                <div className="min-w-0 text-right">
-                  <p className="truncate text-sm font-semibold">{user?.name}</p>
-                  <p className="truncate text-xs text-evo-muted">{title}</p>
-                </div>
+                <Link to="/profile" className="flex min-w-0 items-center gap-2 text-right" aria-label="Mi perfil">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{user?.name}</p>
+                    <p className="truncate text-xs text-evo-muted">{title}</p>
+                  </div>
+                  <Avatar name={user?.name} url={user?.avatar_url} size="sm" />
+                </Link>
                 <Button variant="ghost" className="!min-h-10 !px-3" onClick={() => void handleLogout()}>
                   Salir
                 </Button>
@@ -173,7 +181,11 @@ export function AppShell() {
               aria-label={menuOpen ? 'Cerrar cuenta' : 'Abrir cuenta'}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <Icon name={menuOpen ? 'close' : 'user'} className="h-6 w-6" />
+              {menuOpen ? (
+                <Icon name="close" className="h-6 w-6" />
+              ) : (
+                <Avatar name={user?.name} url={user?.avatar_url} size="sm" />
+              )}
             </button>
           </div>
         </header>
@@ -251,8 +263,13 @@ export function AppShell() {
             </p>
           </div>
           <div className="safe-bottom mt-5 space-y-3 rounded-3xl bg-evo-surface-2 p-4">
-            <p className="truncate font-display text-lg font-bold">{user?.name}</p>
-            <p className="truncate text-sm text-evo-muted">{user?.email}</p>
+            <Link to="/profile" className="-m-1 flex items-center gap-3 rounded-2xl p-1 active:bg-evo-surface">
+              <Avatar name={user?.name} url={user?.avatar_url} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-lg font-bold">{user?.name}</p>
+                <p className="truncate text-sm font-semibold text-evo-accent">Ver mi perfil →</p>
+              </div>
+            </Link>
             <ThemeSwitch />
             <Button variant="secondary" fullWidth size="lg" onClick={() => void handleLogout()}>
               Cerrar sesión

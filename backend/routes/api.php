@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogExerciseController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\RoutineController;
 use App\Http\Controllers\Api\WorkoutReportController;
@@ -18,6 +19,13 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'tenant', 'throttle:120,1'])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
+
+        Route::patch('/profile', [ProfileController::class, 'update']);
+        Route::get('/profile/stats', [ProfileController::class, 'stats']);
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:6,1');
+        Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->middleware('throttle:10,1');
+        Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar']);
+        Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar']);
 
         Route::apiResource('routines', RoutineController::class);
         Route::post('/routines/{routine}/days/{day}/copy', [RoutineController::class, 'copyDay']);

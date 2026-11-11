@@ -24,6 +24,8 @@ type AuthContextValue = {
   }) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
+  /** Sustituye el usuario tras editar el perfil (la API devuelve el usuario actualizado). */
+  setCurrentUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -93,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser }),
+    () => ({ user, loading, login, register, logout, refreshUser, setCurrentUser: setUser }),
     [user, loading, login, register, logout, refreshUser],
   )
 

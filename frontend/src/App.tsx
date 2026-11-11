@@ -33,6 +33,8 @@ const ExercisesPage = page(() => import('./pages/ExercisesPage'), 'ExercisesPage
 const ExerciseHistoryPage = page(() => import('./pages/ExerciseHistoryPage'), 'ExerciseHistoryPage')
 const InstallPage = page(() => import('./pages/InstallPage'), 'InstallPage')
 const NewRoutinePage = page(() => import('./pages/NewRoutinePage'), 'NewRoutinePage')
+const EditProfilePage = page(() => import('./pages/EditProfilePage'), 'EditProfilePage')
+const ProfilePage = page(() => import('./pages/ProfilePage'), 'ProfilePage')
 const ProgressPage = page(() => import('./pages/ProgressPage'), 'ProgressPage')
 const RoutineDetailPage = page(() => import('./pages/RoutineDetailPage'), 'RoutineDetailPage')
 const RoutinesPage = page(() => import('./pages/RoutinesPage'), 'RoutinesPage')
@@ -88,6 +90,8 @@ export default function App() {
                 <Route path="exercises" element={<ExercisesPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="progress" element={<ProgressPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="profile/edit" element={<EditProfilePage />} />
                 <Route path="workout/:id" element={<WorkoutSessionPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

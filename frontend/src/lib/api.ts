@@ -25,6 +25,23 @@ api.interceptors.response.use(undefined, (error) => {
   return Promise.reject(error)
 })
 
+/** Errores de validación de Laravel (422) como { campo: primer mensaje }. */
+export function validationErrors(error: unknown): Record<string, string> {
+  if (!axios.isAxiosError(error) || error.response?.status !== 422) return {}
+  const errors = (error.response.data as { errors?: Record<string, string[]> } | undefined)?.errors ?? {}
+  return Object.fromEntries(Object.entries(errors).map(([field, messages]) => [field, messages[0] ?? '']))
+}
+
+/** Mensaje legible para un fallo de la API. */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { message?: string } | undefined
+    if (error.response?.status === 422 && data?.message) return data.message
+    if (!error.response) return 'Sin conexión. Inténtalo de nuevo.'
+  }
+  return fallback
+}
+
 export async function ensureCsrfCookie(): Promise<void> {
   await axios.get('/sanctum/csrf-cookie', {
     withCredentials: true,
@@ -35,11 +52,28 @@ export async function ensureCsrfCookie(): Promise<void> {
   })
 }
 
+export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced'
+export type TrainingGoal = 'strength' | 'muscle' | 'fat_loss' | 'endurance' | 'health'
+export type ProfileVisibility = 'public' | 'friends' | 'private'
+
 export type User = {
   id: number
   name: string
   email: string
   role: string
+  username: string | null
+  avatar_url: string | null
+  bio: string | null
+  location: string | null
+  birth_date: string | null
+  age: number | null
+  height_cm: number | null
+  gym_name: string | null
+  experience_level: ExperienceLevel | null
+  training_goal: TrainingGoal | null
+  profile_visibility: ProfileVisibility
+  show_age: boolean
+  member_since: string | null
   tenant?: {
     id: number
     name: string
@@ -360,4 +394,12 @@ export type TrainingHighlights = {
     date: string
   } | null
   month: { sessions: number }
+}
+
+export type ProfileStats = {
+  total_workouts: number
+  month_workouts: number
+  streak_weeks: number
+  best_streak_weeks: number
+  first_workout_on: string | null
 }

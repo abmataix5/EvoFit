@@ -34,6 +34,26 @@ class TrainingHighlightsService
     }
 
     /**
+     * Resumen para la cabecera del perfil: total de días entrenados, racha y primer entreno.
+     *
+     * @return array{total_workouts: int, month_workouts: int, streak_weeks: int, best_streak_weeks: int, first_workout_on: ?string}
+     */
+    public function profileStats(User $user, ?CarbonImmutable $today = null): array
+    {
+        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $days = $this->trainedDays($user);
+        $streak = $this->streak($days, $today);
+
+        return [
+            'total_workouts' => $days->count(),
+            'month_workouts' => $days->filter(fn (string $d) => str_starts_with($d, $today->format('Y-m')))->count(),
+            'streak_weeks' => $streak['weeks'],
+            'best_streak_weeks' => $streak['best'],
+            'first_workout_on' => $days->last(),
+        ];
+    }
+
+    /**
      * Series y volumen por grupo muscular, semana a semana (lunes a domingo).
      *
      * @return array<string, mixed>
