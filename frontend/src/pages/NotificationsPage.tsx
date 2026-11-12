@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { LoadError } from '../components/feedback/LoadError'
+import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { buttonClasses } from '../components/ui/Button'
 import { Avatar } from '../features/profile/Avatar'
@@ -35,6 +36,47 @@ export function NotificationsPage() {
       queryClient.setQueryData<{ data: AppNotification[]; unread: number }>(['notifications'], (current) => (current ? { ...current, unread: 0 } : current))
     },
   })
+
+  type Inbox = { data: AppNotification[]; unread: number }
+  const { notify, confirm } = useUiFeedback()
+
+  // Borrar un aviso: desaparece al momento y, si el servidor falla, vuelve a su sitio.
+  const remove = useMutation({
+    mutationFn: async (id: string) => (await api.delete<{ unread: number }>(`/notifications/${id}`)).data,
+    onMutate: (id) => {
+      const previous = queryClient.getQueryData<Inbox>(['notifications'])
+      queryClient.setQueryData<Inbox>(['notifications'], (current) =>
+        current ? { ...current, data: current.data.filter((item) => item.id !== id) } : current,
+      )
+      return { previous }
+    },
+    onSuccess: (result) => queryClient.setQueryData(['notifications', 'unread'], result.unread),
+    onError: (_error, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['notifications'], context.previous)
+      notify('No se ha podido borrar. Revisa la conexión.', 'error')
+    },
+  })
+
+  const clear = useMutation({
+    mutationFn: async () => api.delete('/notifications'),
+    onSuccess: () => {
+      queryClient.setQueryData<Inbox>(['notifications'], { data: [], unread: 0 })
+      queryClient.setQueryData(['notifications', 'unread'], 0)
+      notify('Notificaciones borradas', 'success')
+    },
+    onError: () => notify('No se han podido borrar. Revisa la conexión.', 'error'),
+  })
+
+  async function confirmClear() {
+    const ok = await confirm({
+      title: '¿Borrar todas las notificaciones?',
+      message: 'Se vacía la bandeja. Las solicitudes de amistad pendientes siguen en Amigos.',
+      confirmLabel: 'Borrar todas',
+      cancelLabel: 'Cancelar',
+      danger: true,
+    })
+    if (ok) clear.mutate()
+  }
 
   const unread = query.data?.unread ?? 0
   const marked = useRef(false)
@@ -77,7 +119,21 @@ export function NotificationsPage() {
   }
 
   return (
-    <ul className="evo-stagger mx-auto max-w-2xl overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
+    <div className="mx-auto max-w-2xl space-y-2">
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="text-sm text-evo-muted" aria-live="polite">
+          {items.length} {items.length === 1 ? 'notificación' : 'notificaciones'}
+        </p>
+        <button
+          type="button"
+          disabled={clear.isPending}
+          onClick={() => void confirmClear()}
+          className="min-h-11 rounded-full px-3 text-sm font-bold text-evo-accent transition active:scale-95 disabled:opacity-50"
+        >
+          Borrar todas
+        </button>
+      </div>
+    <ul className="evo-stagger overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
       {items.map((notification) => (
         <li
           key={notification.id}
@@ -107,9 +163,18 @@ export function NotificationsPage() {
               ) : null}
             </div>
             {!notification.read ? <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-evo-accent" role="img" aria-label="Nueva" /> : null}
+            <button
+              type="button"
+              onClick={() => remove.mutate(notification.id)}
+              aria-label={`Borrar notificación de ${handle(notification.actor)}`}
+              className="-my-1 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-evo-muted transition hover:bg-evo-surface-2 active:scale-90"
+            >
+              <Icon name="close" className="h-4 w-4" />
+            </button>
           </div>
         </li>
       ))}
     </ul>
+    </div>
   )
 }

@@ -106,6 +106,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
+        Route::delete('/notifications', [NotificationController::class, 'destroyAll']);
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
 
         Route::apiResource('routines', RoutineController::class);
         Route::post('/routines/{routine}/days/{day}/copy', [RoutineController::class, 'copyDay']);

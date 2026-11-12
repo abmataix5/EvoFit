@@ -193,6 +193,14 @@ class SocialTest extends TestCase
         $this->actingAs($abel)->getJson('/api/v1/notifications/unread-count')->assertJsonPath('unread', 1);
         $this->actingAs($abel)->postJson('/api/v1/notifications/read-all')->assertJsonPath('unread', 0);
         $this->actingAs($abel)->getJson('/api/v1/notifications/unread-count')->assertJsonPath('unread', 0);
+
+        // Borrar avisos: uno suelto (solo los propios) o la bandeja entera.
+        $id = $abel->notifications()->first()->id;
+        $this->actingAs($this->makeUser('Otra'))->deleteJson("/api/v1/notifications/{$id}")->assertOk();
+        $this->assertSame(1, $abel->notifications()->count());
+        $this->actingAs($abel)->deleteJson("/api/v1/notifications/{$id}")->assertOk()->assertJsonPath('unread', 0);
+        $this->assertSame(0, $abel->notifications()->count());
+        $this->deleteJson('/api/v1/notifications')->assertOk()->assertJsonPath('unread', 0);
     }
 
     public function test_email_notifications_preference_is_editable(): void

@@ -72,4 +72,20 @@ class NotificationController extends Controller
 
         return response()->json(['unread' => 0]);
     }
+
+    /** Borra un aviso de la bandeja (solo los propios). Una solicitud pendiente sigue en Amigos. */
+    public function destroy(Request $request, string $notification): JsonResponse
+    {
+        $request->user()->notifications()->whereKey($notification)->delete();
+
+        return response()->json(['unread' => $request->user()->unreadNotifications()->count()]);
+    }
+
+    /** Vacía la bandeja entera, también los avisos antiguos que ya no se muestran. */
+    public function destroyAll(Request $request): JsonResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return response()->json(['unread' => 0]);
+    }
 }
