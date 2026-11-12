@@ -54,7 +54,9 @@ export function LoginPage() {
   return (
     <div className="no-x-scroll grid min-h-svh place-items-center px-5 py-6">
       <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
-        <BrandLogo size="lg" className="evo-pop" decorative />
+        <Link to="/" aria-label="Volver a la portada de EvoFit" className="transition active:scale-95">
+          <BrandLogo size="lg" className="evo-pop" decorative />
+        </Link>
         <h1 className="mt-3 font-display text-5xl font-extrabold uppercase leading-none">
           Evo<span className="text-evo-accent">Fit</span>
         </h1>

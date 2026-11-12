@@ -359,6 +359,37 @@
   animation: evo-fade-in 220ms ease-out;
 }
 
+/* Landing: los bloques aparecen al llegar a ellos con el scroll. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 600ms ease-out,
+    transform 700ms var(--ease-evo);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Cinta de palabras que pasa sin parar (el contenido va repetido para que no se vea el salto). */
+@keyframes evo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.evo-marquee {
+  animation: evo-marquee 38s linear infinite;
+}
+
+/* El móvil de la portada flota un poco. */
+@keyframes evo-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+.evo-float {
+  animation: evo-float 6s ease-in-out infinite;
+}
+
 /* Listas y bloques: cada hijo entra un instante después del anterior. */
 .evo-stagger > * {
   animation: evo-enter 380ms var(--ease-evo) backwards;

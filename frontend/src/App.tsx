@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Component, lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BrandLogo } from './components/BrandLogo'
 import { UiFeedbackProvider } from './components/feedback/UiFeedback'
 import { AppShell } from './components/layout/AppShell'
@@ -27,6 +27,7 @@ const page = <K extends string>(load: () => Promise<Record<K, React.ComponentTyp
     }
   })
 
+const LandingPage = page(() => import('./pages/LandingPage'), 'LandingPage')
 const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
 const DashboardPage = page(() => import('./pages/DashboardPage'), 'DashboardPage')
 const ExercisesPage = page(() => import('./pages/ExercisesPage'), 'ExercisesPage')
@@ -91,6 +92,7 @@ function PageFallback() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
+  const { pathname } = useLocation()
 
   if (loading) {
     return (
@@ -104,7 +106,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    // La portada es la landing para quien no ha entrado; el resto de pantallas piden iniciar sesión.
+    return pathname === '/' ? <LandingPage /> : <Navigate to="/login" replace />
   }
 
   return <>{children}</>
