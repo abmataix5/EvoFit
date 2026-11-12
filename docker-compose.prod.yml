@@ -87,6 +87,10 @@ services:
       # Por defecto el dominio tal cual => HTTPS automático. Detrás de Cloudflare en modo
       # "Flexible" pon SITE_ADDRESS=http://tu-dominio en .env (ver deploy/Caddyfile).
       SITE_ADDRESS: ${SITE_ADDRESS:-${DOMAIN}}
+      MAIL_HOSTNAME: ${MAIL_HOSTNAME:-mail.localhost}
+    extra_hosts:
+      # Para llegar al servidor de correo, que publica sus puertos en el host.
+      - "host.docker.internal:host-gateway"
     volumes:
       - caddy_data:/data
       - caddy_config:/config

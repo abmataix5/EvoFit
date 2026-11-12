@@ -79,3 +79,14 @@
 		file_server
 	}
 }
+
+# Servidor de correo (Poste.io) que corre en el mismo host: su webmail y su panel salen por aquí
+# con certificado válido, y el propio Poste.io puede validar el suyo (lo usa para SMTP e IMAP).
+# Sin MAIL_HOSTNAME en .env este bloque queda en un nombre local que no atiende nadie.
+{$MAIL_HOSTNAME:mail.localhost} {
+	reverse_proxy https://host.docker.internal:8443 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
