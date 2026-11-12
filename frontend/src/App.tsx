@@ -27,6 +27,8 @@ const page = <K extends string>(load: () => Promise<Record<K, React.ComponentTyp
     }
   })
 
+const ForgotPasswordPage = page(() => import('./pages/ForgotPasswordPage'), 'ForgotPasswordPage')
+const ResetPasswordPage = page(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage')
 const LegalPage = page(() => import('./pages/LegalPage'), 'LegalPage')
 const LandingPage = page(() => import('./pages/LandingPage'), 'LandingPage')
 const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
@@ -125,6 +127,8 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/recuperar" element={<ForgotPasswordPage />} />
+              <Route path="/restablecer" element={<ResetPasswordPage />} />
               <Route path="/instalar" element={<InstallPage />} />
               <Route path="/privacidad" element={<LegalPage />} />
               <Route path="/condiciones" element={<LegalPage />} />

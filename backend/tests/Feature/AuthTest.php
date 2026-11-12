@@ -96,4 +96,49 @@ class AuthTest extends TestCase
             ->assertJsonPath('errors.email.0', 'Ya hay una cuenta con ese email. Prueba a iniciar sesión.')
             ->assertJsonPath('errors.password.0', 'La contraseña necesita al menos 8 caracteres.');
     }
+
+    public function test_password_can_be_recovered_by_email(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $user = \App\Models\User::factory()->create(['email' => 'ana@example.test']);
+        $generic = 'Si hay una cuenta con ese email, te hemos enviado un enlace para cambiar la contraseña.';
+
+        // Misma respuesta exista o no la cuenta; solo se envía si existe.
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'nadie@example.test'])->assertOk()->assertJsonPath('message', $generic);
+        \Illuminate\Support\Facades\Mail::assertNothingSent();
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'ana@example.test'])->assertOk()->assertJsonPath('message', $generic);
+
+        $token = null;
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\ResetPasswordMail::class, function ($mail) use (&$token, $user) {
+            $token = $mail->token;
+
+            return $mail->hasTo($user->email) && str_contains($mail->render(), '/restablecer?token=');
+        });
+
+        // Pedirlo otra vez enseguida no manda un segundo correo.
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'ana@example.test'])->assertOk();
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\ResetPasswordMail::class, 1);
+
+        $this->postJson('/api/v1/auth/reset-password', ['token' => 'falso', 'email' => 'ana@example.test', 'password' => 'nueva-clave-segura', 'password_confirmation' => 'nueva-clave-segura'])
+            ->assertStatus(422)->assertJsonValidationErrors('token');
+        $this->postJson('/api/v1/auth/reset-password', ['token' => $token, 'email' => 'ana@example.test', 'password' => 'corta', 'password_confirmation' => 'corta'])
+            ->assertStatus(422)->assertJsonPath('errors.password.0', 'La contraseña necesita al menos 8 caracteres.');
+
+        $this->postJson('/api/v1/auth/reset-password', ['token' => $token, 'email' => 'ana@example.test', 'password' => 'nueva-clave-segura', 'password_confirmation' => 'nueva-clave-segura'])->assertOk();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('nueva-clave-segura', $user->fresh()->password));
+
+        // El enlace solo vale una vez.
+        $this->postJson('/api/v1/auth/reset-password', ['token' => $token, 'email' => 'ana@example.test', 'password' => 'otra-clave-segura', 'password_confirmation' => 'otra-clave-segura'])->assertStatus(422);
+    }
+
+    public function test_new_accounts_get_a_welcome_email(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->withHeaders($this->spa)->postJson('/api/v1/auth/register', [
+            'name' => 'Abel', 'username' => 'abel.fit', 'email' => 'abel@example.com',
+            'password' => 'secret-password', 'password_confirmation' => 'secret-password', 'terms' => true,
+        ])->assertCreated();
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WelcomeMail::class, fn ($mail) => $mail->hasTo('abel@example.com') && str_contains($mail->render(), '@abel.fit'));
+    }
 }

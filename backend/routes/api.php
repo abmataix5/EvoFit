@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ExerciseLibraryController;
 use App\Http\Controllers\Api\FriendController;
 use App\Http\Controllers\Api\LeagueController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\PostInteractionController;
@@ -28,6 +29,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
     });
+
+    // Recuperar la contraseña por email (sin sesión). Límite propio y estricto.
+    Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1,password-forgot');
+    Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1,password-reset');
 
     // Baja de avisos desde el enlace firmado del email (no requiere sesión).
     Route::match(['get', 'post'], '/email/unsubscribe/{user}', [EmailPreferenceController::class, 'unsubscribe'])

@@ -96,6 +96,11 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <p className="-mt-1 text-right">
+          <Link to="/recuperar" className="inline-flex min-h-11 items-center text-sm font-bold text-evo-accent">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
         <FormError message={error} />
         <SubmitButton busy={submitting} busyLabel="Entrando…">
           Iniciar sesión

@@ -11,7 +11,11 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -42,6 +46,15 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // La bienvenida sale después de responder: si el correo falla, la cuenta ya está creada.
+        defer(function () use ($user) {
+            try {
+                Mail::to($user)->send(new WelcomeMail($user));
+            } catch (Throwable $e) {
+                Log::warning('No se pudo enviar el email de bienvenida', ['to' => $user->id, 'error' => $e->getMessage()]);
+            }
+        });
 
         return response()->json([
             'user' => new UserResource($user->load('tenant')),
