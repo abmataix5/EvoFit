@@ -3,6 +3,7 @@ import { Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { Avatar } from '../../features/profile/Avatar'
+import { WelcomeGuideGate } from '../../features/guide/WelcomeGuide'
 import { BrandLogo } from '../BrandLogo'
 import { Icon, type IconName } from '../icons/Icon'
 import { isTabActive, routeMeta, TABS, type Tab, type TabId } from './navigation'
@@ -249,6 +250,8 @@ export function AppShell() {
             </Suspense>
           </div>
         </main>
+
+        <WelcomeGuideGate />
 
         {showTabs ? (
           <nav

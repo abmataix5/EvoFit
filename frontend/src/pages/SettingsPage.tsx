@@ -5,6 +5,7 @@ import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { ThemeSwitch } from '../components/layout/ThemeSwitch'
 import { useAuth } from '../features/auth/AuthContext'
+import { openGuide } from '../features/guide/guideState'
 import { PasswordForm } from '../features/profile/PasswordForm'
 import { VISIBILITY_OPTIONS } from '../features/profile/profileOptions'
 import { api, apiErrorMessage, type User } from '../lib/api'
@@ -209,6 +210,16 @@ export function SettingsPage() {
 
       <Group title="App">
         <RowLink to="/instalar" icon="📲" title="Instalar EvoFit en el móvil" detail="Pantalla completa, como una app" />
+        <button type="button" onClick={openGuide} className="flex min-h-14 w-full items-center gap-3 px-4 text-left transition active:bg-evo-surface-2">
+          <span className="w-6 text-center text-lg" aria-hidden>
+            🧭
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">Ver la guía de uso</span>
+            <span className="block truncate text-sm text-evo-muted">Lo básico de EvoFit en cinco pasos</span>
+          </span>
+          <Icon name="chevron" className="h-4 w-4 shrink-0 text-evo-muted" />
+        </button>
       </Group>
 
       <button
