@@ -23,7 +23,7 @@ function isNetworkError(error: unknown) {
  * - se envía al servidor con un pequeño retardo, de uno en uno (nunca dos PUT a la vez);
  * - si falla, reintenta solo con espera creciente y en cuanto vuelve la conexión.
  */
-export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | undefined) {
+export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | undefined, fetched = true) {
   const [drafts, setDraftsState] = useState<SetDraft[]>([])
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [hydrated, setHydrated] = useState(false)
@@ -38,6 +38,9 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
   const attempt = useRef(0)
   const hydratedFor = useRef<number | null>(null)
   const flushRef = useRef<() => Promise<boolean>>(async () => true)
+  /** Al salir de la pantalla se hace un último envío, pero ya no se reintenta: lo pendiente queda en el móvil. */
+  const unmounted = useRef(false)
+  const refreshedFor = useRef<number | null>(null)
 
   const persistLocal = useCallback(() => {
     saveWorkoutDraft(sessionId, { drafts: draftsRef.current, removed: removedRef.current })
@@ -123,6 +126,7 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
     }
     if (!isDirty()) return true
     const ok = await send(false)
+    if (unmounted.current) return ok
     if (!ok) scheduleRetry()
     else if (isDirty()) void flushRef.current()
     return ok
@@ -154,8 +158,22 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
 
   // Carga inicial: la copia local (si quedó algo sin enviar) manda sobre el servidor.
   useEffect(() => {
-    if (!session || hydratedFor.current === sessionId) return
+    if (!session) return
+    if (hydratedFor.current === sessionId) {
+      // Se pintó primero lo que había en memoria; al llegar los datos recién pedidos al servidor
+      // se rehace la tabla, pero solo si aún no se ha tocado nada (nunca se pisa lo que escribes).
+      if (fetched && refreshedFor.current !== sessionId) {
+        refreshedFor.current = sessionId
+        if (editSeq.current === 0 && !inflight.current) {
+          const rebuilt = buildDrafts(session)
+          draftsRef.current = rebuilt
+          setDraftsState(rebuilt)
+        }
+      }
+      return
+    }
     hydratedFor.current = sessionId
+    if (fetched) refreshedFor.current = sessionId
     const local = loadWorkoutDraft(sessionId)
     if (local && local.drafts.length > 0) {
       const merged = mergeLocalDrafts(session, local.drafts)
@@ -175,7 +193,7 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
     savedSeq.current = 0
     setDraftsState(fresh)
     setHydrated(true)
-  }, [session, sessionId, queueSave])
+  }, [session, sessionId, queueSave, fetched])
 
   // Reintento inmediato al recuperar conexión; guardado al salir o bloquear el móvil.
   useEffect(() => {
@@ -191,6 +209,7 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
       if (document.visibilityState === 'hidden') void flushRef.current()
     }
     const onLeave = () => void flushRef.current()
+    unmounted.current = false
     window.addEventListener('online', onOnline)
     document.addEventListener('visibilitychange', onHidden)
     window.addEventListener('pagehide', onLeave)
@@ -199,6 +218,7 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
       document.removeEventListener('visibilitychange', onHidden)
       window.removeEventListener('pagehide', onLeave)
       void flushRef.current()
+      unmounted.current = true
       clearTimers()
     }
   }, [clearTimers])

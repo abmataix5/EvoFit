@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { isAxiosError } from 'axios'
 import { api, ensureCsrfCookie, UNAUTHORIZED_EVENT, type User } from '../../lib/api'
 import { queryClient } from '../../lib/queryClient'
 import { clearAllWorkoutDrafts } from '../../lib/workoutDrafts'
@@ -31,18 +32,48 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const USER_KEY = 'evofit:user'
+
+/** Última sesión conocida en este móvil: permite abrir la app sin cobertura (en el gimnasio). */
+function readStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    return raw ? (JSON.parse(raw) as User) : null
+  } catch {
+    return null
+  }
+}
+
+function storeUser(user: User | null) {
+  try {
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
+    else localStorage.removeItem(USER_KEY)
+  } catch {
+    // Sin almacenamiento (modo privado): la sesión funciona igual con conexión.
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUserState] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const setUser = useCallback((next: User | null) => {
+    storeUser(next)
+    setUserState(next)
+  }, [])
 
   const refreshUser = useCallback(async () => {
     try {
       const { data } = await api.get<{ data: User }>('/auth/me')
       setUser(data.data)
-    } catch {
-      setUser(null)
+    } catch (error) {
+      const status = isAxiosError(error) ? error.response?.status : undefined
+      // Solo se cierra la sesión si el servidor dice que no la hay. Sin red o con el servidor caído
+      // se sigue con la última sesión conocida: antes te mandaba a la pantalla de entrar.
+      if (status === 401 || status === 419) setUser(null)
+      else setUserState(readStoredUser())
     }
-  }, [])
+  }, [setUser])
 
   useEffect(() => {
     void (async () => {
@@ -56,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await api.post<{ user: User }>('/auth/login', { email, password })
     queryClient.clear()
     setUser(data.user)
-  }, [])
+  }, [setUser])
 
   const register = useCallback(
     async (payload: {
@@ -71,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.post<{ user: User }>('/auth/register', payload)
       setUser(data.user)
     },
-    [],
+    [setUser],
   )
 
   const logout = useCallback(async () => {
@@ -85,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearAllWorkoutDrafts()
       setUser(null)
     }
-  }, [])
+  }, [setUser])
 
   useEffect(() => {
     function onUnauthorized() {
@@ -94,11 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
-  }, [])
+  }, [setUser])
 
   const value = useMemo(
     () => ({ user, loading, login, register, logout, refreshUser, setCurrentUser: setUser }),
-    [user, loading, login, register, logout, refreshUser],
+    [user, loading, login, register, logout, refreshUser, setUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

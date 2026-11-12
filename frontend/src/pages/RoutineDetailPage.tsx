@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { isAxiosError } from 'axios'
+import { LoadError } from '../components/feedback/LoadError'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { ExerciseImage } from '../components/exercises/ExerciseImage'
@@ -11,6 +13,7 @@ import {
   FOCUS_LABELS,
   WEEKDAY_LABELS,
   api,
+  apiErrorMessage,
   type ExerciseSetLog,
   type Routine,
   type WorkoutSession,
@@ -84,8 +87,10 @@ export function RoutineDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
       await queryClient.invalidateQueries({ queryKey: ['routines'] })
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
       notify(is_active ? 'Rutina activada' : 'Rutina pausada', 'success')
     },
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido cambiar. Revisa la conexión.'), 'error'),
   })
 
   const deleteRoutine = useMutation({
@@ -95,9 +100,13 @@ export function RoutineDetailPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['routines'] })
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
+      // Fuera de la caché y del historial: "atrás" no debe volver a una rutina que ya no existe.
+      queryClient.removeQueries({ queryKey: ['routine', routineId] })
       notify('Rutina eliminada', 'success')
-      navigate('/routines')
+      navigate('/routines', { replace: true })
     },
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido eliminar. Revisa la conexión.'), 'error'),
   })
 
   const saveDates = useMutation({
@@ -109,17 +118,30 @@ export function RoutineDetailPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
+      await queryClient.invalidateQueries({ queryKey: ['routines'] })
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
       notify('Fechas actualizadas', 'success')
     },
+    onError: (error) => notify(apiErrorMessage(error, 'No se han podido guardar las fechas.'), 'error'),
   })
 
-  if (routineQuery.isLoading) {
-    return <p className="text-sm text-evo-muted">Cargando rutina…</p>
+  if (!routine && routineQuery.isError) {
+    const notFound = isAxiosError(routineQuery.error) && [403, 404].includes(routineQuery.error.response?.status ?? 0)
+    return notFound ? (
+      <LoadError title="No encontramos esta rutina" message="Puede que se haya borrado." onRetry={() => navigate('/routines', { replace: true })} />
+    ) : (
+      <LoadError onRetry={() => void routineQuery.refetch()} />
+    )
   }
 
   if (!routine) {
-    return <p className="text-sm text-evo-danger">No encontramos esta rutina.</p>
+    return (
+      <div className="mx-auto max-w-2xl space-y-4" role="status" aria-label="Cargando rutina">
+        <div className="evo-skeleton h-44 rounded-3xl" />
+        <div className="evo-skeleton h-64 rounded-3xl" />
+      </div>
+    )
   }
 
   const totalExercises = days.reduce((sum, day) => sum + (day.exercises?.length ?? 0), 0)
@@ -232,10 +254,13 @@ export function RoutineDetailPage() {
             size="lg"
             fullWidth
             onClick={() => startSession.mutate(activeDay.id)}
-            disabled={startSession.isPending || !activeDay.exercises?.length}
+            disabled={startSession.isPending || !activeDay.exercises?.length || !routine.is_active}
           >
             {startSession.isPending ? 'Empezando…' : `Entrenar ${activeDay.name} hoy`}
           </Button>
+          {!routine.is_active ? (
+            <p className="text-center text-sm text-evo-muted">Esta rutina está en pausa. Actívala para entrenarla y que cuente en tu agenda.</p>
+          ) : null}
         </section>
       ) : null}
 

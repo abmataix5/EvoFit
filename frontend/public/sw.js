@@ -1,5 +1,5 @@
 /* EvoFit service worker: abre la app sin cobertura (el entreno se guarda en el móvil y se envía al volver la red). */
-const SHELL_CACHE = 'evofit-shell-v1'
+const SHELL_CACHE = 'evofit-shell-v2'
 const ASSET_CACHE = 'evofit-assets-v1'
 const MEDIA_CACHE = 'evofit-media-v1'
 const SHELL = ['/', '/index.html', '/site.webmanifest', '/icon-192.png', '/apple-touch-icon.png', '/favicon-32.png', '/logo.png']
@@ -35,8 +35,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          caches.open(SHELL_CACHE).then((cache) => cache.put('/index.html', copy))
+          // Solo se guarda una respuesta buena: una página de error del servidor (durante un despliegue)
+          // no debe convertirse en la app sin conexión.
+          if (response.ok) {
+            const copy = response.clone()
+            caches.open(SHELL_CACHE).then((cache) => cache.put('/index.html', copy))
+          }
           return response
         })
         .catch(() => caches.match('/index.html').then((cached) => cached || caches.match('/'))),

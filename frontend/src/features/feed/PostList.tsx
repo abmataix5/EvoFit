@@ -25,9 +25,9 @@ export function PostList({ query, empty }: { query: UseInfiniteQueryResult<Infin
 
   if (query.isLoading) {
     return (
-      <div className="space-y-3" aria-busy>
+      <div className="space-y-4" role="status" aria-label="Cargando entrenos">
         {[0, 1].map((i) => (
-          <div key={i} className="h-64 animate-pulse rounded-3xl bg-evo-surface" />
+          <div key={i} className="evo-skeleton h-72 rounded-3xl" />
         ))}
       </div>
     )
@@ -37,7 +37,7 @@ export function PostList({ query, empty }: { query: UseInfiniteQueryResult<Infin
     return (
       <div className="rounded-3xl bg-evo-surface p-5 text-center">
         <p className="text-sm text-evo-muted">No se han podido cargar los entrenos.</p>
-        <button type="button" onClick={() => void query.refetch()} className="mt-2 text-sm font-bold text-evo-accent">
+        <button type="button" onClick={() => void query.refetch()} className="mt-1 min-h-11 px-4 text-sm font-bold text-evo-accent">
           Reintentar
         </button>
       </div>
@@ -48,12 +48,12 @@ export function PostList({ query, empty }: { query: UseInfiniteQueryResult<Infin
   if (posts.length === 0) return <>{empty}</>
 
   return (
-    <div className="sm:space-y-4">
+    <div className="evo-stagger space-y-4">
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
       <div ref={sentinel} />
-      {isFetchingNextPage ? <p className="py-2 text-center text-sm text-evo-muted">Cargando más…</p> : null}
+      {isFetchingNextPage ? <div className="evo-skeleton h-40 rounded-3xl" role="status" aria-label="Cargando más entrenos" /> : null}
       {!hasNextPage && posts.length > 3 ? <p className="py-2 text-center text-sm text-evo-muted">Ya estás al día 💪</p> : null}
     </div>
   )

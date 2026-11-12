@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { ExerciseImage } from '../components/exercises/ExerciseImage'
 import { ExercisePickerSheet } from '../components/exercises/ExercisePickerSheet'
@@ -120,7 +120,22 @@ export function NewRoutinePage() {
   const queryClient = useQueryClient()
   const { confirm } = useUiFeedback()
   const loadedRef = useRef(false)
-  const [step, setStep] = useState<1 | 2>(isEditing ? 2 : 1)
+  // El paso vive en la URL: el gesto de "atrás" en el paso 2 vuelve al paso 1 en vez de salir y perderlo todo.
+  const [params, setParams] = useSearchParams()
+  const stepParam = params.get('paso')
+  const step: 1 | 2 = stepParam === '1' ? 1 : stepParam === '2' ? 2 : isEditing ? 2 : 1
+  const steppedIn = useRef(false)
+  const namesTouched = useRef(false)
+  function setStep(next: 1 | 2) {
+    if (next === step) return
+    if (next === 1 && steppedIn.current) {
+      steppedIn.current = false
+      navigate(-1)
+      return
+    }
+    steppedIn.current = next === 2
+    setParams({ paso: String(next) }, { replace: next === 1 })
+  }
   const [name, setName] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [days, setDays] = useState<DraftDay[]>(defaultDays)
@@ -167,14 +182,16 @@ export function NewRoutinePage() {
         if (!ok) return
       }
       const next = days.filter((day) => day.key !== existing.key)
-      setDays(anyContent || isEditing ? next : applyTemplateNames(next))
+      setDays(anyContent || isEditing || namesTouched.current ? next : applyTemplateNames(next))
       return
     }
     const next = [...days, { key: newKey(), weekday, name: `Día ${days.length + 1}`, focus: '', exercises: [] }].sort(byWeekday)
-    setDays(anyContent || isEditing ? next : applyTemplateNames(next))
+    setDays(anyContent || isEditing || namesTouched.current ? next : applyTemplateNames(next))
   }
 
   function updateDay(key: string, patch: Partial<DraftDay>) {
+    // Si ya has puesto nombre a un día, cambiar los días de la semana no vuelve a los de la plantilla.
+    if ('name' in patch || 'focus' in patch) namesTouched.current = true
     setDays((current) => current.map((day) => (day.key === key ? { ...day, ...patch } : day)))
   }
 
@@ -278,7 +295,10 @@ export function NewRoutinePage() {
       await queryClient.invalidateQueries({ queryKey: ['routine', routineId] })
       await queryClient.invalidateQueries({ queryKey: ['catalog-exercises'] })
       await invalidateTraining()
-      navigate(`/routines/${routineId}`, { replace: true })
+      // Al editar se vuelve a la ficha de la que se venía (sin duplicarla en el historial).
+      const cameFromApp = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
+      if (isEditing && cameFromApp) navigate(steppedIn.current ? -2 : -1)
+      else navigate(`/routines/${routineId}`, { replace: true })
     },
     onError: (err: unknown) => setError(apiErrorMessage(err, 'No se ha podido guardar. Revisa la conexión.')),
   })

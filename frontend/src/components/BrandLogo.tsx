@@ -2,6 +2,8 @@ type BrandLogoProps = {
   size?: 'xs' | 'sm' | 'nav' | 'md' | 'lg'
   showTagline?: boolean
   className?: string
+  /** Solo adorno (el nombre ya se lee al lado): se oculta a lectores de pantalla. */
+  decorative?: boolean
 }
 
 const sizes = {
@@ -14,12 +16,12 @@ const sizes = {
 
 const px = { xs: 32, sm: 40, nav: 48, md: 64, lg: 112 } as const
 
-export function BrandLogo({ size = 'md', showTagline = false, className = '' }: BrandLogoProps) {
+export function BrandLogo({ size = 'md', showTagline = false, className = '', decorative = false }: BrandLogoProps) {
   return (
     <div className={['inline-flex flex-col items-center text-center', className].join(' ')}>
       <img
         src="/logo.png"
-        alt="EvoFit"
+        alt={decorative ? '' : 'EvoFit'}
         className={[sizes[size], 'rounded-[22%] object-contain'].join(' ')}
         width={px[size]}
         height={px[size]}

@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../../components/feedback/UiFeedback'
+import { Icon } from '../../components/icons/Icon'
 import { Sheet } from '../../components/ui/Sheet'
 import { api, apiErrorMessage } from '../../lib/api'
 import { commentsQuery, patchPost, type Post, type PostComment } from '../../lib/feed'
@@ -44,6 +45,12 @@ function usePostComments(postId: number) {
 
 function CommentList({ post, state }: { post: Post; state: ReturnType<typeof usePostComments> }) {
   const { comments, remove } = state
+  const { confirm } = useUiFeedback()
+
+  async function confirmRemove(commentId: number) {
+    const ok = await confirm({ title: '¿Eliminar este comentario?', message: 'No se puede deshacer.', confirmLabel: 'Eliminar', cancelLabel: 'Cancelar', danger: true })
+    if (ok) remove.mutate(commentId)
+  }
 
   return (
     <ul className="space-y-4">
@@ -57,7 +64,17 @@ function CommentList({ post, state }: { post: Post; state: ReturnType<typeof use
         </li>
       ) : null}
       {comments.isLoading ? (
-        <li className="py-4 text-center text-sm text-evo-muted">Cargando…</li>
+        <li className="space-y-2" role="status" aria-label="Cargando comentarios">
+          <div className="evo-skeleton h-10 rounded-2xl" />
+          <div className="evo-skeleton h-10 w-2/3 rounded-2xl" />
+        </li>
+      ) : comments.isError ? (
+        <li className="py-4 text-center text-sm text-evo-muted">
+          No se han podido cargar los comentarios.{' '}
+          <button type="button" onClick={() => void comments.refetch()} className="min-h-11 px-2 font-bold text-evo-accent">
+            Reintentar
+          </button>
+        </li>
       ) : (comments.data ?? []).length === 0 ? (
         <li className="py-6 text-center">
           <p className="font-bold">Aún no hay comentarios</p>
@@ -79,7 +96,12 @@ function CommentList({ post, state }: { post: Post; state: ReturnType<typeof use
               <p className="mt-1 flex gap-3 text-xs font-semibold text-evo-muted">
                 <span>{timeAgo(comment.created_at)}</span>
                 {comment.can_delete ? (
-                  <button type="button" onClick={() => remove.mutate(comment.id)} disabled={remove.isPending} className="hover:text-evo-danger">
+                  <button
+                    type="button"
+                    onClick={() => void confirmRemove(comment.id)}
+                    disabled={remove.isPending}
+                    className="-my-3 -mr-2 min-h-11 px-2 hover:text-evo-danger"
+                  >
                     Eliminar
                   </button>
                 ) : null}
@@ -101,7 +123,9 @@ function CommentInput({ state, autoFocus }: { state: ReturnType<typeof usePostCo
     event?.preventDefault()
     const text = body.trim()
     if (!text || send.isPending) return
-    send.mutate(text, { onSuccess: () => setBody('') })
+    // Se vacía al enviar; si falla, el texto vuelve a la caja (salvo que ya estés escribiendo otra cosa).
+    setBody('')
+    send.mutate(text, { onError: () => setBody((current) => (current.trim() === '' ? text : current)) })
   }
 
   return (
@@ -112,7 +136,7 @@ function CommentInput({ state, autoFocus }: { state: ReturnType<typeof usePostCo
             key={emoji}
             type="button"
             onClick={() => setBody((current) => current + emoji)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-2xl transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-2xl transition active:scale-75"
             aria-label={`Añadir ${emoji}`}
           >
             {emoji}
@@ -139,15 +163,20 @@ function CommentInput({ state, autoFocus }: { state: ReturnType<typeof usePostCo
             className="max-h-32 w-full resize-none rounded-full border border-evo-border bg-evo-surface-2 px-4 py-2.5 text-base text-evo-text placeholder:text-evo-muted/80 focus:border-evo-accent focus:outline-none"
           />
         </label>
-        <button type="submit" disabled={!body.trim() || send.isPending} className="mb-0.5 min-h-11 px-2 font-bold text-evo-accent disabled:opacity-40">
-          Publicar
+        <button
+          type="submit"
+          disabled={!body.trim() || send.isPending}
+          aria-label="Publicar comentario"
+          className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-evo-accent text-[#1a120c] transition active:scale-90 disabled:opacity-40"
+        >
+          <Icon name="send" className="h-5 w-5" />
         </button>
       </form>
     </div>
   )
 }
 
-/** Comentarios en una hoja inferior, sin salir del feed (como en Instagram). */
+/** Comentarios en una hoja inferior, sin salir del feed. */
 export function CommentsSheet({ post, onClose }: { post: Post; onClose: () => void }) {
   const state = usePostComments(post.id)
 
@@ -165,7 +194,7 @@ export function CommentsPanel({ post }: { post: Post }) {
   return (
     <>
       <section aria-label="Comentarios" className="pt-2">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-evo-muted">
+        <h2 className="mb-3 evo-kicker">
           Comentarios{post.comments_count ? ` · ${post.comments_count}` : ''}
         </h2>
         <CommentList post={post} state={state} />

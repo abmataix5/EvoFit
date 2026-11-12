@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { LoadError } from '../components/feedback/LoadError'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { WeekStrip } from '../components/routines/WeekStrip'
 import { ButtonLink } from '../components/ui/Button'
 import { routinesQuery } from '../lib/queries'
-import { api, type Routine } from '../lib/api'
+import { api, apiErrorMessage, type Routine } from '../lib/api'
 import { formatShortDate } from '../lib/dates'
 
 function formatRange(routine: Routine) {
@@ -18,7 +19,7 @@ function formatRange(routine: Routine) {
 export function RoutinesPage() {
   const queryClient = useQueryClient()
   const { notify } = useUiFeedback()
-  const { data, isLoading } = useQuery(routinesQuery)
+  const { data, isLoading, isError, refetch } = useQuery(routinesQuery)
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
@@ -30,13 +31,16 @@ export function RoutinesPage() {
       await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
       notify(vars.is_active ? 'Rutina activada' : 'Rutina pausada', 'success')
     },
+    onError: (error) => notify(apiErrorMessage(error, 'No se ha podido cambiar. Revisa la conexión.'), 'error'),
   })
 
   const active = (data ?? []).filter((r) => r.is_active)
   const inactive = (data ?? []).filter((r) => !r.is_active)
   const busy = toggleActive.isPending
 
-  if (!isLoading && !data?.length) {
+  if (!data && isError) return <LoadError onRetry={() => void refetch()} />
+
+  if (data && data.length === 0) {
     return (
       <div className="flex min-h-[68dvh] items-center">
         <section className="panel w-full space-y-5 p-6 text-center">
@@ -113,7 +117,7 @@ function RoutineGroup({
   return (
     <section className="space-y-2">
       <div className="flex items-baseline justify-between gap-2 px-1">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-evo-muted">
+        <h2 className="evo-kicker">
           {title} · {routines.length}
         </h2>
         {hint ? <p className="text-xs text-evo-muted">{hint}</p> : null}

@@ -45,7 +45,7 @@ export function UiFeedbackProvider({ children }: { children: ReactNode }) {
     setToasts((current) => [...current, { id, message, tone }])
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id))
-    }, 2800)
+    }, tone === 'error' ? 4500 : 2800)
   }, [])
 
   const confirm = useCallback((options: ConfirmOptions) => {
@@ -61,23 +61,25 @@ export function UiFeedbackProvider({ children }: { children: ReactNode }) {
       {children}
 
       <div
-        className="pointer-events-none fixed inset-x-0 top-3 z-[80] flex flex-col items-center gap-2 px-4"
-        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[95] flex flex-col items-center gap-2 px-4"
       >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={[
-              'pointer-events-auto w-full max-w-md rounded-2xl border-2 px-4 py-3 text-sm font-semibold shadow-lg',
+              'evo-toast pointer-events-auto flex w-full max-w-md items-center gap-2.5 rounded-2xl border-2 px-4 py-3 text-sm font-bold shadow-xl',
               toast.tone === 'success'
                 ? 'border-evo-lime/40 bg-evo-lime text-[#102000]'
                 : toast.tone === 'error'
-                  ? 'border-evo-danger bg-evo-danger text-white'
+                  ? 'border-[#ffb3bd] bg-[#b3243b] text-white'
                   : 'border-evo-border bg-evo-surface-2 text-evo-text',
             ].join(' ')}
-            role="status"
+            role={toast.tone === 'error' ? 'alert' : 'status'}
           >
-            {toast.message}
+            <span aria-hidden className="shrink-0 text-base leading-none">
+              {toast.tone === 'success' ? '✓' : toast.tone === 'error' ? '!' : '›'}
+            </span>
+            <span className="min-w-0">{toast.message}</span>
           </div>
         ))}
       </div>
@@ -149,7 +151,7 @@ function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 p-4 sm:items-center"
+      className="evo-backdrop fixed inset-0 z-[90] flex items-end justify-center bg-black/60 p-4 sm:items-center"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
@@ -158,9 +160,9 @@ function ConfirmDialog({
         if (event.target === event.currentTarget) onAnswer(false)
       }}
     >
-      <div ref={panelRef} className="safe-bottom panel w-full max-w-md space-y-4 p-5">
+      <div ref={panelRef} className="evo-enter safe-bottom panel w-full max-w-md space-y-4 p-5">
         <div>
-          <h2 id="confirm-title" className="font-display text-xl font-bold">
+          <h2 id="confirm-title" className="font-display text-2xl font-bold">
             {options.title}
           </h2>
           <p id="confirm-message" className="mt-2 text-sm text-evo-muted">

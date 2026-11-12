@@ -1,8 +1,10 @@
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { LoadError } from '../components/feedback/LoadError'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { ButtonLink } from '../components/ui/Button'
+import { Segmented } from '../components/ui/Segmented'
 import { Icon } from '../components/icons/Icon'
 import {
   api,
@@ -12,7 +14,8 @@ import {
   type TrainingHighlights,
   type WorkoutSession,
 } from '../lib/api'
-import { addDays, localDateKey, relativeDayLabel, startOfWeek, upcomingDayLabel } from '../lib/dates'
+import { addDays, localDateKey, parseDateKey, relativeDayLabel, startOfWeek, upcomingDayLabel } from '../lib/dates'
+import { useToday } from '../lib/useToday'
 import { routinesQuery } from '../lib/queries'
 import { invalidateTraining } from '../lib/queryClient'
 import { PostList } from '../features/feed/PostList'
@@ -21,6 +24,7 @@ import { StoriesBar } from '../features/stories/StoriesBar'
 import { friendsQuery } from '../lib/social'
 
 const WEEK_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const WEEK_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
 /** Minutos aproximados: cada serie ~40 s de trabajo más su descanso. */
 function estimateMinutes(exercises: RoutineExercise[]): number {
@@ -38,8 +42,8 @@ function kg(value: number) {
 
 function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 px-1">
-      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-evo-muted">{children}</h2>
+    <div className="flex min-h-9 items-center justify-between gap-3 px-1">
+      <h2 className="evo-kicker">{children}</h2>
       {action}
     </div>
   )
@@ -47,10 +51,10 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 
 /** Mi día: lo que toca hoy, cómo va la semana y tu progreso. Solo lo necesario. */
 function MyDayView() {
-  const weekStart = startOfWeek()
+  const todayKey = useToday()
+  const weekStart = startOfWeek(parseDateKey(todayKey))
   const weekFrom = localDateKey(weekStart)
   const weekTo = localDateKey(addDays(weekStart, 6))
-  const todayKey = localDateKey()
 
   const routines = useQuery(routinesQuery)
   const calendarQuery = useQuery({
@@ -71,13 +75,24 @@ function MyDayView() {
   const weekSessions = calendarQuery.data ?? []
   const todaySessions = weekSessions.filter((s) => s.scheduled_date === todayKey)
   const nextSession = weekSessions.find((s) => s.scheduled_date > todayKey && !s.completed_at)
-  const noRoutines = !routines.isLoading && activeRoutines.length === 0
+  // "Sin rutinas" solo cuando el servidor lo ha confirmado: sin conexión no se enseña la bienvenida.
+  const noRoutines = routines.isSuccess && activeRoutines.length === 0
+  const failed = (routines.isError && !routines.data) || (calendarQuery.isError && !calendarQuery.data)
+  const waiting = !failed && (routines.data === undefined || calendarQuery.data === undefined)
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="evo-stagger mx-auto max-w-2xl space-y-6">
       <section aria-label="Hoy" className="space-y-3">
-        {calendarQuery.isLoading || routines.isLoading ? (
-          <div className="h-72 animate-pulse rounded-3xl bg-evo-surface" aria-label="Cargando" />
+        {failed ? (
+          <LoadError
+            message="No hemos podido cargar tu día. Comprueba la cobertura y vuelve a intentarlo."
+            onRetry={() => {
+              void routines.refetch()
+              void calendarQuery.refetch()
+            }}
+          />
+        ) : waiting ? (
+          <div className="evo-skeleton h-72 rounded-3xl" role="status" aria-label="Cargando tu día" />
         ) : noRoutines ? (
           <GetStartedCard />
         ) : todaySessions.length > 0 ? (
@@ -87,7 +102,7 @@ function MyDayView() {
         )}
       </section>
 
-      {!noRoutines ? (
+      {!noRoutines && !failed && !waiting ? (
         <WeekCard
           weekStart={weekStart}
           todayKey={todayKey}
@@ -97,7 +112,7 @@ function MyDayView() {
         />
       ) : null}
 
-      {!noRoutines ? <ProgressTiles highlights={highlightsQuery.data} insight={insightsQuery.data} /> : null}
+      {!noRoutines && !failed && !waiting ? <ProgressTiles highlights={highlightsQuery.data} insight={insightsQuery.data} /> : null}
     </div>
   )
 }
@@ -118,34 +133,43 @@ function TodayCard({ session }: { session: WorkoutSession }) {
   return (
     <article
       className={[
-        'relative overflow-hidden rounded-3xl p-5 text-[#1a120c] shadow-[0_18px_40px_rgba(255,138,76,0.18)]',
-        done ? 'bg-gradient-to-br from-[#d9fb8f] via-[#b6f36a] to-[#7fd94a]' : 'bg-gradient-to-br from-[#ffb347] via-[#ff8a4c] to-[#f0623c]',
+        'relative overflow-hidden rounded-3xl p-5 text-[#1a120c]',
+        done
+          ? 'bg-gradient-to-br from-[#d9fb8f] via-[#b6f36a] to-[#7fd94a] shadow-[0_18px_40px_rgba(182,243,106,0.14)]'
+          : 'bg-gradient-to-br from-[#ffb347] via-[#ff7a36] to-[#ee5a2c] shadow-[0_18px_40px_rgba(255,122,54,0.22)]',
       ].join(' ')}
     >
-      <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15" aria-hidden />
+      <span className="evo-stripes pointer-events-none absolute inset-0" aria-hidden />
       <div className="relative space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] opacity-70">
               {done ? '¡Hecho por hoy!' : started ? 'A medias · sigue' : 'Hoy toca'}
             </p>
-            <h2 className="mt-1 font-display text-4xl font-bold leading-none [text-wrap:balance]">{session.day?.name ?? 'Entrenamiento'}</h2>
+            <h2 className="mt-1 break-words font-display text-[2.6rem] font-extrabold uppercase leading-[0.95] [text-wrap:balance]">{session.day?.name ?? 'Entrenamiento'}</h2>
             {session.routine?.name && session.routine.name !== session.day?.name ? (
               <p className="mt-1.5 text-sm font-semibold opacity-75">{session.routine.name}</p>
             ) : null}
           </div>
           {done ? (
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#102000]/90 text-2xl font-bold text-evo-lime" aria-hidden>
-              ✓
+            <span className="evo-pop evo-shape flex h-12 w-12 shrink-0 items-center justify-center bg-[#102000]/90 text-evo-lime" aria-hidden>
+              <Icon name="check" className="h-7 w-7" />
             </span>
           ) : null}
         </div>
 
-        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
-          <span>{exercises.length} ejercicios</span>
-          <span>{started || done ? `${loggedSets}/${totalSets}` : totalSets} series</span>
-          {!done ? <span>~{estimateMinutes(exercises)} min</span> : null}
-        </p>
+        <dl className="flex flex-wrap gap-2 text-sm font-bold">
+          {[
+            { value: exercises.length, label: exercises.length === 1 ? 'ejercicio' : 'ejercicios' },
+            { value: started || done ? `${loggedSets}/${totalSets}` : totalSets, label: 'series' },
+            ...(!done ? [{ value: `~${estimateMinutes(exercises)}`, label: 'min' }] : []),
+          ].map((item) => (
+            <div key={item.label} className="flex items-baseline gap-1 rounded-full bg-[#1a120c]/10 px-3 py-1.5">
+              <dd className="font-display text-lg font-extrabold leading-none tabular-nums">{item.value}</dd>
+              <dt>{item.label}</dt>
+            </div>
+          ))}
+        </dl>
 
         {thumbs.length > 0 ? (
           <div className="flex items-center gap-2">
@@ -155,7 +179,7 @@ function TodayCard({ session }: { session: WorkoutSession }) {
                   key={exercise.id}
                   src={exercise.image_urls![0]}
                   alt=""
-                  className={['h-11 w-11 rounded-full bg-white object-cover ring-[3px] ring-white/80', index > 0 ? '-ml-3' : ''].join(' ')}
+                  className={['h-11 w-11 rounded-xl bg-white object-cover ring-[3px] ring-white/80', index > 0 ? '-ml-3' : ''].join(' ')}
                 />
               ))}
             </span>
@@ -171,7 +195,7 @@ function TodayCard({ session }: { session: WorkoutSession }) {
 
         {started ? (
           <div className="h-2.5 overflow-hidden rounded-full bg-[#1a120c]/15" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del entreno">
-            <div className="h-full rounded-full bg-[#1a120c]" style={{ width: `${progress * 100}%` }} />
+            <div className="h-full rounded-full bg-[#1a120c] transition-[width] duration-700 ease-(--ease-evo)" style={{ width: `${progress * 100}%` }} />
           </div>
         ) : null}
 
@@ -179,12 +203,12 @@ function TodayCard({ session }: { session: WorkoutSession }) {
           type="button"
           onClick={() => navigate(`/workout/${session.id}`)}
           className={[
-            'flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl text-lg font-bold transition active:scale-[0.98]',
+            'flex min-h-16 w-full items-center justify-center gap-1.5 rounded-2xl text-lg font-extrabold transition active:scale-[0.97]',
             done ? 'bg-[#102000]/90 text-evo-lime' : 'bg-[#1a120c] text-white',
           ].join(' ')}
         >
           {done ? 'Ver entrenamiento' : started ? 'Continuar entrenamiento' : 'Empezar entrenamiento'}
-          <span aria-hidden>→</span>
+          <Icon name="chevron" className="h-5 w-5" />
         </button>
       </div>
     </article>
@@ -220,12 +244,12 @@ function RestDayCard({ nextSession, routines }: { nextSession: WorkoutSession | 
   return (
     <article className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
       <div className="flex items-center gap-4 p-5">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-evo-surface-2 text-4xl" aria-hidden>
+        <span className="evo-shape flex h-16 w-16 shrink-0 items-center justify-center bg-evo-surface-2 text-4xl" aria-hidden>
           😴
         </span>
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-evo-muted">Hoy</p>
-          <h2 className="font-display text-2xl font-bold leading-tight">Toca descansar</h2>
+          <h2 className="font-display text-3xl font-extrabold uppercase leading-none">Toca descansar</h2>
           <p className="mt-0.5 text-sm text-evo-muted">
             {nextSession
               ? `Próximo: ${nextSession.day?.name ?? 'entreno'}, ${upcomingDayLabel(nextSession.scheduled_date)}`
@@ -243,10 +267,10 @@ function RestDayCard({ nextSession, routines }: { nextSession: WorkoutSession | 
             className="flex min-h-14 w-full items-center justify-between gap-3 px-5 text-left font-bold"
           >
             ¿Te apetece entrenar igualmente?
-            <Icon name="chevron" className={['h-4 w-4 text-evo-muted transition', open ? 'rotate-90' : ''].join(' ')} />
+            <Icon name="chevron" className={['h-4 w-4 shrink-0 text-evo-muted transition duration-200', open ? 'rotate-90' : ''].join(' ')} />
           </button>
           {open ? (
-            <ul className="space-y-2 px-4 pb-4">
+            <ul className="evo-stagger space-y-2 px-4 pb-4">
               {pickable.map(({ routine, day }) => (
                 <li key={day.id}>
                   <button
@@ -281,10 +305,11 @@ function GetStartedCard() {
     { icon: '📈', title: 'Mira cómo mejoras', text: 'Tu progreso semana a semana.' },
   ]
   return (
-    <article className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#ffb347] via-[#ff8a4c] to-[#f0623c] p-5 text-[#1a120c]">
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] opacity-70">Bienvenido a EvoFit</p>
-      <h2 className="mt-1 font-display text-3xl font-bold leading-tight">Empieza en 1 minuto</h2>
-      <ol className="mt-4 space-y-2.5">
+    <article className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#ffb347] via-[#ff7a36] to-[#ee5a2c] p-5 text-[#1a120c]">
+      <span className="evo-stripes pointer-events-none absolute inset-0" aria-hidden />
+      <p className="relative text-xs font-extrabold uppercase tracking-[0.16em] opacity-75">Bienvenido a EvoFit</p>
+      <h2 className="relative mt-1 font-display text-4xl font-extrabold uppercase leading-none">Empieza en 1 minuto</h2>
+      <ol className="relative mt-4 space-y-2.5">
         {steps.map((step, index) => (
           <li key={step.title} className="flex items-center gap-3 rounded-2xl bg-white/25 px-3 py-2.5">
             <span className="text-2xl" aria-hidden>
@@ -299,8 +324,9 @@ function GetStartedCard() {
           </li>
         ))}
       </ol>
-      <Link to="/routines/new" className="mt-4 flex min-h-14 w-full items-center justify-center rounded-2xl bg-[#1a120c] text-lg font-bold text-white">
-        Crear mi primera rutina →
+      <Link to="/routines/new" className="relative mt-4 flex min-h-14 w-full items-center justify-center gap-1.5 rounded-2xl bg-[#1a120c] text-lg font-extrabold text-white transition active:scale-[0.97]">
+        Crear mi primera rutina
+        <Icon name="chevron" className="h-5 w-5" />
       </Link>
     </article>
   )
@@ -336,8 +362,8 @@ function WeekCard({
     <section aria-label="Tu semana" className="space-y-2">
       <SectionTitle
         action={
-          <Link to="/calendar" className="text-sm font-bold text-evo-accent">
-            Agenda
+          <Link to="/calendar" className="flex min-h-9 items-center gap-0.5 text-sm font-bold text-evo-accent">
+            Agenda <Icon name="chevron" className="h-3.5 w-3.5" />
           </Link>
         }
       >
@@ -346,8 +372,8 @@ function WeekCard({
       <div className="rounded-3xl border border-evo-border/60 bg-evo-surface p-4">
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-baseline gap-1.5">
-            <span className="font-display text-4xl font-bold tabular-nums">{completed}</span>
-            <span className="font-display text-xl font-bold text-evo-muted">/ {planned || 0}</span>
+            <span className="font-display text-5xl font-extrabold leading-none tabular-nums">{completed}</span>
+            <span className="font-display text-2xl font-bold text-evo-muted">/ {planned || 0}</span>
             <span className="ml-1 text-sm font-semibold text-evo-muted">entrenos</span>
           </p>
           {streak ? (
@@ -357,7 +383,8 @@ function WeekCard({
                 streak.weeks > 0 ? 'bg-evo-accent/15 text-evo-accent' : 'bg-evo-surface-2 text-evo-muted',
               ].join(' ')}
             >
-              <span aria-hidden>{streak.weeks > 0 ? '🔥' : '🌱'}</span>
+              {streak.weeks > 0 ? <Icon name="flame" className="h-4 w-4" /> : <span aria-hidden>🌱</span>}
+              <span className="sr-only">Racha: </span>
               {streak.weeks} {streak.weeks === 1 ? 'semana' : 'semanas'}
             </span>
           ) : null}
@@ -373,14 +400,15 @@ function WeekCard({
             const isToday = key === todayKey
             const state = done ? 'hecho' : missed ? 'sin hacer' : pending ? 'planificado' : 'descanso'
             return (
-              <li key={key} className="flex flex-col items-center gap-1.5" aria-label={`${letter}${isToday ? ' (hoy)' : ''}: ${state}`}>
-                <span className={['text-xs font-bold', isToday ? 'text-evo-accent' : 'text-evo-muted'].join(' ')}>{letter}</span>
+              <li key={key} className="flex flex-col items-center gap-1.5">
+                <span className="sr-only">{`${WEEK_NAMES[index]}${isToday ? ' (hoy)' : ''}: ${state}`}</span>
+                <span aria-hidden className={['text-xs font-bold', isToday ? 'text-evo-accent' : 'text-evo-muted'].join(' ')}>{letter}</span>
                 <span
                   aria-hidden
                   className={[
-                    'flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition',
+                    'evo-shape flex h-9 w-9 items-center justify-center text-sm font-bold transition',
                     done
-                      ? 'bg-evo-lime text-[#102000]'
+                      ? 'evo-pop bg-evo-lime text-[#102000]'
                       : missed
                         ? 'border-2 border-dashed border-evo-border text-evo-muted'
                         : pending
@@ -389,7 +417,7 @@ function WeekCard({
                     isToday && !done ? 'ring-2 ring-evo-accent/40 ring-offset-2 ring-offset-evo-surface' : '',
                   ].join(' ')}
                 >
-                  {done ? '✓' : pending && !missed ? '•' : ''}
+                  {done ? <Icon name="check" className="h-5 w-5" /> : pending && !missed ? '•' : ''}
                 </span>
               </li>
             )
@@ -416,8 +444,8 @@ function ProgressTiles({ highlights, insight }: { highlights: TrainingHighlights
     <section aria-label="Tu progreso" className="space-y-2">
       <SectionTitle
         action={
-          <Link to="/progress" className="text-sm font-bold text-evo-accent">
-            Ver todo
+          <Link to="/progress" className="flex min-h-9 items-center gap-0.5 text-sm font-bold text-evo-accent">
+            Ver todo <Icon name="chevron" className="h-3.5 w-3.5" />
           </Link>
         }
       >
@@ -431,8 +459,11 @@ function ProgressTiles({ highlights, insight }: { highlights: TrainingHighlights
           <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Último récord</p>
           {record ? (
             <div className="min-w-0">
-              <p className="truncate font-bold">🏆 {record.exercise}</p>
-              <p className="font-display text-2xl font-bold tabular-nums">{kg(record.weight_kg)}</p>
+              <p className="flex items-center gap-1 font-bold">
+                <Icon name="trophy" className="h-4 w-4 shrink-0 text-evo-warn" />
+                <span className="truncate">{record.exercise}</span>
+              </p>
+              <p className="font-display text-3xl font-extrabold leading-tight tabular-nums">{kg(record.weight_kg)}</p>
               <p className="text-xs text-evo-muted">
                 <span className="font-bold text-evo-lime">+{kg(Math.round((record.weight_kg - record.previous_kg) * 100) / 100)}</span> ·{' '}
                 {relativeDayLabel(record.date)}
@@ -445,7 +476,7 @@ function ProgressTiles({ highlights, insight }: { highlights: TrainingHighlights
         <Link to="/progress" className="flex min-h-36 flex-col justify-between rounded-3xl border border-evo-border/60 bg-evo-surface p-4 transition active:scale-[0.98]">
           <p className="text-xs font-bold uppercase tracking-wide text-evo-muted">Tendencia</p>
           <div>
-            <p className={['font-display text-2xl font-bold', trend.tone].join(' ')}>
+            <p className={['font-display text-3xl font-extrabold leading-tight', trend.tone].join(' ')}>
               <span aria-hidden>{trend.icon}</span> {trend.label}
             </p>
             <p className="line-clamp-2 text-xs text-evo-muted">{insight?.summary.label ?? 'Apunta kilos para ver tu tendencia.'}</p>
@@ -486,25 +517,16 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div role="tablist" aria-label="Inicio" className="mx-auto grid max-w-2xl grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
-        {(
-          [
-            { id: 'friends', label: 'Amigos' },
-            { id: 'day', label: 'Mi día' },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={view === item.id}
-            onClick={() => choose(item.id)}
-            className={['min-h-11 rounded-xl text-sm font-bold transition', view === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted'].join(' ')}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="Inicio"
+        value={view}
+        onChange={choose}
+        className="mx-auto max-w-2xl"
+        options={[
+          { id: 'friends', label: 'Amigos' },
+          { id: 'day', label: 'Mi día' },
+        ]}
+      />
       {view === 'friends' ? <FriendsFeed hasFriends={(friends.data?.length ?? 0) > 0} /> : <MyDayView />}
     </div>
   )
@@ -514,7 +536,7 @@ function FriendsFeed({ hasFriends }: { hasFriends: boolean }) {
   const feed = useInfiniteQuery(feedQuery)
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3">
+    <div className="mx-auto max-w-2xl space-y-4">
       <StoriesBar />
       <PostList
         query={feed}
@@ -523,11 +545,11 @@ function FriendsFeed({ hasFriends }: { hasFriends: boolean }) {
             <p className="text-3xl" aria-hidden>
               {hasFriends ? '🏋️' : '👋'}
             </p>
-            <p className="font-display text-xl font-bold">{hasFriends ? 'Aún no hay entrenos' : 'Entrena con tus amigos'}</p>
+            <p className="font-display text-2xl font-bold">{hasFriends ? 'Aún no hay entrenos' : 'Entrena con tus amigos'}</p>
             <p className="text-sm text-evo-muted">
               {hasFriends
                 ? 'Cuando tú o tus amigos terminéis un entreno y lo compartáis, aparecerá aquí.'
-                : 'Añade a tus amigos para ver sus entrenos, darles «me gusta» y comentar. Tus entrenos compartidos también salen aquí.'}
+                : 'Añade a tus amigos para ver sus entrenos, darles fuerza y comentar. Tus entrenos compartidos también salen aquí.'}
             </p>
             {!hasFriends ? (
               <ButtonLink to="/search" className="mt-1">

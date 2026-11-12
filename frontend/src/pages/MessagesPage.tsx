@@ -1,3 +1,4 @@
+import { LoadError } from '../components/feedback/LoadError'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -24,27 +25,33 @@ export function MessagesPage() {
         <button
           type="button"
           onClick={() => setPicking(true)}
-          className="flex min-h-10 items-center gap-1.5 rounded-full bg-evo-surface-2 px-3.5 text-sm font-bold"
+          className="flex min-h-11 items-center gap-1.5 rounded-full bg-evo-surface-2 px-4 text-sm font-bold transition active:scale-95"
         >
           <Icon name="plus" className="h-4 w-4" /> Nuevo
         </button>
       </div>
 
-      {conversations.isLoading ? (
-        <p className="px-1 text-sm text-evo-muted">Cargando…</p>
+      {conversations.isError && !conversations.data ? (
+        <LoadError onRetry={() => void conversations.refetch()} />
+      ) : !conversations.data ? (
+        <div className="space-y-2" role="status" aria-label="Cargando mensajes">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="evo-skeleton h-16 rounded-2xl" />
+          ))}
+        </div>
       ) : list.length === 0 ? (
         <div className="space-y-3 rounded-3xl border-2 border-dashed border-evo-border p-6 text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-evo-surface-2 text-evo-text">
-            <Icon name="send" className="h-7 w-7" />
+          <span className="evo-shape mx-auto flex h-14 w-14 items-center justify-center bg-evo-surface-2 text-evo-text">
+            <Icon name="chat" className="h-7 w-7" />
           </span>
-          <p className="font-display text-xl font-bold">Tus mensajes</p>
+          <p className="font-display text-2xl font-bold">Tus mensajes</p>
           <p className="text-sm text-evo-muted">Escribe a tus amigos o responde a sus historias. Los mensajes son privados.</p>
           <button type="button" onClick={() => setPicking(true)} className={buttonClasses({ className: 'mt-1' })}>
             Enviar un mensaje
           </button>
         </div>
       ) : (
-        <ul className="-mx-4 sm:mx-0">
+        <ul className="evo-stagger -mx-4 sm:mx-0">
           {list.map((conversation) => {
             const unread = conversation.unread > 0
             return (

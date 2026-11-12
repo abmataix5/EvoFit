@@ -43,7 +43,12 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
 
   const group = groups[groupIndex]
   const story = group?.stories[storyIndex]
-  const paused = held || typing || reactionsOpen || viewersOpen
+  // Con datos lentos, la foto puede tardar: el tiempo no corre hasta que se ve.
+  const [readyId, setReadyId] = useState<number | null>(null)
+  const currentStory = groups[groupIndex]?.stories[storyIndex]
+  const photoReady = !currentStory?.photo_url || readyId === currentStory.id
+  const replyInput = useRef<HTMLInputElement>(null)
+  const paused = held || typing || reactionsOpen || viewersOpen || !photoReady
 
   const viewers = useQuery({ ...storyViewersQuery(story?.id ?? 0), enabled: Boolean(group?.mine && story) })
 
@@ -92,7 +97,8 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
     let frame = 0
     let last = performance.now()
     const tick = (now: number) => {
-      progressRef.current = Math.min(1, progressRef.current + (now - last) / DURATION_MS)
+      // Tras volver de segundo plano el primer salto es enorme: se limita para no saltarse la historia.
+      progressRef.current = Math.min(1, progressRef.current + Math.min(100, now - last) / DURATION_MS)
       last = now
       setProgress(progressRef.current)
       if (progressRef.current >= 1) {
@@ -104,6 +110,13 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [paused, story, next])
+
+  useEffect(
+    () => () => {
+      if (holdTimer.current) window.clearTimeout(holdTimer.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     const previous = document.body.style.overflow
@@ -124,7 +137,9 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
   const send = useMutation({
     mutationFn: (content: { body?: string; reaction?: string }) => replyToStory(story!.id, content),
     onSuccess: (_, content) => {
-      setReply('')
+      setReply((current) => (content.body && current.trim() !== content.body ? current : ''))
+      // Se suelta el teclado: si no, la historia se quedaba en pausa tras responder.
+      replyInput.current?.blur()
       setReactionsOpen(false)
       setSentFlash(content.reaction ?? 'Enviado')
       window.setTimeout(() => setSentFlash(null), 1400)
@@ -145,7 +160,15 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
 
   function onPointerDown() {
     pressStart.current = Date.now()
+    if (holdTimer.current) window.clearTimeout(holdTimer.current)
     holdTimer.current = window.setTimeout(() => setHeld(true), 180)
+  }
+
+  /** El dedo sale de la pantalla o el sistema cancela el toque: nunca se queda en pausa. */
+  function onPointerAbort() {
+    if (holdTimer.current) window.clearTimeout(holdTimer.current)
+    holdTimer.current = null
+    setHeld(false)
   }
 
   function onPointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -180,8 +203,15 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black" role="dialog" aria-modal="true" aria-label={`Historias de ${handle(group.user)}`}>
       <div className="relative h-full w-full sm:h-[min(92dvh,860px)] sm:w-auto sm:aspect-[9/16] sm:overflow-hidden sm:rounded-3xl">
-        <div className="absolute inset-0 touch-none select-none" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerLeave={() => setHeld(false)}>
-          <StoryCanvas photoUrl={story.photo_url} background={story.background} text={story.text} stickers={story.stickers} />
+        <div className="absolute inset-0 touch-none select-none" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerLeave={onPointerAbort} onPointerCancel={onPointerAbort}>
+          <StoryCanvas
+            key={story.id}
+            photoUrl={story.photo_url}
+            background={story.background}
+            text={story.text}
+            stickers={story.stickers}
+            onPhotoReady={() => setReadyId(story.id)}
+          />
         </div>
 
         <div className={['pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/55 to-transparent px-3 pb-8 pt-[max(0.6rem,env(safe-area-inset-top))] transition-opacity', held ? 'opacity-0' : ''].join(' ')}>
@@ -254,6 +284,7 @@ export function StoryViewer({ groups, startGroup, onClose }: Props) {
                 <label className="min-w-0 flex-1">
                   <span className="sr-only">Responder a {handle(group.user)}</span>
                   <input
+                    ref={replyInput}
                     value={reply}
                     maxLength={1000}
                     onChange={(e) => setReply(e.target.value)}

@@ -10,7 +10,7 @@ type Props = {
   onChange?: (person: PersonCard) => void
 }
 
-const base = 'inline-flex items-center justify-center gap-1.5 rounded-xl font-bold transition active:scale-95 disabled:opacity-50'
+const base = 'inline-flex items-center justify-center gap-1.5 rounded-2xl font-bold transition active:scale-95 disabled:opacity-50'
 
 /** Añadir / solicitud enviada / aceptar-rechazar / amigos, según la relación. */
 export function FriendButton({ person, size = 'compact', onChange }: Props) {
@@ -29,7 +29,7 @@ export function FriendButton({ person, size = 'compact', onChange }: Props) {
     onError: (error) => notify(apiErrorMessage(error, 'No se ha podido completar. Inténtalo de nuevo.'), 'error'),
   })
 
-  const sizing = size === 'full' ? 'min-h-12 w-full px-4 text-base' : 'min-h-10 px-3.5 text-sm'
+  const sizing = size === 'full' ? 'min-h-12 w-full px-4 text-base' : 'min-h-11 px-3.5 text-sm'
   const busy = mutation.isPending
 
   if (person.relation === 'self') return null

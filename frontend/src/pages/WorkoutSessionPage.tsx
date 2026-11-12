@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { ExerciseDetailSheet } from '../components/exercises/ExerciseDetailSheet'
@@ -60,7 +60,7 @@ export function WorkoutSessionPage() {
   })
 
   const session = sessionQuery.data
-  const autosave = useWorkoutAutosave(sessionId, session)
+  const autosave = useWorkoutAutosave(sessionId, session, sessionQuery.isFetchedAfterMount)
   const { drafts, saveState } = autosave
 
   // undefined = el usuario aún no ha elegido: se abre el primer ejercicio sin terminar.
@@ -147,6 +147,15 @@ export function WorkoutSessionPage() {
     chosenExerciseId !== undefined
       ? chosenExerciseId
       : ((groups.find((group) => group.sets.some((set) => !set.done)) ?? groups[0])?.id ?? null)
+
+  // La tarjeta abierta al entrar se fija una vez: si se recalculara con cada serie marcada,
+  // se plegaría sola al terminar la última y todo saltaría bajo el dedo.
+  const firstPendingId = (groups.find((group) => group.sets.some((set) => !set.done)) ?? groups[0])?.id
+  useEffect(() => {
+    if (autosave.hydrated && firstPendingId != null) setOpenExerciseId((current) => (current === undefined ? firstPendingId : current))
+    // Solo al terminar de cargar: después manda lo que elija el usuario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autosave.hydrated])
 
   const openExercise = useCallback((exerciseId: number | null) => {
     setOpenExerciseId(exerciseId)
@@ -280,11 +289,18 @@ export function WorkoutSessionPage() {
   }
 
   if (sessionQuery.isLoading) {
-    return <p className="text-sm text-evo-muted">Cargando sesión…</p>
+    return (
+      <div className="mx-auto max-w-3xl space-y-3" role="status" aria-label="Cargando sesión">
+        <div className="evo-skeleton h-24 rounded-3xl" />
+        <div className="evo-skeleton h-64 rounded-3xl" />
+        <div className="evo-skeleton h-20 rounded-3xl" />
+      </div>
+    )
   }
 
-  if (sessionQuery.isError && !session) {
-    const notFound = isAxiosError(sessionQuery.error) && [403, 404].includes(sessionQuery.error.response?.status ?? 0)
+  if ((sessionQuery.isError && !session) || !Number.isFinite(sessionId)) {
+    const notFound =
+      !Number.isFinite(sessionId) || (isAxiosError(sessionQuery.error) && [403, 404].includes(sessionQuery.error.response?.status ?? 0))
     return (
       <div className="panel space-y-3 p-5">
         <p className="font-display text-xl font-bold">{notFound ? 'Sesión no encontrada' : 'No se pudo cargar la sesión'}</p>
@@ -420,6 +436,7 @@ export function WorkoutSessionPage() {
         initial={session.notes ?? ''}
         saving={notesMutation.isPending}
         onSave={(notes) => notesMutation.mutate(notes)}
+        onLeave={(notes) => void api.patch(`/workout-sessions/${sessionId}`, { notes }).catch(() => undefined)}
       />
 
       {recordEvent ? <RecordCelebration event={recordEvent} onDone={clearRecord} /> : null}
@@ -434,10 +451,39 @@ export function WorkoutSessionPage() {
   )
 }
 
-function SessionNotes({ initial, saving, onSave }: { initial: string; saving: boolean; onSave: (notes: string) => void }) {
+function SessionNotes({
+  initial,
+  saving,
+  onSave,
+  onLeave,
+}: {
+  initial: string
+  saving: boolean
+  onSave: (notes: string) => void
+  /** Al salir de la pantalla con cambios sin enviar. */
+  onLeave: (notes: string) => void
+}) {
   const [value, setValue] = useState(initial)
   const [open, setOpen] = useState(initial.trim() !== '')
   const dirty = value !== initial
+
+  // Se guarda sola al dejar de escribir y, por si acaso, al salir de la pantalla
+  // (en el móvil, tocar "Completar" o "Atrás" no siempre saca el foco del campo).
+  const latest = useRef({ value, dirty, onSave, onLeave })
+  useEffect(() => {
+    latest.current = { value, dirty, onSave, onLeave }
+  })
+  useEffect(() => {
+    if (!dirty) return
+    const id = window.setTimeout(() => latest.current.onSave(latest.current.value), 1500)
+    return () => window.clearTimeout(id)
+  }, [value, dirty])
+  useEffect(
+    () => () => {
+      if (latest.current.dirty) latest.current.onLeave(latest.current.value)
+    },
+    [],
+  )
 
   if (!open) {
     return (
@@ -468,7 +514,7 @@ function SessionNotes({ initial, saving, onSave }: { initial: string; saving: bo
           if (dirty) onSave(value)
         }}
       />
-      <p className="text-xs text-evo-muted">{saving ? 'Guardando…' : dirty ? 'Se guarda al salir del campo' : 'Guardada'}</p>
+      <p className="text-xs text-evo-muted">{saving ? 'Guardando…' : dirty ? 'Se guarda sola al dejar de escribir' : 'Guardada'}</p>
     </div>
   )
 }

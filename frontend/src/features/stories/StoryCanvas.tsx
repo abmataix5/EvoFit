@@ -7,6 +7,8 @@ type Props = {
   text: string | null
   stickers: StoryStickers
   className?: string
+  /** La foto ya se ve (o ha fallado): el visor empieza a contar el tiempo entonces. */
+  onPhotoReady?: () => void
 }
 
 /** Sticker fitness con el estilo de EvoFit (píldora blanca con sombra, como los de Instagram). */
@@ -30,14 +32,23 @@ function Sticker({ icon, label, value, tone }: { icon: string; label: string; va
 }
 
 /** Una historia en formato 9:16: foto o fondo de marca, texto grande y stickers. */
-export function StoryCanvas({ photoUrl, background, text, stickers, className = '' }: Props) {
+export function StoryCanvas({ photoUrl, background, text, stickers, className = '', onPhotoReady }: Props) {
   const bg = STORY_BACKGROUNDS[background ?? 'energy']
   const darkText = !photoUrl && bg.dark
   const hasStickers = Boolean(stickers.today || stickers.gym || stickers.streak)
 
   return (
     <div className={['relative h-full w-full overflow-hidden', photoUrl ? 'bg-black' : bg.className, className].join(' ')}>
-      {photoUrl ? <img src={photoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} /> : null}
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          draggable={false}
+          onLoad={onPhotoReady}
+          onError={onPhotoReady}
+        />
+      ) : null}
       {photoUrl ? <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45" aria-hidden /> : null}
 
       {text ? (

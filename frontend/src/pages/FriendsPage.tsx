@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Segmented } from '../components/ui/Segmented'
 import { buttonClasses } from '../components/ui/Button'
 import { PersonRow } from '../features/social/PersonRow'
 import { friendRequestsQuery, friendsQuery, timeAgo } from '../lib/social'
@@ -15,35 +16,15 @@ export function FriendsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div role="tablist" aria-label="Amigos" className="grid grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
-        {(
-          [
-            { id: 'friends', label: 'Amigos', count: friends.data?.length ?? 0 },
-            { id: 'requests', label: 'Solicitudes', count: incoming.length },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => setParams(item.id === 'requests' ? { tab: 'requests' } : {}, { replace: true })}
-            className={['min-h-11 rounded-xl text-sm font-bold transition', tab === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted'].join(' ')}
-          >
-            {item.label}
-            {item.count ? (
-              <span
-                className={[
-                  'ml-1.5 rounded-full px-1.5 py-0.5 text-xs tabular-nums',
-                  item.id === 'requests' ? 'bg-evo-accent text-[#1a120c]' : 'text-evo-muted',
-                ].join(' ')}
-              >
-                {item.count}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="Amigos"
+        value={tab}
+        onChange={(id) => setParams(id === 'requests' ? { tab: 'requests' } : {}, { replace: true })}
+        options={[
+          { id: 'friends', label: 'Amigos', count: friends.data?.length ?? 0 },
+          { id: 'requests', label: 'Solicitudes', count: incoming.length, highlight: true },
+        ]}
+      />
 
       {tab === 'friends' ? (
         friends.isLoading ? (
@@ -71,7 +52,7 @@ export function FriendsPage() {
       ) : (
         <div className="space-y-5">
           <section>
-            <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">Recibidas</h2>
+            <h2 className="mb-1.5 px-1 evo-kicker">Recibidas</h2>
             {incoming.length === 0 ? (
               <p className="rounded-2xl bg-evo-surface px-4 py-5 text-center text-sm text-evo-muted">No tienes solicitudes pendientes.</p>
             ) : (
@@ -84,7 +65,7 @@ export function FriendsPage() {
           </section>
           {outgoing.length > 0 ? (
             <section>
-              <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">Enviadas</h2>
+              <h2 className="mb-1.5 px-1 evo-kicker">Enviadas</h2>
               <ul className="overflow-hidden rounded-2xl border border-evo-border/60 bg-evo-surface">
                 {outgoing.map((request) => (
                   <PersonRow key={request.id} person={request.user} />

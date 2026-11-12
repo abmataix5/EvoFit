@@ -199,7 +199,7 @@ export function BodyTab() {
               max={today}
               value={weightOn}
               onChange={(e) => setWeightOn(e.target.value)}
-              className="h-12 w-full rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-3 text-sm text-evo-text focus:border-evo-accent focus:outline-none"
+              className="h-12 w-full rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-3 text-base text-evo-text focus:border-evo-accent focus:outline-none"
               required
             />
           </label>

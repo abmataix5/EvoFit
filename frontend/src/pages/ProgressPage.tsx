@@ -1,3 +1,4 @@
+import { Segmented } from '../components/ui/Segmented'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { BodyTab } from '../features/progress/BodyTab'
@@ -35,28 +36,7 @@ export function ProgressPage() {
     <div className="mx-auto max-w-2xl space-y-4 pb-6">
       <h1 className="sr-only">Progreso</h1>
 
-      <div role="tablist" aria-label="Secciones de progreso" className="grid grid-cols-3 gap-1 rounded-2xl bg-evo-surface p-1">
-        {TABS.map((t) => {
-          const active = t.id === tab
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              id={`tab-${t.id}`}
-              aria-selected={active}
-              aria-controls={`panel-${t.id}`}
-              onClick={() => setParam('tab', t.id)}
-              className={[
-                'min-h-11 rounded-xl text-sm font-bold transition',
-                active ? 'bg-evo-accent text-[#1a120c] shadow' : 'text-evo-muted active:bg-evo-surface-2',
-              ].join(' ')}
-            >
-              {t.label}
-            </button>
-          )
-        })}
-      </div>
+      <Segmented label="Secciones de progreso" value={tab} onChange={(id) => setParam('tab', id)} options={TABS} controlsPanels />
 
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="space-y-4">
         {tab !== 'cuerpo' ? (

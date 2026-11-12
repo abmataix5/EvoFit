@@ -107,6 +107,8 @@ export async function refreshSocial(personId?: number) {
     queryClient.invalidateQueries({ queryKey: ['notifications'] }),
     queryClient.invalidateQueries({ queryKey: ['people-search'] }),
   ])
+  // Lo que ves de esa persona (entrenos, historias) depende de la relación: se vuelve a pedir en segundo plano.
+  for (const key of [['feed'], ['stories'], ['person-posts']]) void queryClient.invalidateQueries({ queryKey: key })
 }
 
 export function timeAgo(iso: string): string {

@@ -3,11 +3,28 @@ import { formatDuration } from '../../lib/tracking'
 
 export type RestTimerState = { endsAt: number; total: number; label: string } | null
 
-function beep() {
+let audio: AudioContext | null = null
+
+/**
+ * Prepara el sonido dentro de un toque del usuario (al marcar la serie). El iPhone solo deja sonar
+ * si el audio se activó con un gesto: sin esto el aviso de fin de descanso era mudo.
+ */
+export function primeRestSound() {
   try {
     const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtx) return
-    const ctx = new AudioCtx()
+    if (!audio || audio.state === 'closed') audio = new AudioCtx()
+    if (audio.state === 'suspended') void audio.resume()
+  } catch {
+    /* sin sonido */
+  }
+}
+
+function beep() {
+  try {
+    primeRestSound()
+    const ctx = audio
+    if (!ctx) return
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.frequency.value = 880
@@ -17,7 +34,6 @@ function beep() {
     osc.connect(gain).connect(ctx.destination)
     osc.start()
     osc.stop(ctx.currentTime + 0.65)
-    osc.onended = () => void ctx.close()
   } catch {
     /* sin sonido */
   }
@@ -66,7 +82,7 @@ export function RestTimer({
       role="timer"
       aria-live="off"
       className={[
-        'mb-3 overflow-hidden rounded-2xl border-2 shadow-lg',
+        'evo-enter mb-3 overflow-hidden rounded-2xl border-2 shadow-lg',
         finished ? 'border-evo-lime bg-evo-lime text-[#102000]' : 'border-evo-border bg-evo-surface text-evo-text',
       ].join(' ')}
     >
@@ -84,7 +100,10 @@ export function RestTimer({
             <button
               type="button"
               className="h-12 min-w-12 rounded-xl bg-evo-surface-2 px-3 text-sm font-bold"
-              onClick={() => onChange({ ...timer, endsAt: Math.max(Date.now() + 5000, timer.endsAt - 15_000), total: Math.max(5, timer.total - 15) })}
+              onClick={() =>
+                // Si quedan menos de 15 s, quitar 15 es terminar el descanso (antes lo alargaba).
+                timer.endsAt - Date.now() <= 15_000 ? onChange(null) : onChange({ ...timer, endsAt: timer.endsAt - 15_000, total: Math.max(5, timer.total - 15) })
+              }
               aria-label="Quitar 15 segundos"
             >
               −15

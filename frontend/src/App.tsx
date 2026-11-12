@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { lazy, Suspense } from 'react'
+import { Component, lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { BrandLogo } from './components/BrandLogo'
 import { UiFeedbackProvider } from './components/feedback/UiFeedback'
@@ -48,8 +48,44 @@ const RoutineDetailPage = page(() => import('./pages/RoutineDetailPage'), 'Routi
 const RoutinesPage = page(() => import('./pages/RoutinesPage'), 'RoutinesPage')
 const WorkoutSessionPage = page(() => import('./pages/WorkoutSessionPage'), 'WorkoutSessionPage')
 
+/**
+ * Red de seguridad: si una pantalla falla al pintarse (o no se puede descargar tras una actualización),
+ * se ofrece recargar en vez de dejar la app en blanco.
+ */
+class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center" role="alert">
+        <BrandLogo size="md" decorative />
+        <div>
+          <p className="font-display text-3xl font-extrabold uppercase">Algo ha fallado</p>
+          <p className="mt-1 text-evo-muted">Tus entrenos están a salvo. Recarga para continuar.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="min-h-14 rounded-2xl bg-evo-accent px-8 text-lg font-extrabold text-[#1a120c] transition active:scale-95"
+        >
+          Recargar
+        </button>
+      </div>
+    )
+  }
+}
+
 function PageFallback() {
-  return <p className="text-sm text-evo-muted">Cargando…</p>
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-3" role="status" aria-label="Cargando">
+      <BrandLogo size="md" className="evo-pop" />
+    </div>
+  )
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -58,8 +94,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-evo-bg">
-        <BrandLogo size="md" />
-        <p className="text-sm text-evo-muted">Cargando…</p>
+        <BrandLogo size="md" className="evo-pop" />
+        <p className="text-sm text-evo-muted" role="status">
+          Cargando…
+        </p>
       </div>
     )
   }
@@ -73,6 +111,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <UiFeedbackProvider>
         <AuthProvider>
@@ -117,5 +156,6 @@ export default function App() {
         </AuthProvider>
       </UiFeedbackProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   )
 }

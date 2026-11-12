@@ -13,7 +13,7 @@ import { queryClient } from '../lib/queryClient'
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="px-1 text-xs font-bold uppercase tracking-[0.12em] text-evo-muted">{title}</h2>
+      <h2 className="px-1 evo-kicker">{title}</h2>
       <div className="divide-y divide-evo-border/40 overflow-hidden rounded-2xl border border-evo-border/50 bg-evo-surface">{children}</div>
     </section>
   )
@@ -110,7 +110,7 @@ export function SettingsPage() {
       </Group>
 
       <section className="space-y-2" id="privacidad">
-        <h2 className="px-1 text-xs font-bold uppercase tracking-[0.12em] text-evo-muted">Privacidad</h2>
+        <h2 className="px-1 evo-kicker">Privacidad</h2>
         <div className="overflow-hidden rounded-2xl border border-evo-border/50 bg-evo-surface">
           <fieldset className="p-4">
             {/* La leyenda real queda para lectores de pantalla; la visible no se monta sobre el borde. */}
@@ -176,7 +176,7 @@ export function SettingsPage() {
       </section>
 
       <section className="space-y-2" id="cuenta">
-        <h2 className="px-1 text-xs font-bold uppercase tracking-[0.12em] text-evo-muted">Cuenta y seguridad</h2>
+        <h2 className="px-1 evo-kicker">Cuenta y seguridad</h2>
         <div className="divide-y divide-evo-border/40 overflow-hidden rounded-2xl border border-evo-border/50 bg-evo-surface">
           <div className="flex min-h-14 items-center gap-3 px-4">
             <span className="w-6 text-center text-lg" aria-hidden>

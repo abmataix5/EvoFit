@@ -176,7 +176,7 @@ export function StoryComposer({ onClose }: { onClose: () => void }) {
             maxLength={80}
             onChange={(e) => setGym(e.target.value)}
             placeholder="¿Dónde entrenas hoy?"
-            className="h-11 w-full rounded-full border border-white/20 bg-white/5 px-5 text-sm text-white placeholder:text-white/50 focus:border-evo-accent focus:outline-none"
+            className="h-11 w-full rounded-full border border-white/20 bg-white/5 px-5 text-base text-white placeholder:text-white/50 focus:border-evo-accent focus:outline-none"
           />
         ) : null}
 

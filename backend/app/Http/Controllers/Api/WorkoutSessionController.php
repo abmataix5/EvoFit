@@ -81,10 +81,7 @@ class WorkoutSessionController extends Controller
     {
         $this->authorize('view', $workoutSession);
 
-        if ($workoutSession->started_at === null) {
-            $workoutSession->update(['started_at' => now(), 'is_planned' => false]);
-        }
-
+        // Abrir un entreno para mirarlo no lo empieza: se da por empezado al apuntar la primera serie.
         return $this->detail($workoutSession, $previousSets);
     }
 
@@ -178,6 +175,17 @@ class WorkoutSessionController extends Controller
                     ],
                     $values
                 );
+            }
+
+            // El entreno empieza cuando se apunta la primera serie (o al completarlo): esa es la fecha
+            // con la que cuenta en progreso, rachas e historial.
+            $hasData = collect($sets)->contains(
+                fn (array $set) => ($set['weight_kg'] ?? null) !== null
+                    || ($set['reps'] ?? null) !== null
+                    || ! empty($set['duration_seconds'])
+            );
+            if ($workoutSession->started_at === null && ($hasData || $request->boolean('complete'))) {
+                $workoutSession->update(['started_at' => now(), 'is_planned' => false]);
             }
 
             if ($request->boolean('complete')) {

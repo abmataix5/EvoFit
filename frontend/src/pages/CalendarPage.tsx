@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { LoadError } from '../components/feedback/LoadError'
+import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
 import { Button } from '../components/ui/Button'
 import { ReportSheet, type ReportPeriod } from '../features/reports/ReportSheet'
 import { SessionReportButton } from '../features/reports/SessionReportButton'
 import { sessionHasReport } from '../lib/reports'
-import { api, type Routine, type RoutineDay, type WorkoutSession } from '../lib/api'
-import { localDateKey, startOfWeek } from '../lib/dates'
+import { api, apiErrorMessage, type Routine, type RoutineDay, type WorkoutSession } from '../lib/api'
+import { localDateKey, parseDateKey, startOfWeek } from '../lib/dates'
+import { useToday } from '../lib/useToday'
 import { exercisePlanLabel } from '../lib/tracking'
 
 const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -67,8 +70,9 @@ function sessionStatus(session: WorkoutSession) {
 export function CalendarPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { notify } = useUiFeedback()
   const [now] = useState(() => new Date())
-  const [view, setView] = useState<ViewMode>('week')
+  const [view, setViewState] = useState<ViewMode>('week')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [weekStart, setWeekStart] = useState(() => startOfWeek(now))
@@ -128,10 +132,34 @@ export function CalendarPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-week'] })
+      setSwapSessionId(null)
+      setSwapDayId('')
+      notify('Día cambiado', 'success')
+    },
+    onError: (error) => {
+      notify(apiErrorMessage(error, 'No se ha podido cambiar el día.'), 'error')
       setSwapSessionId(null)
       setSwapDayId('')
     },
   })
+
+  /** Al pasar de semana a mes (o al revés) se sigue viendo el mismo periodo, no el último que se abrió. */
+  function setView(next: ViewMode) {
+    if (next === view) return
+    if (next === 'month') {
+      const anchor = selectedDate ? parseDateKey(selectedDate) : weekStart
+      const inWeek = anchor >= weekStart && anchor.getTime() < weekStart.getTime() + 7 * 86_400_000
+      const date = inWeek ? anchor : weekStart
+      setYear(date.getFullYear())
+      setMonth(date.getMonth())
+    } else {
+      const anchor = selectedDate ? parseDateKey(selectedDate) : null
+      const inMonth = anchor != null && anchor.getFullYear() === year && anchor.getMonth() === month
+      setWeekStart(startOfWeek(inMonth ? anchor : new Date(year, month, 1)))
+    }
+    setViewState(next)
+  }
 
   function shift(delta: number) {
     if (view === 'month') {
@@ -165,7 +193,7 @@ export function CalendarPage() {
   const selectedSessions = selectedDate ? (sessionsByDate.get(selectedDate) ?? []) : []
   const completedCount = (calendarQuery.data ?? []).filter((s) => s.completed_at).length
   const plannedCount = (calendarQuery.data ?? []).length
-  const today = todayKey()
+  const today = useToday()
 
   const weekLabel = useMemo(() => {
     const from = weekStart
@@ -300,8 +328,14 @@ export function CalendarPage() {
           </div>
         ) : null}
 
-        {calendarQuery.isLoading ? (
-          <p className="text-sm text-evo-muted">Cargando plan…</p>
+        {calendarQuery.isError && !calendarQuery.data ? (
+          <LoadError onRetry={() => void calendarQuery.refetch()} />
+        ) : calendarQuery.data === undefined ? (
+          <div className="space-y-2" role="status" aria-label="Cargando plan">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="evo-skeleton h-16 rounded-2xl" />
+            ))}
+          </div>
         ) : view === 'week' ? (
           <ul className="space-y-2">
             {weekDays.map((item) => {
@@ -533,7 +567,8 @@ function DayDetail({
               session.routine?.days ??
               []
             const status = sessionStatus(session)
-            const exercises = session.day?.exercises ?? []
+            // Los de esta sesión (con los cambios de «solo hoy»); si no vienen, los del día de la rutina.
+            const exercises = session.exercises ?? session.day?.exercises ?? []
             return (
               <li key={session.id} className="space-y-3 rounded-2xl bg-evo-surface p-3">
                 <div className="flex flex-wrap items-center gap-2">

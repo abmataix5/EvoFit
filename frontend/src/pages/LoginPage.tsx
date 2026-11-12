@@ -20,6 +20,8 @@ function extractErrorMessage(error: unknown): string {
       return 'La sesión expiró. Recarga la página e inténtalo de nuevo.'
     }
   }
+  // Sin respuesta del servidor: es la conexión, no la contraseña.
+  if (axios.isAxiosError(error) && !error.response) return 'Sin conexión. Comprueba la cobertura e inténtalo de nuevo.'
   return 'No pudimos iniciar sesión. Revisa tu email y contraseña.'
 }
 
@@ -52,11 +54,13 @@ export function LoginPage() {
   return (
     <div className="no-x-scroll grid min-h-svh place-items-center px-5 py-6">
       <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
-        <BrandLogo size="md" />
-        <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">EvoFit</h1>
-        <p className="mt-1 text-center text-base text-evo-muted">Entra para seguir tu entreno.</p>
+        <BrandLogo size="lg" className="evo-pop" decorative />
+        <h1 className="mt-3 font-display text-5xl font-extrabold uppercase leading-none">
+          Evo<span className="text-evo-accent">Fit</span>
+        </h1>
+        <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-evo-muted">Entrena · Mejora · Evoluciona</p>
 
-        <form onSubmit={onSubmit} className="panel mt-6 w-full space-y-4 p-5">
+        <form onSubmit={onSubmit} className="evo-enter panel mt-6 w-full space-y-4 p-5">
           <Input
             label="Email"
             type="email"

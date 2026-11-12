@@ -16,7 +16,7 @@ type Props = {
   className?: string
 }
 
-/** Foto de perfil redonda; si no hay foto (o no carga), las iniciales. */
+/** Foto de perfil con la silueta de EvoFit (esquinas asimétricas); si no hay foto (o no carga), las iniciales. */
 export function Avatar({ name, url, size = 'md', className = '' }: Props) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const showImage = Boolean(url) && failedUrl !== url
@@ -24,7 +24,7 @@ export function Avatar({ name, url, size = 'md', className = '' }: Props) {
   return (
     <span
       className={[
-        'relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full',
+        'evo-shape relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden',
         'bg-gradient-to-br from-evo-accent to-evo-accent-soft font-display font-bold text-[#1a120c]',
         sizes[size],
         className,

@@ -1,5 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useUiFeedback } from '../../components/feedback/UiFeedback'
+import { haptic } from '../../lib/haptics'
+import { primeRestSound } from './RestTimer'
 import { relativeDayLabel } from '../../lib/dates'
 import { bestScoreLabel, formatDuration, formatScore, isTimeMode, joinDuration, splitDuration } from '../../lib/tracking'
 import {
@@ -91,6 +94,7 @@ export function ExerciseCard({
   onShowTechnique,
 }: Props) {
   const [detailsFor, setDetailsFor] = useState<number | null>(null)
+  const { confirm } = useUiFeedback()
   const doneSets = group.sets.filter((set) => set.done && setLogged(set, group.mode)).length
   const allDone = group.sets.length > 0 && doneSets === group.sets.length
   const previous = group.previous
@@ -114,13 +118,34 @@ export function ExerciseCard({
     const patch = { ...fillBlanks(group, set), done: true }
     const merged = { ...set, ...patch }
     if (!setLogged(merged, group.mode)) {
-      // Sin dato no se puede dar por hecha: se lleva el foco al primer campo.
-      document.getElementById(`set-${group.id}-${set.set_number}-main`)?.focus()
+      // Sin dato no se puede dar por hecha: se lleva el foco al campo que falta (el tiempo, si va por tiempo).
+      const missing = group.mode === 'weight_time' ? 'time' : 'main'
+      document.getElementById(`set-${group.id}-${set.set_number}-${missing}`)?.focus()
       return
     }
+    // Dentro del toque: activa el sonido del descanso (el iPhone lo exige) y confirma con una vibración.
+    primeRestSound()
+    haptic()
     updateDraft(set.draftIndex, patch)
     onSetDone(group)
     if (onRecord && isRecordSet(group, merged)) onRecord(group, merged)
+  }
+
+  /** Quitar la última serie; si ya tiene datos se pregunta antes (está pegada a "Añadir serie"). */
+  async function removeLastSet() {
+    const target = group.sets[group.sets.length - 1]
+    if (!target) return
+    if (setLogged(target, group.mode)) {
+      const ok = await confirm({
+        title: `¿Quitar la serie ${target.set_number}?`,
+        message: 'Tiene datos apuntados y se borrarán.',
+        confirmLabel: 'Quitar serie',
+        cancelLabel: 'Cancelar',
+        danger: true,
+      })
+      if (!ok) return
+    }
+    removeSet(group.id, target.set_number)
   }
 
   function repeatLastTime() {
@@ -163,7 +188,6 @@ export function ExerciseCard({
     addSet(newSetDraft(group.exercise, nextNumber))
   }
 
-  const lastSet = group.sets[group.sets.length - 1]
 
   return (
     <li id={`exercise-${group.id}`} className="panel scroll-mt-24 overflow-hidden">
@@ -401,7 +425,7 @@ export function ExerciseCard({
                     ) : (
                       <>
                         <input
-                          id={group.mode === 'time' ? `set-${group.id}-${set.set_number}-main` : undefined}
+                          id={`set-${group.id}-${set.set_number}-${group.mode === 'time' ? 'main' : 'time'}`}
                           role="cell"
                           aria-label={`Minutos serie ${set.set_number}`}
                           inputMode="numeric"
@@ -444,7 +468,7 @@ export function ExerciseCard({
 
                   {record ? (
                     <p className="evo-pop mt-1.5 inline-flex items-center gap-1 rounded-full bg-evo-warn/15 px-2.5 py-1 text-xs font-bold text-evo-warn">
-                      🏆 ¡Nuevo récord personal!
+                      <span aria-hidden>🏆</span> ¡Nuevo récord personal!
                     </p>
                   ) : null}
 
@@ -492,7 +516,7 @@ export function ExerciseCard({
             <button
               type="button"
               className="min-h-12 rounded-2xl border-2 border-dashed border-evo-border text-sm font-bold text-evo-muted disabled:opacity-40"
-              onClick={() => lastSet && removeSet(group.id, lastSet.set_number)}
+              onClick={() => void removeLastSet()}
               disabled={group.sets.length <= 1}
             >
               − Quitar última

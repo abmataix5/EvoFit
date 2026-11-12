@@ -143,7 +143,7 @@ export function ReportSheet({
     >
       <div
         ref={panelRef}
-        className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-2 border-evo-border bg-evo-surface p-5 shadow-2xl sm:rounded-3xl"
+        className="safe-bottom max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[1.6rem] border-2 border-evo-border bg-evo-surface p-5 shadow-2xl sm:rounded-3xl"
       >
         <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-evo-border sm:hidden" aria-hidden />
 

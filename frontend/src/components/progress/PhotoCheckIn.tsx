@@ -153,6 +153,8 @@ export function PhotoCheckIn({
           <label className="block min-w-0 max-w-full space-y-1.5">
             <span className="text-sm font-semibold text-evo-text">Imagen</span>
             <input
+              // Al subir la foto el formulario se vacía: sin la clave, el campo seguía mostrando el archivo anterior.
+              key={`file-${photos.length}`}
               type="file"
             accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic"
             onChange={(e) => onPhotoFile(e.target.files?.[0] ?? null)}
@@ -338,7 +340,7 @@ function CompareStage({
         <>
           <div
             ref={trackRef}
-            className="relative aspect-[3/4] w-full touch-none select-none overflow-hidden bg-black sm:aspect-[4/5] md:max-h-[420px] md:aspect-[16/11]"
+            className="relative aspect-[3/4] w-full touch-pan-y select-none overflow-hidden bg-black sm:aspect-[4/5] md:max-h-[420px] md:aspect-[16/11]"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId)
               setFromClientX(e.clientX)

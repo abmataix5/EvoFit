@@ -21,6 +21,16 @@ export type IconName =
   | 'send'
   | 'plus'
   | 'eye'
+  | 'dumbbell'
+  | 'bolt'
+  | 'bolt-filled'
+  | 'chat'
+  | 'settings'
+  | 'trophy'
+  | 'flame'
+  | 'check'
+  | 'lock'
+  | 'clock'
 
 type Props = {
   name: IconName
@@ -110,6 +120,45 @@ export function Icon({ name, className = 'h-5 w-5' }: Props) {
         <>
           <path {...common} d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
           <circle {...common} cx="12" cy="12" r="3" />
+        </>
+      ) : null}
+      {name === 'dumbbell' ? <path {...common} d="M2.75 10v4M6 7v10M18 7v10M21.25 10v4M6 12h12" /> : null}
+      {name === 'bolt' || name === 'bolt-filled' ? (
+        <path {...common} fill={name === 'bolt-filled' ? 'currentColor' : 'none'} d="M13.5 2.75 5 13.5h5.75L10 21.25 19 10.25h-5.9l.4-7.5Z" />
+      ) : null}
+      {name === 'chat' ? (
+        <>
+          <path {...common} d="M12 4.5c-4.4 0-8 3-8 6.8 0 2 1 3.8 2.6 5L6 20l3.9-2.1c.7.15 1.4.200 2.1.200 4.4 0 8-3 8-6.8s-3.6-6.8-8-6.8Z" />
+          <path {...common} d="M8.5 11.3h.01M12 11.3h.01M15.5 11.3h.01" />
+        </>
+      ) : null}
+      {name === 'settings' ? (
+        <>
+          <path {...common} d="M4 7.5h8.5M18.5 7.5H20M4 16.5h1.5M11.5 16.5H20" />
+          <circle {...common} cx="15.5" cy="7.5" r="2.5" />
+          <circle {...common} cx="8.5" cy="16.5" r="2.5" />
+        </>
+      ) : null}
+      {name === 'trophy' ? (
+        <>
+          <path {...common} d="M8 4.5h8V10a4 4 0 0 1-8 0V4.5Z" />
+          <path {...common} d="M8 6.5H5.25V8A2.75 2.75 0 0 0 8 10.75M16 6.5h2.75V8A2.75 2.75 0 0 1 16 10.75M12 14v3.25M8.5 20h7M9.75 17.25h4.5" />
+        </>
+      ) : null}
+      {name === 'flame' ? (
+        <path {...common} d="M12.2 3c.4 3.2 4.8 5 4.8 9.8a5 5 0 0 1-10 0c0-1.8.8-3.2 1.8-4.2.3 1.3 1 2.1 1.9 2.4-.4-3.2.2-6 1.5-8Z" />
+      ) : null}
+      {name === 'check' ? <path {...common} strokeWidth={2.4} d="m5 12.5 4.5 4.5L19 7.5" /> : null}
+      {name === 'lock' ? (
+        <>
+          <rect {...common} x="5.5" y="10.5" width="13" height="9.5" rx="2" />
+          <path {...common} d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+        </>
+      ) : null}
+      {name === 'clock' ? (
+        <>
+          <circle {...common} cx="12" cy="12" r="8" />
+          <path {...common} d="M12 7.5V12l3 2" />
         </>
       ) : null}
       {name === 'close' ? <path {...common} d="M6 6l12 12M18 6 6 18" /> : null}

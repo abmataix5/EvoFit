@@ -113,4 +113,30 @@ class WorkoutLogsTest extends TestCase
         $this->patchJson("/api/v1/workout-sessions/{$session->id}", ['notes' => str_repeat('x', 2001)])
             ->assertStatus(422);
     }
+
+    public function test_opening_a_session_does_not_start_it_but_logging_does(): void
+    {
+        $user = $this->makeUser();
+        [, $day, $exercises] = $this->makeRoutine($user);
+        $session = $this->makeSession($day, now()->addDay()->toDateString(), null, ['is_planned' => true]);
+        $press = $exercises['Press banca'];
+
+        // Mirar el entreno de mañana no lo empieza ni le cambia la fecha en el progreso.
+        $this->actingAs($user)->getJson("/api/v1/workout-sessions/{$session->id}")->assertOk();
+        $this->assertNull($session->fresh()->started_at);
+        $this->assertTrue($session->fresh()->is_planned);
+
+        // El autosave manda series vacías: tampoco cuenta como empezado.
+        $this->putJson("/api/v1/workout-sessions/{$session->id}/logs", [
+            'sets' => [['routine_exercise_id' => $press->id, 'set_number' => 1, 'weight_kg' => null, 'reps' => null, 'completed' => false]],
+        ])->assertOk();
+        $this->assertNull($session->fresh()->started_at);
+
+        // Al apuntar la primera serie, sí.
+        $this->putJson("/api/v1/workout-sessions/{$session->id}/logs", [
+            'sets' => [['routine_exercise_id' => $press->id, 'set_number' => 1, 'weight_kg' => 60, 'reps' => 8]],
+        ])->assertOk();
+        $this->assertNotNull($session->fresh()->started_at);
+        $this->assertFalse($session->fresh()->is_planned);
+    }
 }

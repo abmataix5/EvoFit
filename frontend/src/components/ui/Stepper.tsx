@@ -29,7 +29,7 @@ export function Stepper({ label, value, onChange, min = 0, max = 999, step = 1, 
           aria-label={`Menos ${label.toLowerCase()}`}
           disabled={value <= min}
           onClick={() => onChange(clamp(value - step))}
-          className="flex h-11 w-8 shrink-0 items-center justify-center text-xl font-bold text-evo-muted transition active:scale-90 disabled:opacity-30"
+          className="flex h-12 w-8 shrink-0 items-center justify-center text-xl font-bold text-evo-muted transition active:scale-90 disabled:opacity-30"
         >
           −
         </button>
@@ -42,7 +42,7 @@ export function Stepper({ label, value, onChange, min = 0, max = 999, step = 1, 
           aria-label={`Más ${label.toLowerCase()}`}
           disabled={value >= max}
           onClick={() => onChange(clamp(value + step))}
-          className="flex h-11 w-8 shrink-0 items-center justify-center text-xl font-bold text-evo-muted transition active:scale-90 disabled:opacity-30"
+          className="flex h-12 w-8 shrink-0 items-center justify-center text-xl font-bold text-evo-muted transition active:scale-90 disabled:opacity-30"
         >
           +
         </button>

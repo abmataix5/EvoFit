@@ -10,9 +10,9 @@ import { friendRequestsQuery, personQuery, type PersonProfile } from '../lib/soc
 import { storiesQuery } from '../lib/stories'
 
 const actionClass =
-  'flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-evo-surface-2 px-3 text-sm font-bold transition active:scale-[0.98]'
+  'flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-3 text-sm font-bold transition active:scale-[0.97]'
 
-/** Tu perfil, como en Instagram. La configuración está en su propio apartado (☰). */
+/** Tu ficha de atleta. La configuración está en su propio apartado (botón de ajustes). */
 export function ProfilePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -22,14 +22,26 @@ export function ProfilePage() {
   const [viewingStory, setViewingStory] = useState(false)
 
   if (!user) return null
+  if (profile.isError && !profile.data) {
+    return (
+      <div className="mx-auto max-w-md space-y-2 py-10 text-center">
+        <p className="font-display text-2xl font-bold">No se ha podido cargar tu perfil</p>
+        <p className="text-sm text-evo-muted">Revisa la conexión e inténtalo de nuevo.</p>
+        <button type="button" onClick={() => void profile.refetch()} className="min-h-11 px-4 text-sm font-bold text-evo-accent">
+          Reintentar
+        </button>
+      </div>
+    )
+  }
   if (!profile.data) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4" aria-busy>
-        <div className="flex items-center gap-5">
-          <div className="h-[5.5rem] w-[5.5rem] animate-pulse rounded-full bg-evo-surface" />
-          <div className="h-12 flex-1 animate-pulse rounded-2xl bg-evo-surface" />
+      <div className="mx-auto max-w-2xl space-y-3" role="status" aria-label="Cargando perfil">
+        <div className="evo-skeleton h-56 rounded-3xl" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="evo-skeleton h-[4.5rem] rounded-2xl" />
+          <div className="evo-skeleton h-[4.5rem] rounded-2xl" />
+          <div className="evo-skeleton h-[4.5rem] rounded-2xl" />
         </div>
-        <div className="h-24 animate-pulse rounded-2xl bg-evo-surface" />
       </div>
     )
   }

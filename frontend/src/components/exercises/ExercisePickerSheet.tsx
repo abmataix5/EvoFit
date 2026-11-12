@@ -1,3 +1,4 @@
+import { Segmented } from '../ui/Segmented'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { apiErrorMessage, validationErrors, type CatalogExercise, type LibraryExercise } from '../../lib/api'
@@ -206,31 +207,18 @@ export function ExercisePickerSheet(props: Props) {
     >
       <div className="sticky top-0 z-10 -mx-4 space-y-2 bg-evo-surface px-4 pb-3">
         {!libraryOnly ? (
-          <div role="tablist" className="grid grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
-            {(
-              [
-                { id: 'mine', label: 'Mis ejercicios' },
-                { id: 'library', label: 'Biblioteca' },
-              ] as const
-            ).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === item.id}
-                onClick={() => {
-                  setTab(item.id)
-                  setMuscle(null)
-                }}
-                className={[
-                  'min-h-10 rounded-xl text-sm font-bold transition',
-                  tab === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted',
-                ].join(' ')}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="Origen de los ejercicios"
+            value={tab}
+            onChange={(id) => {
+              setTab(id)
+              setMuscle(null)
+            }}
+            options={[
+              { id: 'mine', label: 'Mis ejercicios' },
+              { id: 'library', label: 'Biblioteca' },
+            ]}
+          />
         ) : null}
         <ExerciseFilters
           search={search}

@@ -117,7 +117,7 @@ export function PostComposer({ value, onChange }: { value: ComposerValue; onChan
             className="min-h-12 min-w-0 flex-1 bg-transparent text-base text-evo-text placeholder:text-evo-muted/80 focus:outline-none"
           />
           {value.gym ? (
-            <button type="button" onClick={() => set({ gym: '' })} aria-label="Quitar gimnasio" className="text-evo-muted">
+            <button type="button" onClick={() => set({ gym: '' })} aria-label="Quitar gimnasio" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-evo-muted">
               <Icon name="close" className="h-4 w-4" />
             </button>
           ) : null}

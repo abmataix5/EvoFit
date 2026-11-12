@@ -1,46 +1,80 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Icon } from '../../components/icons/Icon'
 import { personPostsQuery, type Post } from '../../lib/feed'
+import { formatVolume } from './WorkoutCover'
 
-/** Miniatura de un entreno: su foto o una mini portada de color con el día. */
+function shortDate(post: Post) {
+  const day = post.summary.trained_on
+  const date = day ? new Date(`${day}T12:00:00`) : new Date(post.created_at)
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+}
+
+/** Ficha de un entreno: su foto de fondo (si la tiene), el día, las cifras y la fuerza recibida. */
 function Tile({ post }: { post: Post }) {
-  const record = post.summary.records.length > 0
+  const { summary } = post
+  const record = summary.records.length > 0
+  const photo = Boolean(post.photo_url)
+  const figures = [
+    `${summary.sets} ${summary.sets === 1 ? 'serie' : 'series'}`,
+    summary.volume_kg > 0 ? formatVolume(summary.volume_kg) : summary.duration_minutes ? `${summary.duration_minutes} min` : null,
+  ].filter(Boolean)
+
   return (
-    <Link to={`/posts/${post.id}`} className="group relative block aspect-square overflow-hidden bg-evo-surface-2" aria-label={`${post.summary.title}, ver entreno`}>
-      {post.photo_url ? (
-        <img src={post.photo_url} alt="" loading="lazy" className="h-full w-full object-cover transition group-active:scale-95" />
+    <Link
+      to={`/posts/${post.id}`}
+      className={[
+        'group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl border border-evo-border/50 p-3 transition active:scale-[0.97]',
+        photo ? 'text-white' : 'bg-gradient-to-br from-evo-accent/25 via-evo-surface to-evo-surface text-evo-text',
+      ].join(' ')}
+      aria-label={`${summary.title}, ${shortDate(post)}. Ver entreno`}
+    >
+      {photo ? (
+        <>
+          <img src={post.photo_url!} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" aria-hidden />
+        </>
       ) : (
-        <span
-          className={[
-            'flex h-full w-full flex-col items-center justify-center gap-0.5 px-2 text-center text-[#1a120c]',
-            record ? 'bg-gradient-to-br from-[#ffb347] via-[#ff8a4c] to-[#e8553d]' : 'bg-gradient-to-br from-[#ff9d68] via-[#ff8a4c] to-[#f0623c]',
-          ].join(' ')}
-        >
-          <span className="text-2xl" aria-hidden>
-            {record ? '🏆' : '🎉'}
-          </span>
-          <span className="line-clamp-2 font-display text-sm font-bold leading-tight sm:text-base">{post.summary.title}</span>
-        </span>
+        <Icon name="dumbbell" className="absolute -right-3 top-8 h-24 w-24 -rotate-12 text-evo-accent/20" />
       )}
-      {post.photo_url ? (
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6">
-          <span className="block truncate text-xs font-bold text-white">{post.summary.title}</span>
+
+      <span className="absolute inset-x-2.5 top-2.5 flex items-center justify-between gap-2">
+        <span className={['rounded-full px-2 py-0.5 text-[0.7rem] font-bold', photo ? 'bg-black/45 text-white' : 'bg-evo-surface-2 text-evo-muted'].join(' ')}>
+          {shortDate(post)}
         </span>
-      ) : null}
-      {record && post.photo_url ? (
-        <span className="absolute right-1.5 top-1.5 text-base drop-shadow" aria-label="Con récord">
-          🏆
-        </span>
-      ) : null}
-      {post.likes_count > 0 ? (
-        <span className="absolute left-1.5 top-1.5 rounded-full bg-black/45 px-1.5 py-0.5 text-[0.65rem] font-bold text-white">♥ {post.likes_count}</span>
-      ) : null}
+        {record ? (
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-evo-warn text-[#1a120c]" role="img" aria-label="Con récord personal">
+            <Icon name="trophy" className="h-3.5 w-3.5" />
+          </span>
+        ) : null}
+      </span>
+
+      <span className="relative">
+        <span className="line-clamp-2 font-display text-xl font-extrabold uppercase leading-none">{summary.title}</span>
+        <span className={['mt-1 block truncate text-xs font-semibold', photo ? 'text-white/85' : 'text-evo-muted'].join(' ')}>{figures.join(' · ')}</span>
+        {post.likes_count > 0 || post.comments_count > 0 ? (
+          <span className={['mt-1.5 flex items-center gap-2.5 text-xs font-bold', photo ? 'text-white' : 'text-evo-text'].join(' ')}>
+            {post.likes_count > 0 ? (
+              <span className="flex items-center gap-0.5">
+                <Icon name="bolt-filled" className="h-3.5 w-3.5 text-evo-accent" />
+                {post.likes_count}
+              </span>
+            ) : null}
+            {post.comments_count > 0 ? (
+              <span className="flex items-center gap-0.5">
+                <Icon name="comment" className="h-3.5 w-3.5" />
+                {post.comments_count}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
+      </span>
     </Link>
   )
 }
 
-/** Cuadrícula de entrenos compartidos (3 columnas), carga más al bajar. */
+/** Entrenos compartidos de una persona, en fichas a dos columnas; carga más al bajar. */
 export function PostGrid({ userId, emptyText }: { userId: number; emptyText: string }) {
   const query = useInfiniteQuery(personPostsQuery(userId))
   const sentinel = useRef<HTMLDivElement>(null)
@@ -56,24 +90,35 @@ export function PostGrid({ userId, emptyText }: { userId: number; emptyText: str
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  if (query.isLoading) {
+  if (query.isPending) {
     return (
-      <div className="grid grid-cols-3 gap-0.5" aria-busy>
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="aspect-square animate-pulse bg-evo-surface" />
+      <div className="grid grid-cols-2 gap-2.5" role="status" aria-label="Cargando entrenos">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="evo-skeleton aspect-[4/5] rounded-2xl" />
         ))}
       </div>
     )
   }
 
-  const posts = query.data?.pages.flatMap((p) => p.data) ?? []
+  if (query.isError) {
+    return (
+      <div className="rounded-3xl bg-evo-surface p-5 text-center">
+        <p className="text-sm text-evo-muted">No se han podido cargar los entrenos.</p>
+        <button type="button" onClick={() => void query.refetch()} className="mt-1 min-h-11 px-4 text-sm font-bold text-evo-accent">
+          Reintentar
+        </button>
+      </div>
+    )
+  }
+
+  const posts = query.data.pages.flatMap((p) => p.data)
   if (posts.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-evo-text/80 text-3xl" aria-hidden>
-          📸
+      <div className="flex flex-col items-center gap-2 rounded-3xl border-2 border-dashed border-evo-border px-6 py-10 text-center">
+        <span className="evo-shape flex h-14 w-14 items-center justify-center bg-evo-surface-2 text-evo-muted" aria-hidden>
+          <Icon name="dumbbell" className="h-7 w-7" />
         </span>
-        <p className="font-display text-lg font-bold">Aún no hay entrenos</p>
+        <p className="font-display text-2xl font-bold">Aún no hay entrenos</p>
         <p className="text-sm text-evo-muted">{emptyText}</p>
       </div>
     )
@@ -81,13 +126,13 @@ export function PostGrid({ userId, emptyText }: { userId: number; emptyText: str
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-0.5">
+      <div className="evo-stagger grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {posts.map((post) => (
           <Tile key={post.id} post={post} />
         ))}
       </div>
       <div ref={sentinel} />
-      {isFetchingNextPage ? <p className="py-3 text-center text-sm text-evo-muted">Cargando…</p> : null}
+      {isFetchingNextPage ? <div className="evo-skeleton mt-2.5 h-16 rounded-2xl" role="status" aria-label="Cargando más" /> : null}
     </>
   )
 }

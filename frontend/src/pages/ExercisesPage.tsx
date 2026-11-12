@@ -1,3 +1,4 @@
+import { Segmented } from '../components/ui/Segmented'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -56,7 +57,8 @@ export function ExercisesPage() {
         else next.set(key, value)
         return next
       },
-      { replace: key !== 'ex' },
+      // Abrir una ficha añade un paso al historial ("atrás" la cierra); cerrarla con la X no deja rastro.
+      { replace: key !== 'ex' || value === null },
     )
   }
 
@@ -159,29 +161,15 @@ export function ExercisesPage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="sr-only">Ejercicios</h1>
 
-      <div role="tablist" aria-label="Ejercicios" className="grid grid-cols-2 gap-1 rounded-2xl bg-evo-surface-2 p-1">
-        {(
-          [
-            { id: 'library', label: 'Biblioteca', count: libraryItems.length },
-            { id: 'mine', label: 'Mis ejercicios', count: mine.length },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => switchTab(item.id)}
-            className={[
-              'min-h-11 rounded-xl text-sm font-bold transition',
-              tab === item.id ? 'bg-evo-surface text-evo-text shadow' : 'text-evo-muted',
-            ].join(' ')}
-          >
-            {item.label}
-            {item.count ? <span className="ml-1.5 font-semibold text-evo-muted tabular-nums">{item.count}</span> : null}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="Ejercicios"
+        value={tab}
+        onChange={switchTab}
+        options={[
+          { id: 'library', label: 'Biblioteca', count: libraryItems.length },
+          { id: 'mine', label: 'Mis ejercicios', count: mine.length },
+        ]}
+      />
 
       <p className="px-1 text-sm text-evo-muted">
         {tab === 'library'

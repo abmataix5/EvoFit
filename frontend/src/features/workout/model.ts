@@ -19,11 +19,17 @@ export type ExerciseGroup = {
 
 export const MAX_SETS = 20
 
+/** Número con coma o punto decimal ("80,5" = "80.5"). Si no es un número claro ("80,5,"), null. */
 export function parseDecimal(value: string): number | null {
-  const trimmed = value.trim().replace(',', '.')
-  if (trimmed === '' || trimmed === '.') return null
-  const n = Number(trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed)
+  const trimmed = value.trim().replace(/\s/g, '').replace(/,/g, '.').replace(/\.+$/, '')
+  if (trimmed === '' || !/^\d*\.?\d+$/.test(trimmed)) return null
+  const n = Number(trimmed)
   return Number.isFinite(n) ? n : null
+}
+
+/** Dentro de lo que acepta el servidor; fuera de rango no se envía (si no, un solo valor raro bloquea todo el guardado). */
+function within(value: number | null, min: number, max: number): number | null {
+  return value != null && value >= min && value <= max ? value : null
 }
 
 export function parseInteger(value: string): number | null {
@@ -40,7 +46,8 @@ export function modeOf(exercise: RoutineExercise): TrackingMode {
 /** Serie con el dato principal apuntado (kg, o tiempo en ejercicios por tiempo). */
 export function setLogged(draft: SetDraft, mode: TrackingMode) {
   if (isTimeMode(mode)) return joinDuration(draft.minutes, draft.seconds) != null
-  return draft.weight_kg.trim() !== ''
+  // Peso corporal (dominadas, flexiones…): con las repeticiones basta, los kg pueden quedar vacíos.
+  return parseDecimal(draft.weight_kg) != null || (mode === 'weight_reps' && parseInteger(draft.reps) != null)
 }
 
 /** Ejercicios de hoy: los del día con los cambios de esta sesión (versiones antiguas: los del día). */
@@ -134,11 +141,11 @@ export function toPayloadSet(draft: SetDraft) {
   return {
     routine_exercise_id: draft.routine_exercise_id,
     set_number: draft.set_number,
-    weight_kg: parseDecimal(draft.weight_kg),
-    reps: parseInteger(draft.reps),
-    duration_seconds: joinDuration(draft.minutes, draft.seconds),
-    rpe: parseDecimal(draft.rpe),
-    notes: draft.notes.trim() === '' ? null : draft.notes.trim(),
+    weight_kg: within(parseDecimal(draft.weight_kg), 0, 999),
+    reps: within(parseInteger(draft.reps), 0, 100),
+    duration_seconds: within(joinDuration(draft.minutes, draft.seconds), 0, 86400),
+    rpe: within(parseDecimal(draft.rpe), 1, 10),
+    notes: draft.notes.trim() === '' ? null : draft.notes.trim().slice(0, 255),
     completed: draft.done,
   }
 }

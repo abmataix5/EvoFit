@@ -50,13 +50,21 @@ export function PersonProfilePage() {
     onSuccess: (person, blocked) => {
       setPerson(person)
       void refreshSocial()
+      for (const key of [['feed'], ['stories'], ['conversations'], ['person-posts', id]]) void queryClient.invalidateQueries({ queryKey: key })
       notify(blocked ? `Has bloqueado a ${person.name}` : `Has desbloqueado a ${person.name}`, 'success')
       setMenuOpen(false)
     },
     onError: (error) => notify(apiErrorMessage(error, 'No se ha podido completar.'), 'error'),
   })
 
-  if (query.isLoading) return <p className="text-sm text-evo-muted">Cargando perfil…</p>
+  if (query.isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3" role="status" aria-label="Cargando perfil">
+        <div className="evo-skeleton h-56 rounded-3xl" />
+        <div className="evo-skeleton h-[4.5rem] rounded-2xl" />
+      </div>
+    )
+  }
   if (query.isError || !query.data) {
     const notFound = isAxiosError(query.error) && query.error.response?.status === 404
     return (
@@ -114,9 +122,9 @@ export function PersonProfilePage() {
                 type="button"
                 disabled={message.isPending}
                 onClick={() => message.mutate()}
-                className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-evo-surface-2 px-4 text-base font-bold transition active:scale-95"
+                className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-2xl border-2 border-evo-border bg-evo-surface-2 px-4 text-base font-bold transition active:scale-95 disabled:opacity-50"
               >
-                <Icon name="send" className="h-5 w-5" /> Mensaje
+                <Icon name="chat" className="h-5 w-5" /> Mensaje
               </button>
             </div>
           ) : (
@@ -213,13 +221,23 @@ function FriendsOfSheet({ person, onClose }: { person: PersonProfile; onClose: (
 
   return (
     <Sheet title={`Amigos de ${person.username ?? person.name}`} onClose={onClose}>
-      {friends.isLoading ? (
-        <p className="py-6 text-center text-sm text-evo-muted">Cargando…</p>
-      ) : (friends.data ?? []).length === 0 ? (
+      {friends.isPending ? (
+        <div className="space-y-2 py-2" role="status" aria-label="Cargando">
+          <div className="evo-skeleton h-12 rounded-2xl" />
+          <div className="evo-skeleton h-12 rounded-2xl" />
+        </div>
+      ) : friends.isError ? (
+        <div className="py-6 text-center">
+          <p className="text-sm text-evo-muted">No se ha podido cargar la lista.</p>
+          <button type="button" onClick={() => void friends.refetch()} className="mt-1 min-h-11 px-4 text-sm font-bold text-evo-accent">
+            Reintentar
+          </button>
+        </div>
+      ) : friends.data.length === 0 ? (
         <p className="py-6 text-center text-sm text-evo-muted">Aún no tiene amigos en EvoFit.</p>
       ) : (
         <ul className="-mx-3">
-          {friends.data!.map((friend) => (
+          {friends.data.map((friend) => (
             <PersonRow key={friend.id} person={friend} />
           ))}
         </ul>

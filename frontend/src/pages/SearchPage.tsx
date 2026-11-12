@@ -20,7 +20,7 @@ function normalize(text: string | null | undefined) {
 function ResultSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">{title}</h2>
+      <h2 className="px-1 evo-kicker">{title}</h2>
       <ul className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">{children}</ul>
     </section>
   )
@@ -121,7 +121,7 @@ export function SearchPage() {
         <div className="space-y-5">
           {peopleResults.length > 0 ? (
             <section className="space-y-2">
-              <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-evo-muted">Personas</h2>
+              <h2 className="px-1 evo-kicker">Personas</h2>
               <ul className="overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
                 {peopleResults.map((person) => (
                   <PersonRow key={person.id} person={person} />

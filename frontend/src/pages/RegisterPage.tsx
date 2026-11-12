@@ -80,8 +80,8 @@ export function RegisterPage() {
   return (
     <div className="no-x-scroll grid min-h-svh place-items-center px-5 py-6">
       <div className="flex w-full max-w-md -translate-y-4 flex-col items-center">
-        <BrandLogo size="md" />
-        <h1 className="mt-4 text-center font-display text-3xl font-bold tracking-tight">Crea tu cuenta</h1>
+        <BrandLogo size="md" decorative />
+        <h1 className="mt-4 text-center font-display text-4xl font-extrabold uppercase leading-none">Crea tu cuenta</h1>
         <p className="mt-1 text-center text-base text-evo-muted">Empieza a registrar entrenos.</p>
 
       <form onSubmit={onSubmit} className="panel mt-6 w-full space-y-4 p-5">

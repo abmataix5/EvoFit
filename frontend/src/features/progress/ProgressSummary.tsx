@@ -116,7 +116,9 @@ function WeeklyChart({ weekly, goal }: { weekly: ProgressOverview['weekly']; goa
               allowDecimals={false}
               width={isWorkouts ? 28 : 44}
               tick={{ fill: 'var(--color-evo-muted)', fontSize: 11 }}
-              tickFormatter={(v: number) => (isWorkouts ? String(v) : v >= 1000 ? `${Math.round(v / 1000)}t` : String(v))}
+              tickFormatter={(v: number) =>
+                isWorkouts ? String(v) : v >= 1000 ? `${(v / 1000).toLocaleString('es-ES', { maximumFractionDigits: v < 10000 ? 1 : 0 })}t` : String(v)
+              }
             />
             <Tooltip
               cursor={{ fill: 'var(--color-evo-surface-2)', opacity: 0.6 }}
@@ -130,6 +132,7 @@ function WeeklyChart({ weekly, goal }: { weekly: ProgressOverview['weekly']; goa
                 y={goal}
                 stroke="var(--color-evo-muted)"
                 strokeDasharray="4 4"
+                ifOverflow="extendDomain"
               />
             ) : null}
             <Bar dataKey={metric} fill="var(--color-evo-chart-1)" radius={[4, 4, 0, 0]} maxBarSize={28} />
