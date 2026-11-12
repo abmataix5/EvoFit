@@ -58,7 +58,7 @@ function TopBar() {
   const unreadMessages = useQuery(unreadMessagesQuery).data ?? 0
 
   return (
-    <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg/85 backdrop-blur-xl">
+    <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg">
       {meta.root ? (
         <div className="flex h-14 items-center gap-2.5 px-4 lg:h-16 lg:px-8">
           <BrandLogo size="xs" className="lg:hidden" decorative />
