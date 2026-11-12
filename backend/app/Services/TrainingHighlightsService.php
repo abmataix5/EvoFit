@@ -21,7 +21,7 @@ class TrainingHighlightsService
      */
     public function highlights(User $user, ?CarbonImmutable $today = null): array
     {
-        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $today = ($today ?? WorkoutSession::localToday())->startOfDay();
         $days = $this->trainedDays($user);
 
         return [
@@ -40,7 +40,7 @@ class TrainingHighlightsService
      */
     public function profileStats(User $user, ?CarbonImmutable $today = null): array
     {
-        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $today = ($today ?? WorkoutSession::localToday())->startOfDay();
         $days = $this->trainedDays($user);
         $streak = $this->streak($days, $today);
 
@@ -60,7 +60,7 @@ class TrainingHighlightsService
      */
     public function muscles(User $user, int $weeks, ?CarbonImmutable $today = null): array
     {
-        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $today = ($today ?? WorkoutSession::localToday())->startOfDay();
         $currentWeek = $today->startOfWeek(CarbonImmutable::MONDAY);
         $from = $currentWeek->subWeeks($weeks - 1);
         $trainedOn = WorkoutSession::trainedOnSql();

@@ -232,6 +232,7 @@ function RestDayCard({ nextSession, routines }: { nextSession: WorkoutSession | 
           routine_id: payload.routineId,
           routine_day_id: payload.dayId,
           scheduled_date: todayKey,
+          local_date: todayKey,
         })
       ).data.session,
     onSuccess: (session) => {

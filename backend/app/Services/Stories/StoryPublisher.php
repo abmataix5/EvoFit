@@ -86,12 +86,12 @@ class StoryPublisher
     /** Día de rutina de hoy: el que se entrenó o, si no, el planificado. */
     private function todayLabel(User $user): ?string
     {
-        $today = now()->toDateString();
+        $today = WorkoutSession::localToday()->toDateString();
         $session = WorkoutSession::query()
             ->withoutGlobalScope('tenant')
             ->with(['day' => fn ($q) => $q->withoutGlobalScope('tenant')])
             ->where('user_id', $user->id)
-            ->where(fn ($q) => $q->whereDate('scheduled_date', $today)->orWhereDate('started_at', $today))
+            ->where(fn ($q) => $q->whereDate('scheduled_date', $today)->orWhereDate('trained_on', $today))
             ->whereHas('routine', fn ($q) => $q->withoutGlobalScope('tenant')->where('is_active', true))
             ->orderByRaw('started_at IS NULL')
             ->orderByDesc('started_at')

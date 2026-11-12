@@ -18,7 +18,7 @@ class ProgressInsightService
      */
     public function weeklyComparison(User $user): array
     {
-        $currentStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $currentStart = Carbon::now(WorkoutSession::DEFAULT_TIMEZONE)->startOfWeek(Carbon::MONDAY);
         $currentEnd = $currentStart->copy()->endOfWeek(Carbon::SUNDAY);
         $prevStart = $currentStart->copy()->subWeek();
         $prevEnd = $currentEnd->copy()->subWeek();

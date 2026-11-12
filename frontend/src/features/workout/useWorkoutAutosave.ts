@@ -1,6 +1,7 @@
 import { isAxiosError } from 'axios'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type WorkoutSession } from '../../lib/api'
+import { localDateKey } from '../../lib/dates'
 import { invalidateTraining, queryClient } from '../../lib/queryClient'
 import { clearWorkoutDraft, loadWorkoutDraft, saveWorkoutDraft } from '../../lib/workoutDrafts'
 import { buildDrafts, mergeLocalDrafts, sessionExercises, toPayloadSet, type SetDraft } from './model'
@@ -69,6 +70,8 @@ export function useWorkoutAutosave(sessionId: number, session: WorkoutSession | 
         sets: draftsRef.current.map(toPayloadSet),
         remove_sets: removed,
         complete,
+        // El día según este móvil: el servidor trabaja en UTC y de madrugada sería "ayer".
+        local_date: localDateKey(),
       }
 
       const run = (async () => {

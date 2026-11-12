@@ -56,7 +56,7 @@ class WorkoutSummaryBuilder
         return [
             'title' => $session->day?->name ?? $session->routine?->name ?? 'Entreno',
             'routine_name' => $session->routine?->name,
-            'trained_on' => ($session->started_at ?? $session->scheduled_date)?->toDateString(),
+            'trained_on' => ($session->trained_on ?? $session->started_at ?? $session->scheduled_date)?->toDateString(),
             // Una sesión que se quedó abierta horas no da una duración real.
             'duration_minutes' => $minutes !== null && $minutes > 0 && $minutes <= 360 ? $minutes : null,
             'sets' => $logs->count(),

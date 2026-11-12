@@ -24,7 +24,7 @@ class ProgressOverviewService
     /** @return array<string, mixed> */
     public function overview(User $user, int $weeks, ?CarbonImmutable $today = null): array
     {
-        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $today = ($today ?? WorkoutSession::localToday())->startOfDay();
         $weekStart = $today->startOfWeek(CarbonImmutable::MONDAY);
         $from = $weekStart->subWeeks($weeks - 1);
         $prevFrom = $from->subWeeks($weeks);
@@ -108,9 +108,9 @@ class ProgressOverviewService
             ->where('user_id', $user->id)
             ->where(fn ($q) => $q->whereNotNull('completed_at')->orWhereHas('setLogs', fn ($l) => $l
                 ->whereNotNull('weight_kg')->orWhereNotNull('reps')->orWhereNotNull('duration_seconds')))
-            ->get(['id', 'scheduled_date', 'started_at', 'completed_at'])
+            ->get(['id', 'scheduled_date', 'trained_on', 'started_at', 'completed_at'])
             ->map(function (WorkoutSession $s) {
-                $date = ($s->started_at ?? $s->completed_at ?? $s->scheduled_date)?->toDateString();
+                $date = $s->trainedDate()?->toDateString();
                 $minutes = $s->started_at && $s->completed_at ? (int) round($s->started_at->diffInMinutes($s->completed_at)) : null;
 
                 return [

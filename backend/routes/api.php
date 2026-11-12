@@ -33,6 +33,15 @@ Route::prefix('v1')->group(function (): void {
         ->middleware(['signed', 'throttle:20,1,unsubscribe'])
         ->name('email.unsubscribe');
 
+    // Imágenes (avatares, fotos de entrenos, historias y progreso): un feed o un perfil piden
+    // muchas de golpe, así que llevan su propio contador y no gastan el de la API.
+    Route::middleware(['auth:sanctum', 'tenant', 'throttle:600,1,media'])->group(function (): void {
+        Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar']);
+        Route::get('/posts/{post}/photo', [PostController::class, 'photo']);
+        Route::get('/stories/{story}/photo', [StoryController::class, 'photo']);
+        Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage']);
+    });
+
     Route::middleware(['auth:sanctum', 'tenant', 'throttle:120,1,api'])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -42,7 +51,6 @@ Route::prefix('v1')->group(function (): void {
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:6,1,password');
         Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->middleware('throttle:10,1,avatar');
         Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar']);
-        Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar']);
 
         // Red social: personas, amistades y avisos.
         Route::get('/people/search', [PeopleController::class, 'search']);
@@ -67,7 +75,6 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/posts/{post}', [PostController::class, 'update'])->middleware('throttle:20,1,post-write');
         Route::delete('/posts/{post}', [PostController::class, 'destroy']);
         Route::get('/posts/{post}/likes', [PostController::class, 'likers']);
-        Route::get('/posts/{post}/photo', [PostController::class, 'photo']);
         Route::post('/posts/{post}/like', [PostInteractionController::class, 'like']);
         Route::delete('/posts/{post}/like', [PostInteractionController::class, 'unlike']);
         Route::get('/posts/{post}/comments', [PostInteractionController::class, 'comments']);
@@ -82,7 +89,6 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/stories/{story}/view', [StoryController::class, 'view']);
         Route::get('/stories/{story}/viewers', [StoryController::class, 'viewers']);
         Route::post('/stories/{story}/reply', [StoryController::class, 'reply'])->middleware('throttle:60,1,message');
-        Route::get('/stories/{story}/photo', [StoryController::class, 'photo']);
 
         // Mensajes privados entre amigos.
         Route::get('/conversations', [ConversationController::class, 'index']);
@@ -124,7 +130,6 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/progress/muscles', [ProgressController::class, 'muscles']);
         Route::get('/progress/overview', [ProgressController::class, 'overview']);
         Route::delete('/progress/body-weight/{bodyWeightEntry}', [ProgressController::class, 'destroyBodyWeight']);
-        Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage']);
         Route::delete('/progress/photos/{progressPhoto}', [ProgressController::class, 'destroyPhoto']);
 
         Route::get('/exercise-history', [ExerciseHistoryController::class, 'show']);

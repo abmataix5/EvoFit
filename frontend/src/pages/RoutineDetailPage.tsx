@@ -69,6 +69,7 @@ export function RoutineDetailPage() {
         routine_id: routineId,
         routine_day_id: dayId,
         scheduled_date: today,
+        local_date: today,
       })
       return data.session
     },

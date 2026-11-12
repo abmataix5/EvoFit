@@ -61,16 +61,11 @@ class WorkoutSessionController extends Controller
                 'routine_day_id' => $day->id,
                 'scheduled_date' => $payload['scheduled_date'],
             ],
-            [
-                'routine_id' => $routine->id,
-                'started_at' => now(),
-                'is_planned' => false,
-            ]
+            ['routine_id' => $routine->id, 'is_planned' => false]
         );
 
-        if ($session->started_at === null) {
-            $session->update(['started_at' => now(), 'is_planned' => false]);
-        }
+        // "Entrenar hoy" es empezar de verdad: cuenta desde ahora, en el día local del móvil.
+        $session->markStarted($payload['local_date'] ?? null);
 
         return response()->json([
             'session' => new WorkoutSessionResource($session->load(self::DETAIL_RELATIONS)),
@@ -184,8 +179,8 @@ class WorkoutSessionController extends Controller
                     || ($set['reps'] ?? null) !== null
                     || ! empty($set['duration_seconds'])
             );
-            if ($workoutSession->started_at === null && ($hasData || $request->boolean('complete'))) {
-                $workoutSession->update(['started_at' => now(), 'is_planned' => false]);
+            if ($hasData || $request->boolean('complete')) {
+                $workoutSession->markStarted($request->validated('local_date'));
             }
 
             if ($request->boolean('complete')) {

@@ -65,7 +65,28 @@ export function WorkoutSessionPage() {
 
   // undefined = el usuario aún no ha elegido: se abre el primer ejercicio sin terminar.
   const [chosenExerciseId, setOpenExerciseId] = useState<number | null | undefined>(undefined)
-  const [restTimer, setRestTimer] = useState<RestTimerState>(null)
+  // El descanso se recuerda aunque salgas un momento (a mirar el historial, por ejemplo) y vuelvas.
+  const restKey = `evofit:rest:${sessionId}`
+  const [restTimer, setRestTimerState] = useState<RestTimerState>(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(restKey) ?? 'null') as RestTimerState
+      return saved && typeof saved.endsAt === 'number' && saved.endsAt > Date.now() ? saved : null
+    } catch {
+      return null
+    }
+  })
+  const setRestTimer = useCallback(
+    (next: RestTimerState) => {
+      setRestTimerState(next)
+      try {
+        if (next) sessionStorage.setItem(restKey, JSON.stringify(next))
+        else sessionStorage.removeItem(restKey)
+      } catch {
+        // Sin almacenamiento: el descanso funciona igual mientras no salgas de la pantalla.
+      }
+    },
+    [restKey],
+  )
   const [finished, setFinished] = useState<{ stats: ReturnType<typeof sessionStats>; minutes: number | null } | null>(null)
   const [completing, setCompleting] = useState(false)
   const [recordEvent, setRecordEvent] = useState<RecordEvent | null>(null)
@@ -169,7 +190,7 @@ export function WorkoutSessionPage() {
   const startRest = useCallback((group: ExerciseGroup) => {
     if (!group.rest || group.rest <= 0) return
     setRestTimer({ endsAt: Date.now() + group.rest * 1000, total: group.rest, label: group.name })
-  }, [])
+  }, [setRestTimer])
 
   const notesMutation = useMutation({
     mutationFn: async (notes: string) => {

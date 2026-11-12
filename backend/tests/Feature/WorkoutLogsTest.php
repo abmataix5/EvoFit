@@ -139,4 +139,44 @@ class WorkoutLogsTest extends TestCase
         $this->assertNotNull($session->fresh()->started_at);
         $this->assertFalse($session->fresh()->is_planned);
     }
+
+    public function test_training_after_midnight_counts_on_the_local_day(): void
+    {
+        $user = $this->makeUser();
+        [, $day, $exercises] = $this->makeRoutine($user);
+        $press = $exercises['Press banca'];
+
+        // 00:30 del martes en España = 23:30 del lunes en UTC.
+        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-11-16 23:30:00', 'UTC'));
+        $session = $this->makeSession($day, '2026-11-17', null, ['is_planned' => true]);
+
+        $this->actingAs($user)->putJson("/api/v1/workout-sessions/{$session->id}/logs", [
+            'local_date' => '2026-11-17',
+            'sets' => [['routine_exercise_id' => $press->id, 'set_number' => 1, 'weight_kg' => 60, 'reps' => 8]],
+        ])->assertOk();
+        $this->assertSame('2026-11-17', $session->fresh()->trained_on->toDateString());
+
+        // Sin fecha del móvil se usa la hora peninsular; una fecha disparatada se ignora.
+        $other = $this->makeSession($this->makeDay($day->routine, 2, 3, 'Pierna'), '2026-11-18', null, ['is_planned' => true]);
+        $this->putJson("/api/v1/workout-sessions/{$other->id}/logs", ['local_date' => '2031-01-01', 'complete' => true])->assertOk();
+        $this->assertSame('2026-11-17', $other->fresh()->trained_on->toDateString());
+
+        // El progreso lo cuenta en el martes, no en el lunes.
+        $this->getJson('/api/v1/progress/overview?weeks=4')
+            ->assertOk()
+            ->assertJsonPath('calendar.days.2026-11-17', fn ($value) => $value !== null);
+    }
+
+    public function test_images_do_not_spend_the_api_rate_limit(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+
+        for ($i = 0; $i < 130; $i++) {
+            $this->get("/api/v1/users/{$user->id}/avatar");
+        }
+
+        // 130 imágenes después, la API sigue respondiendo.
+        $this->getJson('/api/v1/auth/me')->assertOk();
+    }
 }

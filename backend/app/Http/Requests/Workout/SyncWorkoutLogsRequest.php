@@ -18,6 +18,8 @@ class SyncWorkoutLogsRequest extends FormRequest
     {
         return [
             'complete' => ['sometimes', 'boolean'],
+            // Día que marca el móvil de quien entrena (las horas del servidor van en UTC).
+            'local_date' => ['nullable', 'date_format:Y-m-d'],
             'sets' => ['sometimes', 'array'],
             'sets.*.routine_exercise_id' => ['required', 'integer'],
             'sets.*.set_number' => ['required', 'integer', 'min:1', 'max:20'],

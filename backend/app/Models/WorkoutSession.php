@@ -22,6 +22,7 @@ class WorkoutSession extends Model
         'routine_id',
         'routine_day_id',
         'scheduled_date',
+        'trained_on',
         'started_at',
         'completed_at',
         'notes',
@@ -33,6 +34,7 @@ class WorkoutSession extends Model
     {
         return [
             'scheduled_date' => 'date',
+            'trained_on' => 'date',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
             'is_planned' => 'boolean',
@@ -47,7 +49,8 @@ class WorkoutSession extends Model
      */
     public static function trainedAtSql(string $table = 'workout_sessions'): string
     {
-        return "COALESCE({$table}.started_at, {$table}.completed_at, {$table}.scheduled_date)";
+        // trained_on es el día en hora local de quien entrenó (las horas van en UTC).
+        return "COALESCE({$table}.trained_on, {$table}.started_at, {$table}.completed_at, {$table}.scheduled_date)";
     }
 
     /**
@@ -56,6 +59,41 @@ class WorkoutSession extends Model
     public static function trainedOnSql(string $table = 'workout_sessions'): string
     {
         return 'DATE('.static::trainedAtSql($table).')';
+    }
+
+    /** Zona horaria que se asume cuando la app no dice qué día es para quien entrena. */
+    public const DEFAULT_TIMEZONE = 'Europe/Madrid';
+
+    /**
+     * Da el entreno por empezado ahora. $localDate es el día que marca el móvil de quien entrena;
+     * solo se acepta si cuadra con la hora real (un día arriba o abajo, por las zonas horarias).
+     */
+    public function markStarted(?string $localDate = null): void
+    {
+        if ($this->started_at !== null) {
+            return;
+        }
+
+        $now = now();
+        $fallback = $now->copy()->setTimezone(self::DEFAULT_TIMEZONE)->toDateString();
+        $trainedOn = $fallback;
+        if ($localDate !== null && abs($now->copy()->startOfDay()->diffInDays($localDate, false)) <= 1) {
+            $trainedOn = $localDate;
+        }
+
+        $this->update(['started_at' => $now, 'trained_on' => $trainedOn, 'is_planned' => false]);
+    }
+
+    /** "Hoy" para quien entrena: de madrugada, en UTC todavía sería ayer. */
+    public static function localToday(): \Carbon\CarbonImmutable
+    {
+        return \Carbon\CarbonImmutable::now(self::DEFAULT_TIMEZONE)->startOfDay();
+    }
+
+    /** Día en que se entrenó (hora local) o, si aún no se ha empezado, el planificado. */
+    public function trainedDate(): ?\Illuminate\Support\Carbon
+    {
+        return $this->trained_on ?? $this->started_at ?? $this->completed_at ?? $this->scheduled_date;
     }
 
     public function user(): BelongsTo

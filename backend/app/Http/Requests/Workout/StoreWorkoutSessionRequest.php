@@ -17,6 +17,7 @@ class StoreWorkoutSessionRequest extends FormRequest
             'routine_id' => ['required', 'integer', 'exists:routines,id'],
             'routine_day_id' => ['required', 'integer', 'exists:routine_days,id'],
             'scheduled_date' => ['required', 'date'],
+            'local_date' => ['nullable', 'date_format:Y-m-d'],
         ];
     }
 }
