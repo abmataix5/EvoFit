@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\EmailPreferenceController;
 use App\Http\Controllers\Api\ExerciseHistoryController;
 use App\Http\Controllers\Api\ExerciseLibraryController;
 use App\Http\Controllers\Api\FriendController;
+use App\Http\Controllers\Api\LeagueController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\PostController;
@@ -66,6 +67,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/friend-requests', [FriendController::class, 'store'])->middleware('throttle:30,1,friend-request');
         Route::post('/friend-requests/{friendship}/accept', [FriendController::class, 'accept']);
         Route::delete('/friend-requests/{friendship}', [FriendController::class, 'dismiss']);
+
+        // Liga semanal entre amigos.
+        Route::get('/league', [LeagueController::class, 'show']);
 
         // Feed: entrenos compartidos, "me gusta" y comentarios.
         Route::get('/feed', [PostController::class, 'feed']);

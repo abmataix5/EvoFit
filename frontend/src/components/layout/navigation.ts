@@ -11,7 +11,7 @@ export type Tab = {
 }
 
 export const TABS: Tab[] = [
-  { id: 'home', to: '/', label: 'Hoy', matches: ['/'] },
+  { id: 'home', to: '/', label: 'Hoy', matches: ['/', '/league'] },
   { id: 'calendar', to: '/calendar', label: 'Agenda', matches: ['/calendar'] },
   {
     id: 'routines',
@@ -48,6 +48,7 @@ const ROUTES: Array<{ pattern: string; meta: (params: Record<string, string | un
   { pattern: '/profile/edit', meta: () => ({ title: 'Editar perfil', root: false, parent: '/profile', focus: true }) },
   { pattern: '/search', meta: () => ({ title: 'Buscar', root: false, parent: '/' }) },
   { pattern: '/notifications', meta: () => ({ title: 'Notificaciones', root: false, parent: '/' }) },
+  { pattern: '/league', meta: () => ({ title: 'Liga semanal', root: false, parent: '/' }) },
   { pattern: '/friends', meta: () => ({ title: 'Amigos', root: false, parent: '/profile' }) },
   { pattern: '/settings', meta: () => ({ title: 'Configuración', root: false, parent: '/profile' }) },
   { pattern: '/u/:id', meta: () => ({ title: 'Perfil', root: false, parent: '/search' }) },

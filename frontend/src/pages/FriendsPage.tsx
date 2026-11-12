@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Icon } from '../components/icons/Icon'
 import { Segmented } from '../components/ui/Segmented'
 import { buttonClasses } from '../components/ui/Button'
 import { PersonRow } from '../features/social/PersonRow'
@@ -16,6 +17,15 @@ export function FriendsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
+      <Link
+        to="/league"
+        className="flex min-h-14 items-center gap-3 rounded-2xl border border-evo-border/60 bg-evo-surface px-4 font-bold transition active:scale-[0.98]"
+      >
+        <Icon name="trophy" className="h-5 w-5 text-evo-accent" />
+        <span className="flex-1">Liga semanal</span>
+        <Icon name="chevron" className="h-4 w-4 text-evo-muted" />
+      </Link>
+
       <Segmented
         label="Amigos"
         value={tab}

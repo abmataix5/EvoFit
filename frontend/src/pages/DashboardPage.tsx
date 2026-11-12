@@ -21,6 +21,7 @@ import { invalidateTraining } from '../lib/queryClient'
 import { PostList } from '../features/feed/PostList'
 import { feedQuery } from '../lib/feed'
 import { StoriesBar } from '../features/stories/StoriesBar'
+import { LeagueCard } from '../features/social/LeagueCard'
 import { friendsQuery } from '../lib/social'
 
 const WEEK_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -539,6 +540,7 @@ function FriendsFeed({ hasFriends }: { hasFriends: boolean }) {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <StoriesBar />
+      <LeagueCard />
       <PostList
         query={feed}
         empty={

@@ -35,6 +35,7 @@ const InstallPage = page(() => import('./pages/InstallPage'), 'InstallPage')
 const NewRoutinePage = page(() => import('./pages/NewRoutinePage'), 'NewRoutinePage')
 const EditProfilePage = page(() => import('./pages/EditProfilePage'), 'EditProfilePage')
 const ProfilePage = page(() => import('./pages/ProfilePage'), 'ProfilePage')
+const LeaguePage = page(() => import('./pages/LeaguePage'), 'LeaguePage')
 const FriendsPage = page(() => import('./pages/FriendsPage'), 'FriendsPage')
 const PersonProfilePage = page(() => import('./pages/PersonProfilePage'), 'PersonProfilePage')
 const PostDetailPage = page(() => import('./pages/PostDetailPage'), 'PostDetailPage')
@@ -143,6 +144,7 @@ export default function App() {
                 <Route path="search" element={<SearchPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="friends" element={<FriendsPage />} />
+                <Route path="league" element={<LeaguePage />} />
                 <Route path="u/:id" element={<PersonProfilePage />} />
                 <Route path="posts/:id" element={<PostDetailPage />} />
                 <Route path="messages" element={<MessagesPage />} />

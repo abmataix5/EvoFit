@@ -33,6 +33,7 @@ export const TRAINING_KEYS = [
   ['progress-muscles'],
   ['exercise-history'],
   ['progress-overview'],
+  ['league'],
 ] as const
 
 export async function invalidateTraining() {
