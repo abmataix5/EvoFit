@@ -78,4 +78,14 @@ class AuthTest extends TestCase
             TenantContext::enforce(false);
         }
     }
+
+    public function test_register_errors_are_in_spanish(): void
+    {
+        \App\Models\User::factory()->create(['email' => 'ana@example.test']);
+
+        $this->postJson('/api/v1/auth/register', ['name' => 'Ana', 'username' => 'otra.ana', 'email' => 'ana@example.test', 'password' => 'corta', 'password_confirmation' => 'corta'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.email.0', 'Ya hay una cuenta con ese email. Prueba a iniciar sesión.')
+            ->assertJsonPath('errors.password.0', 'La contraseña necesita al menos 8 caracteres.');
+    }
 }

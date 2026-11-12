@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { BrandLogo } from '../components/BrandLogo'
-import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { PasswordInput } from '../components/ui/PasswordInput'
 import { useAuth } from '../features/auth/AuthContext'
+import { AuthLayout, FormError, SubmitButton } from '../features/auth/AuthLayout'
 
 function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -52,51 +52,55 @@ export function LoginPage() {
   }
 
   return (
-    <div className="no-x-scroll grid min-h-svh place-items-center px-5 py-6">
-      <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
-        <Link to="/" aria-label="Volver a la portada de EvoFit" className="transition active:scale-95">
-          <BrandLogo size="lg" className="evo-pop" decorative />
-        </Link>
-        <h1 className="mt-3 font-display text-5xl font-extrabold uppercase leading-none">
-          Evo<span className="text-evo-accent">Fit</span>
-        </h1>
-        <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-evo-muted">Entrena · Mejora · Evoluciona</p>
-
-        <form onSubmit={onSubmit} className="evo-enter panel mt-6 w-full space-y-4 p-5">
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            label="Contraseña"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error ? (
-            <p className="text-base font-semibold text-evo-danger" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <Button type="submit" size="lg" fullWidth disabled={submitting}>
-            {submitting ? 'Entrando…' : 'Iniciar sesión'}
-          </Button>
-        </form>
-
-        <p className="mt-5 text-center text-base text-evo-muted">
+    <AuthLayout
+      title="Hola de nuevo"
+      subtitle="Entra para seguir con tu entreno."
+      panelTitle={
+        <>
+          Tu entreno
+          <br />
+          te espera
+        </>
+      }
+      highlights={['Tu rutina y tu agenda, al día', 'Tus récords y tu progreso', 'La liga de la semana con tus amigos']}
+      footer={
+        <>
           ¿Primera vez?{' '}
           <Link to="/register" className="font-bold text-evo-accent">
-            Crear cuenta
+            Crear cuenta gratis
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4" noValidate={false}>
+        <Input
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="email"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="next"
+          placeholder="tu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <PasswordInput
+          label="Contraseña"
+          name="password"
+          autoComplete="current-password"
+          enterKeyHint="go"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <FormError message={error} />
+        <SubmitButton busy={submitting} busyLabel="Entrando…">
+          Iniciar sesión
+        </SubmitButton>
+      </form>
+    </AuthLayout>
   )
 }

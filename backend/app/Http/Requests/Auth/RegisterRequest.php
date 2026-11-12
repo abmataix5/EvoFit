@@ -26,7 +26,16 @@ class RegisterRequest extends FormRequest
 
     public function messages(): array
     {
-        return User::usernameMessages();
+        return [
+            ...User::usernameMessages(),
+            'name.required' => 'Escribe tu nombre.',
+            'email.required' => 'Escribe tu email.',
+            'email.email' => 'Escribe un email válido.',
+            'email.unique' => 'Ya hay una cuenta con ese email. Prueba a iniciar sesión.',
+            'password.required' => 'Elige una contraseña.',
+            'password.min' => 'La contraseña necesita al menos :min caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+        ];
     }
 
     protected function prepareForValidation(): void
