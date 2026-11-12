@@ -70,6 +70,7 @@ Route::prefix('v1')->group(function (): void {
 
         // Liga semanal entre amigos.
         Route::get('/league', [LeagueController::class, 'show']);
+        Route::get('/league/history', [LeagueController::class, 'history']);
 
         // Feed: entrenos compartidos, "me gusta" y comentarios.
         Route::get('/feed', [PostController::class, 'feed']);

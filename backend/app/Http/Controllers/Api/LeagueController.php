@@ -18,4 +18,15 @@ class LeagueController extends Controller
 
         return response()->json($league->standings($request->user(), (int) ($validated['weeks_ago'] ?? 0)));
     }
+
+    /** Cómo quedaste en las semanas ya cerradas y cuántas has ganado. */
+    public function history(Request $request, WeeklyLeague $league): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'weeks' => $league->history($user),
+            'wins' => $league->wins($user),
+        ]);
+    }
 }

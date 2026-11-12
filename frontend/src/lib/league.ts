@@ -26,6 +26,24 @@ export const leagueQuery = (weeksAgo = 0) =>
     staleTime: 60_000,
   })
 
+export type LeagueWeek = {
+  week_start: string
+  week_end: string
+  participants: number
+  positions: Record<LeagueMetric, number | null>
+  days: number
+  sets: number
+  volume_kg: number
+  records: number
+}
+
+/** Semanas ya cerradas (las últimas 12) y cuántas has ganado. */
+export const leagueHistoryQuery = queryOptions({
+  queryKey: ['league', 'history'],
+  queryFn: async () => (await api.get<{ weeks: LeagueWeek[]; wins: number }>('/league/history')).data,
+  staleTime: 5 * 60_000,
+})
+
 export const METRICS: ReadonlyArray<{ id: LeagueMetric; label: string }> = [
   { id: 'days', label: 'Días' },
   { id: 'volume', label: 'Kilos' },
@@ -60,7 +78,7 @@ export function rank(entries: LeagueEntry[], metric: LeagueMetric): RankedEntry[
   })
 }
 
-export function formatScore(entry: LeagueEntry, metric: LeagueMetric): string {
+export function formatScore(entry: Pick<LeagueEntry, 'days' | 'volume_kg' | 'records'>, metric: LeagueMetric): string {
   if (metric === 'volume') {
     return entry.volume_kg >= 10000
       ? `${(entry.volume_kg / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} t`

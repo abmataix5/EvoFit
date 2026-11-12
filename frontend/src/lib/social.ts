@@ -28,6 +28,8 @@ export type PersonProfile = PersonCard & {
   blocked_by_me: boolean
   stats: ProfileStats | null
   posts_count: number | null
+  /** Semanas en las que quedó primero en su liga de amigos (null si no comparte su actividad). */
+  league_wins: number | null
   height_cm: number | null
 }
 

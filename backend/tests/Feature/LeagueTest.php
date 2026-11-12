@@ -103,4 +103,45 @@ class LeagueTest extends TestCase
         // Quien tiene el perfil privado sí se ve a sí mismo, y a su amigo.
         $this->actingAs($private)->getJson('/api/v1/league')->assertOk()->assertJsonCount(2, 'entries');
     }
+
+    public function test_closed_weeks_are_stored_and_wins_show_on_the_profile(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-01 12:00:00', 'UTC'));
+        $me = $this->makeUser('Abel');
+        $ana = $this->makeUser('Ana');
+        $this->befriend($me, $ana);
+
+        // Semana del 9 al 15 de noviembre: yo dos días, Ana uno. Semana del 2 al 8: solo Ana.
+        $mine = $this->train($me, '2026-11-10', [[60, 8]]);
+        $this->train($me, '2026-11-12', [[60, 8]], $mine);
+        $hers = $this->train($ana, '2026-11-11', [[100, 10]]);
+        $this->train($ana, '2026-11-04', [[90, 10]], $hers);
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-18 12:00:00', 'UTC'));
+
+        $history = $this->actingAs($me)->getJson('/api/v1/league/history')->assertOk()
+            ->assertJsonPath('wins', 1)
+            ->assertJsonPath('weeks.0.week_start', '2026-11-09')
+            ->assertJsonPath('weeks.0.week_end', '2026-11-15')
+            ->assertJsonPath('weeks.0.participants', 2)
+            ->assertJsonPath('weeks.0.positions.days', 1)
+            ->assertJsonPath('weeks.0.positions.volume', 2)
+            ->assertJsonPath('weeks.0.days', 2)
+            ->assertJsonPath('weeks.1.week_start', '2026-11-02')
+            ->assertJsonPath('weeks.1.positions.days', null);
+        // Solo desde que existe la cuenta (1 de octubre): 7 semanas cerradas, no 12.
+        $this->assertCount(7, $history->json('weeks'));
+
+        // En el perfil: yo he ganado una semana; Ana, la del 2 al 8.
+        $this->getJson("/api/v1/people/{$me->id}")->assertOk()->assertJsonPath('data.league_wins', 1);
+        $this->getJson("/api/v1/people/{$ana->id}")->assertOk()->assertJsonPath('data.league_wins', 1);
+
+        // Lo guardado no cambia aunque después se apunte algo en esa semana.
+        $this->train($ana, '2026-11-13', [[100, 10]], $hers);
+        $this->train($ana, '2026-11-14', [[100, 10]], $hers);
+        $this->getJson('/api/v1/league/history')->assertJsonPath('wins', 1)->assertJsonPath('weeks.0.positions.days', 1);
+        $this->assertSame(7, \Illuminate\Support\Facades\DB::table('league_results')->where('user_id', $me->id)->count());
+
+        $this->getJson("/api/v1/people/{$ana->id}")->assertJsonPath('data.league_wins', 1);
+    }
 }

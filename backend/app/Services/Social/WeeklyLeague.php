@@ -64,6 +64,133 @@ class WeeklyLeague
         ];
     }
 
+    /** Modalidades: puntuación principal y desempates, de más a menos importante. */
+    private const METRICS = [
+        'days' => ['days', 'sets', 'volume_kg'],
+        'volume' => ['volume_kg', 'days', 'sets'],
+        'records' => ['records', 'days', 'sets'],
+    ];
+
+    /**
+     * Puesto de cada participante en una modalidad. Quien empata en todo comparte puesto;
+     * quien no ha puntuado no tiene puesto (null).
+     *
+     * @param  list<array<string, mixed>>  $entries
+     * @return array<int, int|null> id de usuario => puesto
+     */
+    public function positions(array $entries, string $metric): array
+    {
+        $keys = self::METRICS[$metric];
+        $score = fn (array $entry) => array_map(fn (string $key) => (int) $entry[$key], $keys);
+
+        usort($entries, fn (array $a, array $b) => $score($b) <=> $score($a));
+
+        $positions = [];
+        $position = 0;
+        $previous = null;
+        foreach ($entries as $index => $entry) {
+            $current = $score($entry);
+            if ($current !== $previous) {
+                $position = $index + 1;
+            }
+            $previous = $current;
+            $positions[$entry['user']['id']] = $current[0] > 0 ? $position : null;
+        }
+
+        return $positions;
+    }
+
+    /**
+     * Semanas ya cerradas de una persona, de la más reciente a la más antigua.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function history(User $user, ?CarbonImmutable $today = null): array
+    {
+        $this->settle($user, $today);
+
+        return DB::table('league_results')
+            ->where('user_id', $user->id)
+            ->orderByDesc('week_start')
+            ->limit(self::MAX_WEEKS_AGO)
+            ->get()
+            ->map(fn ($row) => [
+                'week_start' => substr((string) $row->week_start, 0, 10),
+                'week_end' => CarbonImmutable::parse($row->week_start)->addDays(6)->toDateString(),
+                'participants' => (int) $row->participants,
+                'positions' => [
+                    'days' => $row->position_days !== null ? (int) $row->position_days : null,
+                    'volume' => $row->position_volume !== null ? (int) $row->position_volume : null,
+                    'records' => $row->position_records !== null ? (int) $row->position_records : null,
+                ],
+                'days' => (int) $row->days,
+                'sets' => (int) $row->sets,
+                'volume_kg' => (int) $row->volume_kg,
+                'records' => (int) $row->records,
+            ])
+            ->all();
+    }
+
+    /** Semanas ganadas: primer puesto por días entrenados compitiendo al menos con un amigo. */
+    public function wins(User $user, ?CarbonImmutable $today = null): int
+    {
+        $this->settle($user, $today);
+
+        return DB::table('league_results')
+            ->where('user_id', $user->id)
+            ->where('position_days', 1)
+            ->where('participants', '>', 1)
+            ->count();
+    }
+
+    /**
+     * Cierra las semanas terminadas que aún no tienen resultado guardado (las últimas 12 y
+     * solo desde que existe la cuenta). Se hace al consultarlo: no hace falta ninguna tarea programada.
+     */
+    private function settle(User $user, ?CarbonImmutable $today = null): void
+    {
+        $today = ($today ?? WorkoutSession::localToday())->startOfDay();
+        $currentWeek = $today->startOfWeek(CarbonImmutable::MONDAY);
+        $since = $user->created_at?->toDateString();
+
+        $stored = DB::table('league_results')
+            ->where('user_id', $user->id)
+            ->where('week_start', '>=', $currentWeek->subWeeks(self::MAX_WEEKS_AGO)->toDateString())
+            ->pluck('week_start')
+            ->map(fn ($date) => substr((string) $date, 0, 10))
+            ->flip();
+
+        for ($weeksAgo = 1; $weeksAgo <= self::MAX_WEEKS_AGO; $weeksAgo++) {
+            $weekStart = $currentWeek->subWeeks($weeksAgo);
+            if ($since !== null && $weekStart->addDays(6)->toDateString() < $since) {
+                break;
+            }
+            if (isset($stored[$weekStart->toDateString()])) {
+                continue;
+            }
+
+            $entries = $this->standings($user, $weeksAgo, $today)['entries'];
+            $mine = collect($entries)->firstWhere('me', true);
+            $now = now();
+
+            // insertOrIgnore: si dos peticiones lo cierran a la vez, la segunda no falla.
+            DB::table('league_results')->insertOrIgnore([
+                'user_id' => $user->id,
+                'week_start' => $weekStart->toDateString(),
+                'participants' => count($entries),
+                'position_days' => $this->positions($entries, 'days')[$user->id],
+                'position_volume' => $this->positions($entries, 'volume')[$user->id],
+                'position_records' => $this->positions($entries, 'records')[$user->id],
+                'days' => $mine['days'],
+                'sets' => $mine['sets'],
+                'volume_kg' => $mine['volume_kg'],
+                'records' => $mine['records'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+    }
+
     /** Tú y los amigos que te dejan ver su actividad. @return \Illuminate\Support\Collection<int, User> */
     private function participants(User $viewer)
     {

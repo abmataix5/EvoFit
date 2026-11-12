@@ -7,7 +7,7 @@ import { ButtonLink } from '../components/ui/Button'
 import { Segmented } from '../components/ui/Segmented'
 import { Avatar } from '../features/profile/Avatar'
 import { formatShortDate } from '../lib/dates'
-import { formatScore, leagueQuery, METRICS, rank, readMetric, scoreDetail, storeMetric, type LeagueMetric, type RankedEntry } from '../lib/league'
+import { formatScore, leagueHistoryQuery, leagueQuery, METRICS, rank, readMetric, scoreDetail, storeMetric, type LeagueMetric, type LeagueWeek, type RankedEntry } from '../lib/league'
 import { handle } from '../lib/social'
 
 const MEDALS = ['bg-evo-warn text-[#1a120c]', 'bg-[#cfd8e3] text-[#1a120c]', 'bg-[#e0a070] text-[#1a120c]']
@@ -55,11 +55,47 @@ function Row({ entry, metric, top }: { entry: RankedEntry; metric: LeagueMetric;
   )
 }
 
+/** Una semana ya cerrada: cómo quedaste en la modalidad elegida. */
+function PastWeek({ week, metric }: { week: LeagueWeek; metric: LeagueMetric }) {
+  const position = week.positions[metric]
+  const alone = week.participants <= 1
+  const medal = !alone && position != null && position <= 3 ? MEDALS[position - 1] : null
+  const result = alone
+    ? 'Sin rivales esa semana'
+    : position == null
+      ? 'No puntuaste'
+      : position === 1
+        ? '¡Ganaste!'
+        : `${position}.º de ${week.participants}`
+
+  return (
+    <li className="flex items-center gap-3 px-3.5 py-2.5">
+      <span
+        aria-hidden
+        className={['evo-shape flex h-9 w-9 shrink-0 items-center justify-center font-display text-xl font-extrabold', medal ?? 'bg-evo-surface-2 text-evo-muted'].join(' ')}
+      >
+        {!alone && position != null ? position : '–'}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-bold">{result}</span>
+        <span className="block truncate text-xs text-evo-muted">
+          Del {formatShortDate(week.week_start)} al {formatShortDate(week.week_end)}
+        </span>
+      </span>
+      <span className="shrink-0 font-display text-xl font-bold tabular-nums text-evo-muted">{formatScore(week, metric)}</span>
+    </li>
+  )
+}
+
 /** Liga semanal: tú y tus amigos, ordenados por días entrenados, kilos movidos o récords. */
 export function LeaguePage() {
   const [metric, setMetric] = useState<LeagueMetric>(readMetric)
   const [weeksAgo, setWeeksAgo] = useState<0 | 1>(0)
   const league = useQuery(leagueQuery(weeksAgo))
+  const history = useQuery(leagueHistoryQuery)
+  // Semanas con rivales: una semana sin amigos no cuenta ni como ganada ni como perdida.
+  const played = (history.data?.weeks ?? []).filter((item) => item.participants > 1)
+  const won = played.filter((item) => item.positions[metric] === 1).length
 
   function chooseMetric(next: LeagueMetric) {
     setMetric(next)
@@ -149,6 +185,23 @@ export function LeaguePage() {
           </p>
         </>
       )}
+
+      {played.length > 0 ? (
+        <section aria-label="Semanas anteriores" className="space-y-2">
+          <div className="flex min-h-9 items-center justify-between gap-3 px-1">
+            <h2 className="evo-kicker">Semanas anteriores</h2>
+            <p className="flex items-center gap-1 text-sm font-bold text-evo-accent">
+              <Icon name="trophy" className="h-4 w-4" />
+              {won} {won === 1 ? 'ganada' : 'ganadas'} de {played.length}
+            </p>
+          </div>
+          <ul className="divide-y divide-evo-border/40 overflow-hidden rounded-3xl border border-evo-border/60 bg-evo-surface">
+            {played.map((item) => (
+              <PastWeek key={item.week_start} week={item} metric={metric} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }

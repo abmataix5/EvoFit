@@ -15,6 +15,7 @@ class ProfilePresenter
     public function __construct(
         private readonly SocialGraph $graph,
         private readonly TrainingHighlightsService $highlights,
+        private readonly WeeklyLeague $league,
     ) {}
 
     /**
@@ -61,6 +62,8 @@ class ProfilePresenter
             'can_view_activity' => $canView,
             'blocked_by_me' => ! $isSelf && $this->graph->hasBlocked($viewer, $user),
             'stats' => $canView ? $this->highlights->profileStats($user) : null,
+            // Semanas en las que quedó primero en su liga de amigos.
+            'league_wins' => $canView ? $this->league->wins($user) : null,
             'posts_count' => $canView ? Post::query()->where('user_id', $user->id)->count() : null,
             'height_cm' => $canView ? $user->height_cm : null,
         ];

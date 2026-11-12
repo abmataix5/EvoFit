@@ -83,6 +83,8 @@ export function ProfileView({ person, isSelf, actions, onMenu, storyGroup, onOpe
   const facts = [person.location ? `📍 ${person.location}` : null, person.gym_name ? `🏟️ ${person.gym_name}` : null].filter(Boolean)
   const isPrivate = person.profile_visibility === 'private'
 
+  const wins = canView ? (person.league_wins ?? 0) : 0
+
   const about = [
     goal ? { icon: goal.emoji, label: 'Objetivo', value: goal.label } : null,
     level ? { icon: '📊', label: 'Nivel', value: level } : null,
@@ -92,6 +94,7 @@ export function ProfileView({ person, isSelf, actions, onMenu, storyGroup, onOpe
     person.gym_name ? { icon: '🏟️', label: 'Gimnasio', value: person.gym_name } : null,
     stats ? { icon: '📅', label: 'Este mes', value: `${stats.month_workouts} ${stats.month_workouts === 1 ? 'entreno' : 'entrenos'}` } : null,
     stats && stats.best_streak_weeks > 0 ? { icon: '🏅', label: 'Mejor racha', value: `${stats.best_streak_weeks} semanas` } : null,
+    wins > 0 ? { icon: '🏆', label: 'Ligas semanales ganadas', value: String(wins) } : null,
     person.member_since ? { icon: '✨', label: 'En EvoFit desde', value: formatMonthYear(person.member_since) ?? '' } : null,
   ].filter(Boolean) as Array<{ icon: string; label: string; value: string }>
 
@@ -139,6 +142,12 @@ export function ProfileView({ person, isSelf, actions, onMenu, storyGroup, onOpe
           {goal ? (
             <p className="mt-2 text-sm font-bold text-evo-accent">
               <span aria-hidden>{goal.emoji}</span> Objetivo: {goal.label}
+            </p>
+          ) : null}
+          {wins > 0 ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-evo-warn px-3 py-1 text-sm font-extrabold text-[#1a120c]">
+              <Icon name="trophy" className="h-4 w-4" />
+              {wins} {wins === 1 ? 'liga semanal ganada' : 'ligas semanales ganadas'}
             </p>
           ) : null}
           {person.bio ? <p className="mt-2 whitespace-pre-line break-words text-[0.95rem] leading-snug">{person.bio}</p> : null}
