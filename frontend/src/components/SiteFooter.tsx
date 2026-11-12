@@ -2,46 +2,51 @@ import { Link } from 'react-router-dom'
 import { LEGAL, LEGAL_LINKS } from '../lib/legal'
 import { BrandLogo } from './BrandLogo'
 
-/** Pie de las páginas públicas: marca, enlaces legales y copyright. */
+const ACCOUNT_LINKS = [
+  { to: '/login', label: 'Iniciar sesión' },
+  { to: '/register', label: 'Crear cuenta' },
+  { to: '/instalar', label: 'Instalar en el móvil' },
+] as const
+
+function Column({ title, links }: { title: string; links: ReadonlyArray<{ to: string; label: string }> }) {
+  return (
+    <nav aria-label={title}>
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-evo-text">{title}</p>
+      <ul className="mt-2">
+        {links.map((link) => (
+          <li key={link.to}>
+            <Link to={link.to} className="inline-flex min-h-10 items-center text-sm font-semibold text-evo-muted transition hover:text-evo-accent">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+/** Pie de las páginas públicas: marca y copyright a un lado, enlaces en columnas al otro. */
 export function SiteFooter({ showAccountLinks = true }: { showAccountLinks?: boolean }) {
   return (
-    <footer className="border-t border-evo-border/30">
-      <div className="safe-bottom mx-auto max-w-6xl px-4 pt-8 lg:px-8">
-        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
-          <p className="flex items-center gap-2.5">
-            <BrandLogo size="xs" decorative />
-            <span className="font-display text-xl font-extrabold uppercase">
+    <footer className="bg-evo-surface/50">
+      <div className="safe-bottom mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-4 pt-10 sm:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
+        <div className="col-span-2 sm:col-span-1">
+          <Link to="/" className="flex w-fit items-center gap-2.5" aria-label="EvoFit, ir a la portada">
+            <BrandLogo size="sm" decorative />
+            <span className="font-display text-2xl font-extrabold uppercase">
               Evo<span className="text-evo-accent">Fit</span>
             </span>
-            <span className="text-sm text-evo-muted">Entrena · Mejora · Evoluciona</span>
+          </Link>
+          <p className="mt-3 max-w-xs text-sm leading-snug text-evo-muted">
+            La app para apuntar tus entrenos, ver tu progreso y picarte con tus amigos.
           </p>
-          {showAccountLinks ? (
-            <nav aria-label="Cuenta" className="flex flex-wrap justify-center gap-x-5 text-sm font-bold text-evo-muted">
-              <Link to="/login" className="flex min-h-11 items-center hover:text-evo-text">
-                Iniciar sesión
-              </Link>
-              <Link to="/register" className="flex min-h-11 items-center hover:text-evo-text">
-                Crear cuenta
-              </Link>
-              <Link to="/instalar" className="flex min-h-11 items-center hover:text-evo-text">
-                Instalar en el móvil
-              </Link>
-            </nav>
-          ) : null}
+          <p className="mt-4 text-sm text-evo-muted">
+            © {new Date().getFullYear()} EvoFit · {LEGAL.owner}
+          </p>
         </div>
 
-        <div className="mt-4 flex flex-col items-center gap-2 border-t border-evo-border/30 pt-4 text-center text-sm text-evo-muted sm:flex-row sm:justify-between sm:text-left">
-          <p>
-            © {new Date().getFullYear()} EvoFit · {LEGAL.owner}. Todos los derechos reservados.
-          </p>
-          <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-4">
-            {LEGAL_LINKS.map((link) => (
-              <Link key={link.to} to={link.to} className="flex min-h-11 items-center font-semibold hover:text-evo-text">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        {showAccountLinks ? <Column title="Cuenta" links={ACCOUNT_LINKS} /> : <span className="hidden sm:block" aria-hidden />}
+        <Column title="Legal" links={LEGAL_LINKS} />
       </div>
     </footer>
   )
