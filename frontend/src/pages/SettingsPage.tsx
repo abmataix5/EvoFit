@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useUiFeedback } from '../components/feedback/UiFeedback'
 import { Icon } from '../components/icons/Icon'
@@ -8,7 +8,10 @@ import { useAuth } from '../features/auth/AuthContext'
 import { openGuide } from '../features/guide/guideState'
 import { PasswordForm } from '../features/profile/PasswordForm'
 import { VISIBILITY_OPTIONS } from '../features/profile/profileOptions'
-import { api, apiErrorMessage, type User } from '../lib/api'
+import { api, apiErrorMessage, validationErrors, type User } from '../lib/api'
+import { LEGAL_LINKS } from '../lib/legal'
+import { PasswordInput } from '../components/ui/PasswordInput'
+import { Sheet } from '../components/ui/Sheet'
 import { queryClient } from '../lib/queryClient'
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
@@ -71,9 +74,13 @@ function RowToggle({
 
 /** Configuración y actividad: todo lo que no es el perfil en sí. */
 export function SettingsPage() {
-  const { user, logout, setCurrentUser } = useAuth()
+  const { user, logout, deleteAccount, setCurrentUser } = useAuth()
   const { confirm, notify } = useUiFeedback()
   const [passwordOpen, setPasswordOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Los ajustes se guardan al momento (sin botón de guardar).
   const update = useMutation({
@@ -98,6 +105,21 @@ export function SettingsPage() {
       danger: true,
     })
     if (ok) await logout()
+  }
+
+  async function handleDelete(event: FormEvent) {
+    event.preventDefault()
+    if (deleting || !deletePassword) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteAccount(deletePassword)
+      // A la portada, con la app recargada desde cero: no queda nada de la cuenta en memoria.
+      window.location.replace('/')
+    } catch (error) {
+      setDeleteError(validationErrors(error).current_password ?? apiErrorMessage(error, 'No se ha podido eliminar la cuenta. Revisa la conexión.'))
+      setDeleting(false)
+    }
   }
 
   return (
@@ -222,6 +244,12 @@ export function SettingsPage() {
         </button>
       </Group>
 
+      <Group title="Legal">
+        {LEGAL_LINKS.map((link) => (
+          <RowLink key={link.to} to={link.to} icon="📄" title={link.label} />
+        ))}
+      </Group>
+
       <button
         type="button"
         onClick={() => void handleLogout()}
@@ -230,6 +258,58 @@ export function SettingsPage() {
         <Icon name="logout" className="h-5 w-5" />
         Cerrar sesión
       </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setDeletePassword('')
+          setDeleteError(null)
+          setDeleteOpen(true)
+        }}
+        className="mx-auto block min-h-11 px-4 text-sm font-bold text-evo-muted underline transition hover:text-evo-danger"
+      >
+        Eliminar mi cuenta
+      </button>
+
+      {deleteOpen ? (
+        <Sheet title="Eliminar mi cuenta" onClose={() => (deleting ? undefined : setDeleteOpen(false))}>
+          <form onSubmit={handleDelete} className="space-y-4">
+            <p className="rounded-2xl border-2 border-evo-danger/50 bg-evo-danger/10 px-4 py-3 text-base font-semibold text-evo-danger">
+              Esto no se puede deshacer.
+            </p>
+            <p className="leading-snug text-evo-muted">
+              Se borrarán para siempre tu perfil, tus rutinas, todos tus entrenos y tu progreso, tus fotos, tus publicaciones, comentarios, historias,
+              mensajes y amistades.
+            </p>
+            <PasswordInput
+              label="Escribe tu contraseña para confirmar"
+              name="current_password"
+              autoComplete="current-password"
+              value={deletePassword}
+              error={deleteError ?? undefined}
+              onChange={(e) => {
+                setDeletePassword(e.target.value)
+                setDeleteError(null)
+              }}
+            />
+            <button
+              type="submit"
+              disabled={deleting || !deletePassword}
+              className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-[#b3243b] text-lg font-extrabold text-white transition active:scale-[0.98] disabled:opacity-50"
+            >
+              {deleting ? 'Eliminando…' : 'Eliminar mi cuenta para siempre'}
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+              className="min-h-12 w-full rounded-2xl text-base font-bold transition active:scale-[0.98]"
+            >
+              Cancelar
+            </button>
+          </form>
+        </Sheet>
+      ) : null}
     </div>
   )
 }

@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
 
         Route::patch('/profile', [ProfileController::class, 'update']);
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:6,1,password');
         Route::get('/profile/stats', [ProfileController::class, 'stats']);
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:6,1,password');
         Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->middleware('throttle:10,1,avatar');

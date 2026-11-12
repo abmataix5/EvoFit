@@ -27,6 +27,7 @@ const page = <K extends string>(load: () => Promise<Record<K, React.ComponentTyp
     }
   })
 
+const LegalPage = page(() => import('./pages/LegalPage'), 'LegalPage')
 const LandingPage = page(() => import('./pages/LandingPage'), 'LandingPage')
 const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
 const DashboardPage = page(() => import('./pages/DashboardPage'), 'DashboardPage')
@@ -125,6 +126,10 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/instalar" element={<InstallPage />} />
+              <Route path="/privacidad" element={<LegalPage />} />
+              <Route path="/condiciones" element={<LegalPage />} />
+              <Route path="/cookies" element={<LegalPage />} />
+              <Route path="/aviso-legal" element={<LegalPage />} />
               <Route
                 element={
                   <ProtectedRoute>

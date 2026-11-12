@@ -21,6 +21,8 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'workspace_name' => ['nullable', 'string', 'max:160'],
+            // Tener 16 años o más y aceptar las condiciones y la política de privacidad.
+            'terms' => ['accepted'],
         ];
     }
 
@@ -35,6 +37,7 @@ class RegisterRequest extends FormRequest
             'password.required' => 'Elige una contraseña.',
             'password.min' => 'La contraseña necesita al menos :min caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
+            'terms.accepted' => 'Para crear la cuenta tienes que tener 16 años o más y aceptar las condiciones.',
         ];
     }
 

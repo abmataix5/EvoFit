@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { BrandLogo } from '../components/BrandLogo'
 import { Icon, type IconName } from '../components/icons/Icon'
+import { SiteFooter } from '../components/SiteFooter'
 
 /** Los bloques con data-reveal entran al llegar a ellos con el scroll (una sola vez). */
 function useReveal() {
@@ -461,28 +462,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-evo-border/30">
-        <div className="safe-bottom mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pt-8 text-center sm:flex-row sm:justify-between sm:text-left lg:px-8">
-          <p className="flex items-center gap-2.5">
-            <BrandLogo size="xs" decorative />
-            <span className="font-display text-xl font-extrabold uppercase">
-              Evo<span className="text-evo-accent">Fit</span>
-            </span>
-            <span className="text-sm text-evo-muted">Entrena · Mejora · Evoluciona</span>
-          </p>
-          <nav aria-label="Pie" className="flex flex-wrap justify-center gap-x-5 text-sm font-bold text-evo-muted">
-            <Link to="/login" className="flex min-h-11 items-center hover:text-evo-text">
-              Iniciar sesión
-            </Link>
-            <Link to="/register" className="flex min-h-11 items-center hover:text-evo-text">
-              Crear cuenta
-            </Link>
-            <Link to="/instalar" className="flex min-h-11 items-center hover:text-evo-text">
-              Instalar en el móvil
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

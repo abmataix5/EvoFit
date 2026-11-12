@@ -27,7 +27,7 @@ class AuthController extends Controller
                 'plan' => 'free',
             ]);
 
-            return User::query()->create([
+            $user = User::query()->create([
                 'tenant_id' => $tenant->id,
                 'name' => $payload['name'],
                 'username' => $payload['username'],
@@ -35,6 +35,9 @@ class AuthController extends Controller
                 'password' => $payload['password'],
                 'role' => 'owner',
             ]);
+            $user->forceFill(['terms_accepted_at' => now()])->save();
+
+            return $user;
         });
 
         Auth::login($user);

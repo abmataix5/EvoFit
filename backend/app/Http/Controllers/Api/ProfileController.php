@@ -8,6 +8,7 @@ use App\Http\Requests\Profile\UpdatePasswordRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\AccountEraser;
 use App\Services\AvatarProcessor;
 use App\Services\TrainingHighlightsService;
 use Illuminate\Http\JsonResponse;
@@ -43,6 +44,25 @@ class ProfileController extends Controller
         $user = $avatars->remove($request->user());
 
         return new UserResource($user->load('tenant'));
+    }
+
+    /** Elimina la cuenta y todos sus datos. Pide la contraseña para que no pase por descuido. */
+    public function destroy(Request $request, AccountEraser $eraser): JsonResponse
+    {
+        $request->validate(
+            ['current_password' => ['required', 'string', 'current_password:web']],
+            ['current_password.required' => 'Escribe tu contraseña.', 'current_password.current_password' => 'La contraseña no es correcta.'],
+        );
+
+        $user = $request->user();
+        Auth::guard('web')->logout();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+        $eraser->erase($user);
+
+        return response()->json(['message' => 'Cuenta eliminada.']);
     }
 
     public function updatePassword(UpdatePasswordRequest $request): JsonResponse

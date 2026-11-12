@@ -23,8 +23,11 @@ type AuthContextValue = {
     password: string
     password_confirmation: string
     workspace_name?: string
+    terms: boolean
   }) => Promise<void>
   logout: () => Promise<void>
+  /** Elimina la cuenta y todos sus datos (pide la contraseña). Lanza el error del servidor si falla. */
+  deleteAccount: (password: string) => Promise<void>
   refreshUser: () => Promise<void>
   /** Sustituye el usuario tras editar el perfil (la API devuelve el usuario actualizado). */
   setCurrentUser: (user: User) => void
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string
       password_confirmation: string
       workspace_name?: string
+      terms: boolean
     }) => {
       await ensureCsrfCookie()
       const { data } = await api.post<{ user: User }>('/auth/register', payload)
@@ -118,6 +122,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setUser])
 
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await api.delete('/profile', { data: { current_password: password } })
+      // Nada de la cuenta borrada debe quedar en este dispositivo.
+      queryClient.clear()
+      clearAllWorkoutDrafts()
+      setUser(null)
+    },
+    [setUser],
+  )
+
   useEffect(() => {
     function onUnauthorized() {
       queryClient.clear()
@@ -128,8 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setUser])
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser, setCurrentUser: setUser }),
-    [user, loading, login, register, logout, refreshUser, setUser],
+    () => ({ user, loading, login, register, logout, deleteAccount, refreshUser, setCurrentUser: setUser }),
+    [user, loading, login, register, logout, deleteAccount, refreshUser, setUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

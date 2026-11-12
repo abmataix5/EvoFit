@@ -7,11 +7,12 @@ import { PasswordInput } from '../components/ui/PasswordInput'
 import { useAuth } from '../features/auth/AuthContext'
 import { AuthLayout, FormError, SubmitButton } from '../features/auth/AuthLayout'
 import { validationErrors } from '../lib/api'
+import { LEGAL } from '../lib/legal'
 
 const MIN_PASSWORD = 8
 const USERNAME_FORMAT = /^[a-z0-9](?:[a-z0-9._]*[a-z0-9])?$/
 
-type Field = 'name' | 'username' | 'email' | 'password'
+type Field = 'name' | 'username' | 'email' | 'password' | 'terms'
 
 function generalError(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -33,13 +34,14 @@ function suggestUsername(name: string): string {
 }
 
 /** Lo que se puede comprobar sin preguntar al servidor; el resto (alias o email ya usados) lo dice él. */
-function checkFields(values: Record<Field, string>): Partial<Record<Field, string>> {
+function checkFields(values: Record<Exclude<Field, 'terms'>, string> & { terms: boolean }): Partial<Record<Field, string>> {
   const errors: Partial<Record<Field, string>> = {}
   if (values.name.trim().length < 2) errors.name = 'Escribe tu nombre.'
   if (values.username.length < 3) errors.username = 'El nombre de usuario necesita al menos 3 caracteres.'
   else if (!USERNAME_FORMAT.test(values.username)) errors.username = 'Solo letras, números, puntos y guiones bajos, y que empiece y acabe en letra o número.'
   if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) errors.email = 'Escribe un email válido.'
   if (values.password.length < MIN_PASSWORD) errors.password = `La contraseña necesita al menos ${MIN_PASSWORD} caracteres.`
+  if (!values.terms) errors.terms = `Marca la casilla: hay que tener ${LEGAL.minAge} años o más y aceptar las condiciones.`
   return errors
 }
 
@@ -52,6 +54,7 @@ export function RegisterPage() {
   const [usernameTouched, setUsernameTouched] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [terms, setTerms] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({})
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -70,9 +73,9 @@ export function RegisterPage() {
     if (submitting) return
     setError(null)
 
-    const found = checkFields({ name, username, email, password })
+    const found = checkFields({ name, username, email, password, terms })
     setErrors(found)
-    const first = (['name', 'username', 'email', 'password'] as const).find((field) => found[field])
+    const first = (['name', 'username', 'email', 'password', 'terms'] as const).find((field) => found[field])
     if (first) {
       // El foco va al primer campo con problema: se ve y se corrige sin buscar.
       document.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus()
@@ -82,13 +85,13 @@ export function RegisterPage() {
     setSubmitting(true)
     try {
       // Hay un botón para ver la contraseña, así que no se pide escribirla dos veces.
-      await register({ name: name.trim(), username, email: email.trim(), password, password_confirmation: password })
+      await register({ name: name.trim(), username, email: email.trim(), password, password_confirmation: password, terms })
       navigate('/')
     } catch (err) {
       const fromServer = validationErrors(err)
       if (Object.keys(fromServer).length > 0) {
-        setErrors({ name: fromServer.name, username: fromServer.username, email: fromServer.email, password: fromServer.password })
-        const known = ['name', 'username', 'email', 'password'].some((field) => fromServer[field])
+        setErrors({ name: fromServer.name, username: fromServer.username, email: fromServer.email, password: fromServer.password, terms: fromServer.terms })
+        const known = ['name', 'username', 'email', 'password', 'terms'].some((field) => fromServer[field])
         if (!known) setError(Object.values(fromServer)[0] ?? generalError(err))
       } else {
         setError(generalError(err))
@@ -201,6 +204,43 @@ export function RegisterPage() {
             Al menos {MIN_PASSWORD} caracteres
             <span className="sr-only">{longEnough ? ' (cumplido)' : ' (pendiente)'}</span>
           </p>
+        </div>
+        <div className="space-y-1.5">
+          <label
+            className={[
+              'flex cursor-pointer items-start gap-3 rounded-2xl border-2 px-4 py-3 transition-colors',
+              errors.terms ? 'border-evo-danger' : terms ? 'border-evo-accent bg-evo-accent/10' : 'border-evo-border bg-evo-surface-2',
+            ].join(' ')}
+          >
+            <input
+              type="checkbox"
+              name="terms"
+              checked={terms}
+              aria-invalid={errors.terms ? true : undefined}
+              aria-describedby={errors.terms ? 'terms-error' : undefined}
+              onChange={(e) => {
+                setTerms(e.target.checked)
+                clear('terms')
+              }}
+              className="mt-0.5 h-6 w-6 shrink-0 accent-evo-accent"
+            />
+            <span className="text-sm leading-snug">
+              Tengo {LEGAL.minAge} años o más y acepto las{' '}
+              <Link to="/condiciones" target="_blank" rel="noreferrer" className="font-bold text-evo-accent underline">
+                condiciones de uso
+              </Link>{' '}
+              y la{' '}
+              <Link to="/privacidad" target="_blank" rel="noreferrer" className="font-bold text-evo-accent underline">
+                política de privacidad
+              </Link>
+              .
+            </span>
+          </label>
+          {errors.terms ? (
+            <p id="terms-error" className="text-xs font-semibold text-evo-danger" role="alert">
+              {errors.terms}
+            </p>
+          ) : null}
         </div>
         <FormError message={error} />
         <SubmitButton busy={submitting} busyLabel="Creando tu cuenta…">

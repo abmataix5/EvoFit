@@ -23,7 +23,15 @@ class AuthTest extends TestCase
             'email' => 'abel@example.com',
             'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
+            'terms' => true,
         ])->assertCreated()->assertJsonPath('user.email', 'abel@example.com');
+        $this->assertNotNull(\App\Models\User::query()->where('email', 'abel@example.com')->value('terms_accepted_at'));
+
+        // Sin aceptar las condiciones no se crea la cuenta.
+        $this->withHeaders($this->spa)->postJson('/api/v1/auth/register', [
+            'name' => 'Otra', 'username' => 'otra', 'email' => 'otra@example.com',
+            'password' => 'secret-password', 'password_confirmation' => 'secret-password',
+        ])->assertStatus(422)->assertJsonValidationErrors('terms');
 
         // (201 en test porque el guard reutiliza el modelo recién creado.)
         $this->withHeaders($this->spa)->getJson('/api/v1/auth/me')

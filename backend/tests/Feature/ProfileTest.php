@@ -226,4 +226,33 @@ class ProfileTest extends TestCase
                 'password_confirmation' => 'secret-password',
             ])->assertJsonValidationErrors('username');
     }
+
+    public function test_deleting_the_account_removes_everything_and_needs_the_password(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $user = $this->makeUser('Abel');
+        $friend = $this->makeUser('Ana');
+        [, $day, $exercises] = $this->makeRoutine($user);
+        $session = $this->makeSession($day, now()->toDateString(), now()->toDateTimeString());
+        $this->logSet($session, $exercises['Press banca'], 1, 60, 8);
+        \App\Models\Friendship::query()->create(['requester_id' => $user->id, 'addressee_id' => $friend->id, 'status' => 'accepted', 'accepted_at' => now()]);
+        $post = \App\Models\Post::query()->create(['user_id' => $user->id, 'workout_session_id' => $session->id, 'summary' => ['title' => 'x']]);
+        \App\Models\PostComment::query()->create(['post_id' => $post->id, 'user_id' => $friend->id, 'body' => 'Bien']);
+        $friend->notify(new \App\Notifications\FriendRequestAccepted($user));
+
+        $this->actingAs($user)->deleteJson('/api/v1/profile', ['current_password' => 'no-es'])
+            ->assertStatus(422)->assertJsonPath('errors.current_password.0', 'La contraseña no es correcta.');
+        $this->assertNotNull($user->fresh());
+
+        $this->deleteJson('/api/v1/profile', ['current_password' => 'password'])->assertOk();
+
+        $this->assertNull(\App\Models\User::query()->find($user->id));
+        $this->assertNull(\App\Models\Tenant::query()->find($user->tenant_id));
+        foreach (['routines', 'workout_sessions', 'exercise_set_logs', 'posts', 'post_comments', 'friendships'] as $table) {
+            $this->assertSame(0, \Illuminate\Support\Facades\DB::table($table)->count(), $table);
+        }
+        // Lo de su amiga sigue ahí, sin avisos que apunten a la cuenta borrada.
+        $this->assertNotNull($friend->fresh());
+        $this->assertSame(0, $friend->notifications()->count());
+    }
 }
