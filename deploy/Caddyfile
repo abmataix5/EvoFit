@@ -16,6 +16,11 @@
 {$SITE_ADDRESS} {
 	encode gzip zstd
 
+	# Si SITE_ADDRESS trae más direcciones (www, la IP antigua), todas llevan a la principal.
+	# Con una sola dirección no hace nada.
+	@other not host {$DOMAIN}
+	redir @other https://{$DOMAIN}{uri} permanent
+
 	request_body {
 		max_size 20MB
 	}
