@@ -15,6 +15,7 @@ use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Sanctum\PersonalAccessToken;
 use Throwable;
 use Illuminate\Support\Str;
 
@@ -44,8 +45,7 @@ class AuthController extends Controller
             return $user;
         });
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $token = $this->startSession($request, $user);
 
         // La bienvenida sale después de responder: si el correo falla, la cuenta ya está creada.
         defer(function () use ($user) {
@@ -58,12 +58,26 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => new UserResource($user->load('tenant')),
+            ...($token !== null ? ['token' => $token] : []),
         ], 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->validated();
+        $credentials = $request->safe()->only(['email', 'password']);
+
+        // Las apps del móvil no usan cookies: se comprueba la contraseña y se les da un token.
+        if ($this->isApp($request)) {
+            if (! Auth::validate($credentials)) {
+                return response()->json(['message' => 'Credenciales incorrectas.'], 422);
+            }
+            $user = User::query()->where('email', $credentials['email'])->firstOrFail();
+
+            return response()->json([
+                'user' => new UserResource($user->load('tenant')),
+                'token' => $this->startSession($request, $user),
+            ]);
+        }
 
         if (! Auth::attempt($credentials, remember: true)) {
             return response()->json([
@@ -80,11 +94,43 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        // En las apps, cerrar sesión es anular el token de ese móvil; en la web, cerrar la sesión de cookies.
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+
+            return response()->json(['message' => 'Sesión cerrada.']);
+        }
+
         Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json(['message' => 'Sesión cerrada.']);
+    }
+
+    /** Las apps de iOS y Android se identifican mandando el nombre del dispositivo. */
+    private function isApp(Request $request): bool
+    {
+        return $request->filled('device_name');
+    }
+
+    /**
+     * Abre la sesión tras registrarse o entrar: cookie en la web, token en las apps.
+     * Devuelve el token (solo para apps) o null.
+     */
+    private function startSession(Request $request, User $user): ?string
+    {
+        if ($this->isApp($request)) {
+            return $user->createToken(Str::limit((string) $request->input('device_name'), 100, ''))->plainTextToken;
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return null;
     }
 
     public function me(Request $request): UserResource

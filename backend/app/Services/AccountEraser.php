@@ -31,6 +31,8 @@ class AccountEraser
                     ->orWhere('data->actor_id', $user->id))
                 ->delete();
             DB::table('sessions')->where('user_id', $user->id)->delete();
+            // Sesiones de las apps del móvil.
+            $user->tokens()->delete();
 
             $tenantId = $user->tenant_id;
             $shared = $tenantId !== null && User::query()->where('tenant_id', $tenantId)->where('id', '!=', $user->id)->exists();

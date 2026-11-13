@@ -66,6 +66,8 @@ class PasswordResetController extends Controller
         $status = Password::broker()->reset($data, function (User $user, string $password): void {
             // Con la contraseña nueva, las sesiones "recordadas" en otros dispositivos dejan de valer.
             $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
+            // Y las apps del móvil tienen que volver a entrar.
+            $user->tokens()->delete();
         });
 
         if ($status !== Password::PASSWORD_RESET) {

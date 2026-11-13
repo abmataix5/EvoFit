@@ -16,6 +16,8 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            // Solo lo mandan las apps de iOS y Android: reciben un token en vez de una cookie.
+            'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

@@ -23,6 +23,8 @@ class RegisterRequest extends FormRequest
             'workspace_name' => ['nullable', 'string', 'max:160'],
             // Tener 16 años o más y aceptar las condiciones y la política de privacidad.
             'terms' => ['accepted'],
+            // Solo lo mandan las apps de iOS y Android: reciben un token en vez de una cookie.
+            'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 

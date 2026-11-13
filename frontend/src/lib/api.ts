@@ -1,10 +1,13 @@
 import axios from 'axios'
+import { appToken } from './appSession'
+import { IS_APP, SERVER_ORIGIN } from './platform'
 import type { TimeDirection, TrackingMode } from './tracking'
 
-// Same-origin: el proxy de Vite reenvía a Laravel y evita fallos CSRF entre puertos.
+// Web: mismo dominio y cookies (el proxy de Vite reenvía a Laravel y evita fallos CSRF entre puertos).
+// Apps de iOS y Android: dirección completa del servidor y token en vez de cookies.
 export const api = axios.create({
-  baseURL: '/api/v1',
-  withCredentials: true,
+  baseURL: `${SERVER_ORIGIN}/api/v1`,
+  withCredentials: !IS_APP,
   headers: {
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
@@ -15,6 +18,14 @@ export const api = axios.create({
 
 /** Evento global cuando el servidor dice que la sesión ya no vale (caducada o cerrada en otro sitio). */
 export const UNAUTHORIZED_EVENT = 'evofit:unauthorized'
+
+if (IS_APP) {
+  api.interceptors.request.use((config) => {
+    const token = appToken()
+    if (token) config.headers.set('Authorization', `Bearer ${token}`)
+    return config
+  })
+}
 
 api.interceptors.response.use(undefined, (error) => {
   const status = error?.response?.status
@@ -43,6 +54,8 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
 }
 
 export async function ensureCsrfCookie(): Promise<void> {
+  // Las apps no usan cookies, así que tampoco necesitan la de protección de formularios.
+  if (IS_APP) return
   await axios.get('/sanctum/csrf-cookie', {
     withCredentials: true,
     headers: {

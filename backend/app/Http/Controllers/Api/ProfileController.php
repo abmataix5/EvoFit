@@ -14,6 +14,7 @@ use App\Services\TrainingHighlightsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -50,7 +51,7 @@ class ProfileController extends Controller
     public function destroy(Request $request, AccountEraser $eraser): JsonResponse
     {
         $request->validate(
-            ['current_password' => ['required', 'string', 'current_password:web']],
+            ['current_password' => ['required', 'string', 'current_password:sanctum']],
             ['current_password.required' => 'Escribe tu contraseña.', 'current_password.current_password' => 'La contraseña no es correcta.'],
         );
 
@@ -72,6 +73,11 @@ class ProfileController extends Controller
 
         // Cierra la sesión en el resto de dispositivos; esta sigue abierta.
         Auth::guard('web')->logoutOtherDevices($request->validated('password'));
+        // También en las apps del móvil, menos en la que ha hecho el cambio.
+        $current = $user->currentAccessToken();
+        $user->tokens()
+            ->when($current instanceof PersonalAccessToken, fn ($query) => $query->whereKeyNot($current->getKey()))
+            ->delete();
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }

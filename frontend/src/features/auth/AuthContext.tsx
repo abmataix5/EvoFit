@@ -9,6 +9,8 @@ import {
 } from 'react'
 import { isAxiosError } from 'axios'
 import { api, ensureCsrfCookie, UNAUTHORIZED_EVENT, type User } from '../../lib/api'
+import { appDeviceName, appToken, loadAppToken, setAppToken } from '../../lib/appSession'
+import { IS_APP } from '../../lib/platform'
 import { queryClient } from '../../lib/queryClient'
 import { clearAllWorkoutDrafts } from '../../lib/workoutDrafts'
 
@@ -80,14 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void (async () => {
-      await refreshUser()
+      await loadAppToken()
+      // En la app, sin token guardado no hay sesión: no hace falta preguntar al servidor.
+      if (IS_APP && !appToken()) setUser(null)
+      else await refreshUser()
       setLoading(false)
     })()
-  }, [refreshUser])
+  }, [refreshUser, setUser])
 
   const login = useCallback(async (email: string, password: string) => {
     await ensureCsrfCookie()
-    const { data } = await api.post<{ user: User }>('/auth/login', { email, password })
+    const { data } = await api.post<{ user: User; token?: string }>('/auth/login', { email, password, device_name: await appDeviceName() })
+    await setAppToken(data.token ?? null)
     queryClient.clear()
     setUser(data.user)
   }, [setUser])
@@ -103,7 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       terms: boolean
     }) => {
       await ensureCsrfCookie()
-      const { data } = await api.post<{ user: User }>('/auth/register', payload)
+      const { data } = await api.post<{ user: User; token?: string }>('/auth/register', { ...payload, device_name: await appDeviceName() })
+      await setAppToken(data.token ?? null)
       setUser(data.user)
     },
     [setUser],
@@ -116,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Aunque falle la red, se sale igualmente en este dispositivo.
     } finally {
       // Nada del usuario anterior debe quedar visible a quien entre después en este móvil.
+      await setAppToken(null)
       queryClient.clear()
       clearAllWorkoutDrafts()
       setUser(null)
@@ -126,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (password: string) => {
       await api.delete('/profile', { data: { current_password: password } })
       // Nada de la cuenta borrada debe quedar en este dispositivo.
+      await setAppToken(null)
       queryClient.clear()
       clearAllWorkoutDrafts()
       setUser(null)
@@ -135,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function onUnauthorized() {
+      void setAppToken(null)
       queryClient.clear()
       setUser(null)
     }

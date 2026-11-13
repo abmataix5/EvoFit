@@ -5,6 +5,7 @@ import { BrandLogo } from './components/BrandLogo'
 import { UiFeedbackProvider } from './components/feedback/UiFeedback'
 import { AppShell } from './components/layout/AppShell'
 import { AuthProvider, useAuth } from './features/auth/AuthContext'
+import { IS_APP } from './lib/platform'
 import { queryClient } from './lib/queryClient'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -111,7 +112,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     // La portada es la landing para quien no ha entrado; el resto de pantallas piden iniciar sesión.
-    return pathname === '/' ? <LandingPage /> : <Navigate to="/login" replace />
+    // Dentro de las apps de iOS y Android no hay landing: se va directo a iniciar sesión.
+    return pathname === '/' && !IS_APP ? <LandingPage /> : <Navigate to="/login" replace />
   }
 
   return <>{children}</>
