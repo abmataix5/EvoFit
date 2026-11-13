@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { BrandLogo } from '../components/BrandLogo'
 import { Icon, type IconName } from '../components/icons/Icon'
 import { SiteFooter } from '../components/SiteFooter'
+import { SiteHeader } from '../components/SiteHeader'
+import { StoreBadges } from '../components/StoreBadges'
+import { PRICING, useFounderSpotsLeft } from '../lib/pricing'
 
 /** Los bloques con data-reveal entran al llegar a ellos con el scroll (una sola vez). */
 function useReveal() {
@@ -195,6 +197,7 @@ const WORDS = ['Rutinas', 'Series', 'Récords', 'Progreso', 'Agenda', 'Amigos', 
 /** Portada pública de EvoFit: qué hace la app y cómo entrar. Quien ya tiene sesión ve la app, no esto. */
 export function LandingPage() {
   useReveal()
+  const spotsLeft = useFounderSpotsLeft()
 
   useEffect(() => {
     document.title = 'EvoFit · Entrena, mejora, evoluciona'
@@ -206,32 +209,7 @@ export function LandingPage() {
         Saltar al contenido
       </a>
 
-      <header className="safe-top sticky top-0 z-30 border-b border-evo-border/30 bg-evo-bg">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 lg:px-8">
-          <Link to="/" className="flex items-center gap-2.5" aria-label="EvoFit, inicio">
-            <BrandLogo size="sm" decorative />
-            <span className="font-display text-2xl font-extrabold uppercase">
-              Evo<span className="text-evo-accent">Fit</span>
-            </span>
-          </Link>
-          <nav aria-label="Cuenta" className="ml-auto flex items-center gap-1.5">
-            <Link
-              to="/login"
-              aria-label="Iniciar sesión"
-              className="flex min-h-11 items-center whitespace-nowrap rounded-2xl px-3 text-sm font-bold transition hover:bg-evo-surface-2 active:scale-95 sm:px-4 sm:text-base"
-            >
-              <span className="sm:hidden">Entrar</span>
-              <span className="hidden sm:inline">Iniciar sesión</span>
-            </Link>
-            <Link
-              to="/register"
-              className="flex min-h-11 items-center whitespace-nowrap rounded-2xl bg-evo-accent px-4 text-sm font-extrabold text-[#1a120c] transition active:scale-95 sm:text-base"
-            >
-              Crear cuenta
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main>
         {/* ── Portada ── */}
@@ -422,6 +400,8 @@ export function LandingPage() {
               <Link to="/instalar" className="mt-4 inline-flex min-h-11 items-center gap-1 font-bold text-evo-accent">
                 Cómo instalarla en el móvil <Icon name="chevron" className="h-4 w-4" />
               </Link>
+              <p className="mt-4 text-sm font-semibold text-evo-muted">Y en las próximas semanas, también en las tiendas:</p>
+              <StoreBadges className="mt-2" />
             </div>
             <ul className="space-y-2.5">
               {[
@@ -436,6 +416,26 @@ export function LandingPage() {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+
+        {/* ── Precios ── */}
+        <section className="mx-auto max-w-6xl px-4 pb-16 lg:px-8 lg:pb-24">
+          <div data-reveal className="flex flex-col gap-5 rounded-3xl border border-evo-accent/50 bg-evo-accent/10 p-6 lg:flex-row lg:items-center lg:justify-between lg:p-10">
+            <div>
+              <Kicker>Precios</Kicker>
+              <h2 className="mt-3 text-center font-display text-[clamp(2.2rem,7vw,3.4rem)] font-extrabold uppercase leading-[0.95] sm:text-left">
+                Los {PRICING.founderSpots} primeros <span className="text-evo-accent">entrenan gratis</span>
+              </h2>
+              <p className="mt-3 text-center text-lg leading-snug text-evo-muted sm:text-left">
+                Después costará {PRICING.monthly} al mes.
+                {spotsLeft ? ` Quedan ${spotsLeft} ${spotsLeft === 1 ? 'plaza' : 'plazas'}.` : ''}
+              </p>
+            </div>
+            <Link to="/precios" className={`${cta} shrink-0 border-2 border-evo-accent text-evo-text`}>
+              Ver precios
+              <Icon name="chevron" className="h-5 w-5" />
+            </Link>
           </div>
         </section>
 

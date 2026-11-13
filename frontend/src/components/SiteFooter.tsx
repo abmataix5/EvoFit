@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { LEGAL, LEGAL_LINKS } from '../lib/legal'
 import { BrandLogo } from './BrandLogo'
+import { StoreBadges } from './StoreBadges'
 
 const ACCOUNT_LINKS = [
+  { to: '/precios', label: 'Precios' },
   { to: '/login', label: 'Iniciar sesión' },
   { to: '/register', label: 'Crear cuenta' },
   { to: '/instalar', label: 'Instalar en el móvil' },
@@ -40,12 +42,13 @@ export function SiteFooter({ showAccountLinks = true }: { showAccountLinks?: boo
           <p className="mt-3 max-w-xs text-sm leading-snug text-evo-muted">
             La app para apuntar tus entrenos, ver tu progreso y picarte con tus amigos.
           </p>
+          <StoreBadges className="mt-4" />
           <p className="mt-4 text-sm text-evo-muted">
             © {new Date().getFullYear()} EvoFit · {LEGAL.owner}
           </p>
         </div>
 
-        {showAccountLinks ? <Column title="Cuenta" links={ACCOUNT_LINKS} /> : <span className="hidden sm:block" aria-hidden />}
+        {showAccountLinks ? <Column title="EvoFit" links={ACCOUNT_LINKS} /> : <span className="hidden sm:block" aria-hidden />}
         <Column title="Legal" links={LEGAL_LINKS} />
       </div>
     </footer>
