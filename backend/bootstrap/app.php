@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateMedia;
 use App\Http\Middleware\EnforceTenantContext;
 use App\Http\Middleware\SetTenantFromUser;
 use Illuminate\Foundation\Application;
@@ -21,11 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(EnforceTenantContext::class);
         $middleware->alias([
             'tenant' => SetTenantFromUser::class,
+            'media.auth' => AuthenticateMedia::class,
         ]);
         // El tenant debe fijarse antes de resolver los modelos de la ruta,
         // para que el scope global filtre también el route model binding.
         // (Queda después de auth, que va antes de SubstituteBindings en la lista.)
         $middleware->prependToPriorityList(SubstituteBindings::class, SetTenantFromUser::class);
+        // Y las imágenes firmadas tienen que identificar a la persona antes de fijar su tenant.
+        $middleware->prependToPriorityList(SetTenantFromUser::class, AuthenticateMedia::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

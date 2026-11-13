@@ -44,6 +44,6 @@ class ProgressPhoto extends Model
     public function url(): string
     {
         // Las fotos son privadas: se sirven a través de la API con sesión y dueño.
-        return '/api/v1/progress/photos/'.$this->id.'/image';
+        return \App\Support\MediaUrl::to('media.progress', ['progressPhoto' => $this->id]);
     }
 }

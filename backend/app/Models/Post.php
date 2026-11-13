@@ -55,7 +55,7 @@ class Post extends Model
         }
 
         // La versión cambia con la foto (no con cada "me gusta"): la caché del navegador dura.
-        return '/api/v1/posts/'.$this->id.'/photo?v='.substr(md5($this->photo_path), 0, 10);
+        return \App\Support\MediaUrl::to('media.post', ['post' => $this->id, 'v' => substr(md5($this->photo_path), 0, 10)]);
     }
 
     public function deletePhotoFile(): void

@@ -45,11 +45,12 @@ Route::prefix('v1')->group(function (): void {
 
     // Imágenes (avatares, fotos de entrenos, historias y progreso): un feed o un perfil piden
     // muchas de golpe, así que llevan su propio contador y no gastan el de la API.
-    Route::middleware(['auth:sanctum', 'tenant', 'throttle:600,1,media'])->group(function (): void {
-        Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar']);
-        Route::get('/posts/{post}/photo', [PostController::class, 'photo']);
-        Route::get('/stories/{story}/photo', [StoryController::class, 'photo']);
-        Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage']);
+    // Se entra con sesión, con token o con la dirección firmada que reciben las apps.
+    Route::middleware(['media.auth', 'tenant', 'throttle:600,1,media'])->group(function (): void {
+        Route::get('/users/{user}/avatar', [ProfileController::class, 'avatar'])->name('media.avatar');
+        Route::get('/posts/{post}/photo', [PostController::class, 'photo'])->name('media.post');
+        Route::get('/stories/{story}/photo', [StoryController::class, 'photo'])->name('media.story');
+        Route::get('/progress/photos/{progressPhoto}/image', [ProgressController::class, 'photoImage'])->name('media.progress');
     });
 
     Route::middleware(['auth:sanctum', 'tenant', 'throttle:120,1,api'])->group(function (): void {

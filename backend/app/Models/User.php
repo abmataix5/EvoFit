@@ -82,7 +82,7 @@ class User extends Authenticatable
         }
 
         // La versión en la URL permite cachear la imagen y renovarla al cambiarla.
-        return '/api/v1/users/'.$this->id.'/avatar?v='.($this->avatar_updated_at?->getTimestamp() ?? 0);
+        return \App\Support\MediaUrl::to('media.avatar', ['user' => $this->id, 'v' => $this->avatar_updated_at?->getTimestamp() ?? 0]);
     }
 
     public function deleteAvatarFile(): void

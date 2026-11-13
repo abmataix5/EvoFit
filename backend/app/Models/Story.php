@@ -58,6 +58,6 @@ class Story extends Model
 
     public function photoUrl(): ?string
     {
-        return $this->photo_path ? '/api/v1/stories/'.$this->id.'/photo' : null;
+        return $this->photo_path ? \App\Support\MediaUrl::to('media.story', ['story' => $this->id]) : null;
     }
 }
