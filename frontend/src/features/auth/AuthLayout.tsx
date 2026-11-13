@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { BrandLogo } from '../../components/BrandLogo'
 import { Icon } from '../../components/icons/Icon'
+import { IS_APP } from '../../lib/platform'
 
 type Props = {
   title: string
@@ -52,13 +53,16 @@ export function AuthLayout({ title, subtitle, children, footer, highlights, pane
                 Evo<span className="text-evo-accent">Fit</span>
               </span>
             </Link>
-            <Link
-              to="/"
-              className="-mr-2 flex min-h-11 items-center gap-1 rounded-2xl px-3 text-sm font-bold text-evo-muted transition hover:bg-evo-surface-2 hover:text-evo-text active:scale-95"
-            >
-              <Icon name="back" className="h-4 w-4" />
-              Volver
-            </Link>
+            {/* En las apps de iOS y Android no hay portada a la que volver. */}
+            {IS_APP ? null : (
+              <Link
+                to="/"
+                className="-mr-2 flex min-h-11 items-center gap-1 rounded-2xl px-3 text-sm font-bold text-evo-muted transition hover:bg-evo-surface-2 hover:text-evo-text active:scale-95"
+              >
+                <Icon name="back" className="h-4 w-4" />
+                Volver
+              </Link>
+            )}
           </div>
         </header>
 

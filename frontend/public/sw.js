@@ -2,7 +2,7 @@
 const SHELL_CACHE = 'evofit-shell-v2'
 const ASSET_CACHE = 'evofit-assets-v1'
 const MEDIA_CACHE = 'evofit-media-v1'
-const SHELL = ['/', '/index.html', '/site.webmanifest', '/icon-192.png', '/apple-touch-icon.png', '/favicon-32.png', '/logo.png']
+const SHELL = ['/', '/index.html', '/site.webmanifest', '/icon-192.png', '/apple-touch-icon.png', '/favicon-32.png', '/logo.png', '/icon-symbol.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -20,7 +20,8 @@ export function BrandLogo({ size = 'md', showTagline = false, className = '', de
   return (
     <div className={['inline-flex flex-col items-center text-center', className].join(' ')}>
       <img
-        src="/logo.png"
+        // En pequeño el logo completo no se lee: va solo el símbolo, como en el icono de la app.
+        src={px[size] <= 48 ? '/icon-symbol.png' : '/logo.png'}
         alt={decorative ? '' : 'EvoFit'}
         className={[sizes[size], 'rounded-[22%] object-contain'].join(' ')}
         width={px[size]}
