@@ -1,5 +1,8 @@
+import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 import { isAxiosError } from 'axios'
 import { api } from './api'
+import { IS_APP } from './platform'
 
 export type ReportResult = { ok: true } | { ok: false; message: string }
 
@@ -38,7 +41,30 @@ async function errorMessage(error: unknown): Promise<string> {
   return 'No se pudo generar el informe. Inténtalo de nuevo.'
 }
 
+function toBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '')
+    reader.onerror = () => reject(reader.error ?? new Error('No se pudo leer el informe'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+/** En las apps de iOS y Android: se guarda el PDF en el móvil y se abre la hoja de compartir (guardar, enviar, imprimir). */
+async function deliverInApp(blob: Blob, filename: string): Promise<void> {
+  const { uri } = await Filesystem.writeFile({ path: filename, data: await toBase64(blob), directory: Directory.Cache })
+  try {
+    await Share.share({ title: filename, files: [uri] })
+  } catch (error) {
+    // Cerrar la hoja de compartir sin elegir nada no es un error.
+    if (error instanceof Error && /cancel/i.test(error.message)) return
+    throw error
+  }
+}
+
 async function deliver(blob: Blob, filename: string): Promise<void> {
+  if (IS_APP) return deliverInApp(blob, filename)
+
   const file = new File([blob], filename, { type: 'application/pdf' })
 
   if (isIos() && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {

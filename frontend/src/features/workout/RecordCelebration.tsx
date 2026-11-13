@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { haptic } from '../../lib/haptics'
 
 export type RecordEvent = { id: number; exercise: string; label: string; previous: string | null }
 
@@ -15,11 +16,7 @@ const SPARKS = Array.from({ length: 12 }, (_, i) => {
 /** Aviso grande y breve cuando una serie bate el récord de siempre. */
 export function RecordCelebration({ event, onDone }: { event: RecordEvent; onDone: () => void }) {
   useEffect(() => {
-    try {
-      navigator.vibrate?.([70, 50, 70, 50, 200])
-    } catch {
-      // sin vibración
-    }
+    haptic([70, 50, 70, 50, 200], { always: true })
     const timer = window.setTimeout(onDone, 3600)
     return () => window.clearTimeout(timer)
   }, [event.id, onDone])

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDuration } from '../../lib/tracking'
+import { haptic } from '../../lib/haptics'
 
 export type RestTimerState = { endsAt: number; total: number; label: string } | null
 
@@ -62,11 +63,7 @@ export function RestTimer({
   useEffect(() => {
     if (!timer || !finished || firedFor.current === timer.endsAt) return
     firedFor.current = timer.endsAt
-    try {
-      navigator.vibrate?.([250, 120, 250, 120, 400])
-    } catch {
-      /* iOS no vibra */
-    }
+    haptic([250, 120, 250, 120, 400], { always: true })
     beep()
     const id = window.setTimeout(() => onChange(null), 6000)
     return () => window.clearTimeout(id)
